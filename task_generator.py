@@ -59,18 +59,47 @@ def make_objects(task_list):
 				object_list[i].set_deadline(entry_we_want)
 	return object_list
 
-def get_distance(point_a, point_b):
-    return ((point_a[0] - point_b)**2 + (point_a[0] - point_b[0])**2)**0.5
+def get_distance(task_a, task_b):
+    return ((task_a.x - task_b.x)**2 + (task_a.y - task_b.y)**2)**0.5
 
 def convert_dist_to_time(distance, factor):
     return distance*factor
 
-def get_all_permuations(length_of_perms):
+def find_maximal_schedule(object_list, task_orderings):
+    max_schedule = []
+    for task_ordering in task_orderings:
+        new_schedule = create_schedule(task_ordering, object_list)
+        if len(new_schedule) > len(max_schedule):
+            max_schedule = new_schedule
+            print "This is the new_max_schedule ordering:", max_schedule
+    return max_schedule
+            
+
+def create_schedule(task_ordering, object_list):
+    first_task = object_list[task_ordering[0]]
+    schedule = [first_task]
+    ending_time = first_task.release_time + first_task.duration
+    for i in task_ordering[1:]:
+        includable, ending_time = includable_task(ending_time, object_list[i-1], object_list[i])
+        if includable:
+            schedule.append(object_list[i])
+    return schedule
+    
+
+def includable_task(finishing_time, prev_task, next_task):
+    distance = get_distance(prev_task, next_task)
+    starting_time = finishing_time + distance
+    ending_time = starting_time + next_task.duration
+    if ending_time <= next_task.deadline:
+        return True, ending_time
+    return False, finishing_time
+
+def get_all_permutations(length_of_perms):
     permutations = [i for i in range(length_of_perms)]
     permutations = list(itertools.permutations(permutations, length_of_perms))
     return permutations
 
-def main():
+def set_up_N_tasks():
     with open('my.csv', 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(task_features)
@@ -81,22 +110,29 @@ def main():
 
     #Testing the class:
     object_list = make_objects(tasks) # object_list gets objects populated with info from tasks
-    print object_list[4].deadline # should print the deadline for the 5th task in the list
+    return object_list
+
+def main():
+    object_list = set_up_N_tasks()
+    task_orderings = get_all_permutations(len(object_list))
+    best_schedule = find_maximal_schedule(object_list, task_orderings)
+    print best_schedule
+
 
 
 #Class definition
 #Task is a class that contains five variables
 class Task(object):
     def setX(self, x):#x coordinate
-    	self.x = x
+    	self.x = float(x)
     def setY(self, y):#y coordinate
-    	self.y = y
+    	self.y = float(y)
     def set_release_time(self, r):#release time
-    	self.release_time = r
+    	self.release_time = float(r)
     def set_duration(self, dur):#duration
-    	self.duration = dur
+    	self.duration = float(dur)
     def set_deadline(self, dead):#deadline
-    	self.deadline = dead
+    	self.deadline = float(dead)
 
 
 
