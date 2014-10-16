@@ -11,8 +11,6 @@ from write_to_csv import *
 task_features = ['x_coord', 'y_coord', 'release_time', 'duration', 'deadline']
 
 
-
-
 def get_distance(task_a, task_b):
     return ((task_a.x - task_b.x)**2 + (task_a.y - task_b.y)**2)**0.5
 
@@ -92,6 +90,7 @@ def get_all_permutations(length_of_perms):
     permutations = [i for i in range(length_of_perms)]
     permutations = list(itertools.permutations(permutations, length_of_perms))
     return permutations
+
 
 
 
