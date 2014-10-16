@@ -1,6 +1,7 @@
 # Comps 2014
 # Larkin Flodin, Avery Johnson, Maraki Keteman, 
 # Abby Lewis, Will Schifeling, and  Alex Trauman
+
 import csv
 import random
 import itertools
