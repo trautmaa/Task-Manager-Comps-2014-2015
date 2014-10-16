@@ -59,33 +59,32 @@ def read_in_task(csv_file):
 
 '''
 A function that returns a list of task objects.
-populated with the information from the task_list input
-The function should still work if we add more columns 
-to the .csv file (add another piece of information for 
-each task)
+It takes a list of tasks in list form, and converts
+them to objects and adds them to the object_list.
 '''
 def make_objects(task_list):
-	object_list = []
-	for i in range(len(task_list)): #i is each tuple
-		newobject = Task()
-		object_list.append(newobject)
-		for j in range(len(task_list[i])): #j is xcoord, ycoord, release time, duration, deadline
-			if (j % 5 == 0): #x coordinate value
-				entry_we_want = task_list[i][j%5]
-				object_list[i].setX(entry_we_want)
-			if (j % 5 == 1): #y coordinate value
-				entry_we_want = task_list[i][j%5]
-				object_list[i].setY(entry_we_want)
-			if (j % 5 == 2): #release time
-				entry_we_want = task_list[i][j%5]
-				object_list[i].set_release_time(entry_we_want)
-			if (j % 5 == 3): #duration
-				entry_we_want = task_list[i][j%5]
-				object_list[i].set_duration(entry_we_want)
-			if (j % 5 == 4): #deadline
-				entry_we_want = task_list[i][j%5]
-				object_list[i].set_deadline(entry_we_want)
-	return object_list
+    object_list = []
+    for i in range(len(task_list)):
+        newobject = Task()
+        object_list.append(newobject)
+        # task_list[i][j] is xcoord, ycoord, release time, duration, deadline
+        for j in range(len(task_list[i])): 
+            if (j == 0): #x coordinate value
+                object_list[i].setX(task_list[i][0])
+            
+            if (j == 1): #y coordinate value
+                object_list[i].setY(task_list[i][1])
+                
+            if (j == 2): #release time
+                object_list[i].set_release_time(task_list[i][2])
+                
+            if (j == 3): #duration
+                object_list[i].set_duration(task_list[i][3])
+                
+            if (j == 4): #deadline
+                object_list[i].set_deadline(task_list[i][4])
+            # With added features, we must add statements here.
+    return object_list
 
 
 
