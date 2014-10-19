@@ -2,10 +2,7 @@
 # Larkin Flodin, Avery Johnson, Maraki Keteman, 
 # Abby Lewis, Will Schifeling, and  Alex Trauman
 
-import csv
-import random
 import itertools
-import math
 from create_tasks_from_csv import *
 from write_to_csv import *
 from helper_functions import *
