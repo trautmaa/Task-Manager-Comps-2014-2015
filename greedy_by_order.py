@@ -8,6 +8,12 @@ from write_to_csv import *
 from helper_functions import *
 from brute_force import *
 
+
+'''
+A function that will create a schedule based on just ordering
+all tasks by their release time or deadline and then outputting that 
+schedule.
+'''
 def run_greedy_by_order(n, method):
     written_csv  = write_n_tasks(n, 'my.csv')
     object_list = get_object_list(written_csv)
@@ -20,10 +26,18 @@ def run_greedy_by_order(n, method):
     print_schedule(best_schedule)
     print
 
+'''
+A function that given a bunch of tasks will order them by their
+deadline from earliest to latest.
+'''
 def order_by_deadline(object_list):
     object_list = sorted(object_list, key=lambda task: task.deadline)
     return object_list
 
+'''
+A function that given a bunch of tasks will order them by their
+release time from earliest to latest.
+'''
 def order_by_release(object_list):
     object_list = sorted(object_list, key=lambda task: task.release_time)
     return object_list
