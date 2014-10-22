@@ -26,21 +26,6 @@ def run_greedy_by_order(n, method):
     print_schedule(best_schedule)
     print
 
-'''
-A function that given a bunch of tasks will order them by their
-deadline from earliest to latest.
-'''
-def order_by_deadline(object_list):
-    object_list = sorted(object_list, key=lambda task: task.deadline)
-    return object_list
-
-'''
-A function that given a bunch of tasks will order them by their
-release time from earliest to latest.
-'''
-def order_by_release(object_list):
-    object_list = sorted(object_list, key=lambda task: task.release_time)
-    return object_list
 
 def main():
     run_greedy_by_order(10, "deadline")
