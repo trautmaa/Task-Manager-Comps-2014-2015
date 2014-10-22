@@ -22,42 +22,6 @@ def find_maximal_schedule(object_list, task_orderings):
         if len(new_schedule) > len(max_schedule):
             max_schedule = new_schedule
     return max_schedule
-   
-         
-'''
-A function that given an ordering of tasks and a list of objects
-will output the schedule that can be created from that ordering.
-'''
-def create_schedule(task_ordering, object_list):
-    last_included_task = object_list[task_ordering[0]]
-    schedule = [last_included_task]
-    ending_time = last_included_task.release_time + last_included_task.duration
-    for i in range(len(task_ordering)):
-        if i == 0:
-            pass
-        else:
-            includable, ending_time = includable_task(ending_time, last_included_task, 
-                                                      object_list[task_ordering[i]])
-            if includable:
-                last_included_task = object_list[task_ordering[i]]
-                schedule.append(last_included_task)
-                
-    return schedule
-    
-
-'''
-A function that given the finishing time of the last task done
-and the previous task object and next task object will return
-(true, the end time of finishing the next task) if the next task 
-can be completed before it's deadline and (false, the finishing 
-time of the task previously included) if the next_task cannot be finished.
-'''
-def includable_task(finishing_time, prev_task, next_task):
-    starting_time = get_starting_time_of_next_task(finishing_time, prev_task, next_task)
-    ending_time = (starting_time + next_task.duration)
-    if ending_time <= next_task.deadline:
-        return True, ending_time
-    return False, finishing_time
 
 
 '''
@@ -68,6 +32,7 @@ def get_all_permutations(length_of_perms):
     permutations = [i for i in range(length_of_perms)]
     permutations = list(itertools.permutations(permutations, length_of_perms))
     return permutations
+
 
 '''
 a function that will run our brute force algorithm to find one of the
