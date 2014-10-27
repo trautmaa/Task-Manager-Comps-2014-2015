@@ -38,15 +38,14 @@ def get_all_permutations(length_of_perms):
 a function that will run our brute force algorithm to find one of the
 best schedules.
 '''
-def run_brute_force_alg(n):
-    written_csv  = write_n_tasks(n, 'my.csv')
-    object_list = get_object_list(written_csv)
+def run_brute_force_alg(csv_file):
+    object_list = get_object_list(csv_file)
     task_orderings = get_all_permutations(len(object_list))
     best_schedule = find_maximal_schedule(object_list, task_orderings)
     print_schedule(best_schedule)
 
 def main():
-    run_brute_force_alg(10)
+    run_brute_force_alg("test.csv")
 
 
 if __name__ == '__main__':

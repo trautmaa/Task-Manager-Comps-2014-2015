@@ -8,16 +8,25 @@ from write_to_csv import *
 from helper_functions import *
 from brute_force import *
 
-
-def run_greedy_by_present_choice(n, method):
-    written_csv  = write_n_tasks(n, 'my.csv')
-    object_list = get_object_list(written_csv)
-    schedule = select_schedule(object_list, method)
+'''
+A function that given a csv_file and the method, i.e. whether to
+pick the next task based on when you can start it or when you can finish
+it.  This algorithm just picks a schedule based on just doing what it can 
+then moving on.
+'''
+def run_greedy_by_present_choice(csv_file, method):
+    task_list = get_task_list(csv_file)
+    schedule = select_schedule(task_list, method)
     print_schedule(schedule)
+    print
 
-def select_schedule(object_list, method):
-    schedule, present_location, present_time = [], (2.5, 2.5), 0
-    best_tasks = object_list
+'''
+Refer to run_greedy_by_present_choice.
+Given a method and a task list, returns a greedily selected schedule.
+'''
+def select_schedule(task_list, method):
+    schedule, present_location, present_time = [], (2.5, 2.5), 0 #present_location is arbitrary.
+    best_tasks = task_list
     while len(best_tasks) != 0:
         best_tasks = get_next_task(present_time, present_location,
                                    best_tasks, method)
@@ -30,6 +39,10 @@ def select_schedule(object_list, method):
             
     return schedule
 
+'''
+A function that given a present time and location along with a tasks list, and
+a method will return the next task that can be started or finished depending on the method.
+'''
 def get_next_task(starting_time, starting_location, tasks_list, method):
     best_tasks = []
     for task in tasks_list:
@@ -44,8 +57,8 @@ def get_next_task(starting_time, starting_location, tasks_list, method):
     
 
 def main():
-    run_greedy_by_present_choice(10, "finish_time")
-    run_greedy_by_present_choice(10, "start_time")
+    run_greedy_by_present_choice("test.csv", "finish_time")
+    run_greedy_by_present_choice("test.csv", "start_time")
     
 
 

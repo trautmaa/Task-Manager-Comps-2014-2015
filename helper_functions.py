@@ -39,12 +39,12 @@ def is_finishable_task(task, present_location, present_time):
 A function that given an ordering of tasks and a list of objects
 will output the schedule that can be created from that ordering.
 '''
-def create_schedule(task_ordering, object_list):
+def create_schedule(task_ordering, task_list):
     last_location = (2.5, 2.5)
     ending_time = 0
     schedule = []
     for i in range(len(task_ordering)):
-        task = object_list[task_ordering[i]]
+        task = task_list[task_ordering[i]]
         includable, ending_time = is_finishable_task(task, last_location, 
                                                      ending_time)
         if includable:
@@ -56,17 +56,17 @@ def create_schedule(task_ordering, object_list):
 A function that given a bunch of tasks will order them by their
 deadline from earliest to latest.
 '''
-def order_by_deadline(object_list):
-    object_list = sorted(object_list, key=lambda task: task.deadline)
-    return object_list
+def order_by_deadline(task_list):
+    task_list = sorted(task_list, key=lambda task: task.deadline)
+    return task_list
 
 '''
 A function that given a bunch of tasks will order them by their
 release time from earliest to latest.
 '''
-def order_by_release(object_list):
-    object_list = sorted(object_list, key=lambda task: task.release_time)
-    return object_list
+def order_by_release(task_list):
+    task_list = sorted(task_list, key=lambda task: task.release_time)
+    return task_list
 
 def order_by_method(tasks_list, method):
     if method == "start_time":
