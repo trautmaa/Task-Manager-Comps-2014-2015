@@ -33,7 +33,7 @@ def write_n_tasks(n, csv_file):
         writer = csv.writer(f)
         writer.writerow(task_features)
         for i in range(n):
-            writer.writerow(generate_task(100, 100, 30, 200, 770))
+            writer.writerow(generate_task(1000, 1000, 1000, 0, 1000))
     return csv_file
 
 def main():

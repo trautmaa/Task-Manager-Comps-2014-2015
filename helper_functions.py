@@ -122,12 +122,12 @@ def print_schedule(schedule):
                 task.release_time, "and must finish before", task.deadline
         else:
             print "Task", i + 1, "will start at", starting_time, "and finish at",\
-                current_time, "because it must start after", task.release_time,\
+                finishing_time, "because it must start after", task.release_time,\
                 "and must finish before", task.deadline
         if i != (len(schedule) - 1):
             print "Travel time is", get_distance_between_tasks(task, schedule[i + 1]),\
                 "to travel from Task", i + 1, "at", get_coords(task), "to Task", i + 2,\
                 "at", get_coords(schedule[i + 1])
         current_time = finishing_time
-        current_location = get_coords(task)
+        last_location = get_coords(task)
 
