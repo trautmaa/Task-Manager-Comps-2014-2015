@@ -31,16 +31,29 @@ class Node(object):
 def compute_lower_bound():
     return 10000 # To be changed
 
-def choose_best_node(node_a, node_b):
+def choose_better_node(node_a, node_b):
     if len(node_a.schedule) > len(node_b.schedule):
         return node_a
     return node_b
 
+def choose_best_node(list_of_nodes):
+    best_node = list_of_nodes[0]
+    for node in list_of_nodes:
+        if len(node.schedule) > len(best_node.schedule):
+            best_node = node
+    return best_node
+
 def dfs(node, upper_bound_node):
     if len(node.tasks_to_search) == 0:
-        return choose_best_node(node, upper_bound_node)
-
-    return upper_bound_node
+        return choose_better_node(node, upper_bound_node)
+    elif compute_lower_bound() >= len(upper_bound_node.schedule):
+        return upper_bound_node
+    else:
+        node_list = []
+        nodes_to_search = create_nodes_to_search(node):
+        for search_node in nodes_to_search:
+            node_list.append(dfs(search_node, upper_bound_node))
+        return choose_best_node(node_list)
         
     
 
