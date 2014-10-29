@@ -1,6 +1,6 @@
 # Comps 2014
 # Larkin Flodin, Avery Johnson, Maraki Keteman, 
-# Abby Lewis, Will Schifeling, and  Alex Trauman
+# Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import csv
 
@@ -15,19 +15,19 @@ task.deadline is the task's deadline.
 class Task(object):
     
     def setX(self, x):
-    	self.x = float(x)
+    	self.x = int(x)
 
     def setY(self, y):
-    	self.y = float(y)
+    	self.y = int(y)
 
     def set_release_time(self, r):
-    	self.release_time = float(r)
+    	self.release_time = int(r)
 
     def set_duration(self, dur):
-    	self.duration = float(dur)
+    	self.duration = int(dur)
 
     def set_deadline(self, dead):
-    	self.deadline = float(dead)
+    	self.deadline = int(dead)
 
 
 '''

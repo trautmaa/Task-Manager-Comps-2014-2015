@@ -1,8 +1,9 @@
 # Comps 2014
 # Larkin Flodin, Avery Johnson, Maraki Keteman, 
-# Abby Lewis, Will Schifeling, and  Alex Trauman
+# Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import itertools
+
 from create_tasks_from_csv import *
 from write_to_csv import *
 from helper_functions import *
@@ -25,7 +26,7 @@ def find_maximal_schedule(object_list, task_orderings):
 
 
 '''
-a function that returns all potential orderings of tasks as a list.
+A function that returns all potential orderings of tasks as a list.
 It just takes a number of how many elements you want to be permutated.
 '''
 def get_all_permutations(length_of_perms):
@@ -35,11 +36,11 @@ def get_all_permutations(length_of_perms):
 
 
 '''
-a function that will run our brute force algorithm to find one of the
-best schedules.
+A function that will run our brute force algorithm to find the
+best schedule.
 '''
 def run_brute_force_alg(csv_file):
-    object_list = get_object_list(csv_file)
+    object_list = get_task_list(csv_file)
     task_orderings = get_all_permutations(len(object_list))
     best_schedule = find_maximal_schedule(object_list, task_orderings)
     print_schedule(best_schedule)
