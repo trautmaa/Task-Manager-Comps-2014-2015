@@ -29,6 +29,13 @@ class Task(object):
     def set_deadline(self, dead):
     	self.deadline = int(dead)
 
+    def __str__(self):
+        string_representation = "(Location: (" + str(self.x) + " " \
+        + str(self.y) + "), Release Time: " + str(self.release_time) \
+        + ", Duration: " + str(self.duration) + ", Deadline: " \
+        + str(self.deadline) + ")"
+        return string_representation
+
 
 '''
 Given a csv file, this function will call the read_in_task

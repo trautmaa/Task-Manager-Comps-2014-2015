@@ -9,6 +9,15 @@ from helper_functions import *
 
 
 '''
+A function that prints the result of run_greedy_by_order
+in a more detailed format.
+'''
+def print_greedy_by_order(csv_file, order_function):
+	schedule = run_greedy_by_order(csv_file, order_function)
+	print_schedule(schedule)
+	print
+
+'''
 A function that will create a schedule based on just ordering
 all tasks by their release time or deadline and then outputting that 
 schedule.
@@ -18,12 +27,12 @@ def run_greedy_by_order(csv_file, order_function):
     task_list = order_function(task_list)
     ordering = [i for i in range(len(task_list))]
     best_schedule = create_schedule(ordering, task_list)
-    print_schedule(best_schedule)
-    print
+    return best_schedule
 
 def main():
-    run_greedy_by_order("test.csv", order_by_deadline)
-    run_greedy_by_order("test.csv", order_by_release)
+    print
+    print_greedy_by_order("test.csv", order_by_release)
+    print_greedy_by_order("test.csv", order_by_deadline)
     
 
 

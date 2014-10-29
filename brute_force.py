@@ -43,10 +43,20 @@ def run_brute_force_alg(csv_file):
     object_list = get_task_list(csv_file)
     task_orderings = get_all_permutations(len(object_list))
     best_schedule = find_maximal_schedule(object_list, task_orderings)
-    print_schedule(best_schedule)
+    return best_schedule
+
+'''
+Prints the output of run_brute_force_alg in a more
+detailed format.
+'''
+def print_brute_force(csv_file):
+    schedule = run_brute_force_alg(csv_file)
+    print_schedule(schedule)
+    print
 
 def main():
-    run_brute_force_alg("test.csv")
+    print
+    print_brute_force("test.csv")
 
 
 if __name__ == '__main__':

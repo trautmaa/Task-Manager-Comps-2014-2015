@@ -16,6 +16,14 @@ location and time.
 def run_greedy_by_present_choice(csv_file, order_function):
     task_list = get_task_list(csv_file)
     schedule = select_schedule(task_list, order_function)
+    return schedule
+
+'''
+A function that prints the result of run_greedy_by_present_choice
+in a more detailed way.
+'''
+def print_greedy_by_present_choice(csv_file, order_function):
+    schedule = run_greedy_by_present_choice(csv_file, order_function)
     print_schedule(schedule)
     print
 
@@ -55,8 +63,9 @@ def get_next_task(starting_time, starting_location, remaining_tasks_list, order_
     
 
 def main():
-    run_greedy_by_present_choice("test.csv", order_by_starting_time)
-    run_greedy_by_present_choice("test.csv", order_by_ending_time)
+    print
+    print_greedy_by_present_choice("test.csv", order_by_starting_time)
+    print_greedy_by_present_choice("test.csv", order_by_ending_time)
     
 
 
