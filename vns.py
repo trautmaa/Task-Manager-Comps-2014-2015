@@ -4,6 +4,8 @@ from helper_functions import *
 import time
 
 
+
+
 '''
 @return: an ordering of tasks
 '''
@@ -21,7 +23,6 @@ def solve(csvFile):
 @return: modified solution
 '''
 
-###### AVERY AND ABBY CHECK THIS SHIT OUT WHEN YOU'RE AWAKE
 def vns(taskList, currSolution):
     
     #Number of seconds VNS is allowed to run
@@ -30,7 +31,7 @@ def vns(taskList, currSolution):
     #Number of neighborhood structures
     nHoodMax = 17
     
-    #Number of iterations since last solution update
+    #Number of iterations since last bestSolution update
     numIterations = 0
     
     bestSolution = currSolution
@@ -43,7 +44,7 @@ def vns(taskList, currSolution):
         nHood = 1
         while nHood < nHoodMax:
             shakeSolution = shaking(currSolution, nHood)
-            iterSolution = iterativeImprovement(taskList, currSolution, nHoodIndex)
+            iterSolution = iterativeImprovement(taskList, shakeSolution, nHoodIndex)
             
             #make sure the modified solution is still feasible. 
             # If it is not, try again
@@ -54,28 +55,39 @@ def vns(taskList, currSolution):
             else:
                 feasible = True
                 iterSolution = feasibleSolution
-            if feasible and isBetter(iterSolution, currSolution):
-                currSolution = iterSolution
-                k = 1
-                if isBetter(currSolution, bestSolution):
-                    bestSolution  = currSolution
+            
+            #if feasible and better
+            #     accept it as the new solution, reset nHood of numIterations
+            
+            if feasible:
+                #If our solution is better than the current solution, update.
+                if isBetter(iterSolution, currSolution):
+                    currSolution = iterSolution
+                    nHood = 1
+                #Otherwise, increment nHood
+                else:
+                    nHood += 1
+                
+                #If our solution is better than the best solution so far, update.
+                if isBetter(iterSolution, bestSolution):
+                    bestSolution = iterSolution
                     numIterations = 0
                     
-                #After 8000 iterations without improvement, accept a slightly worse solution
-                elif numIterations > 8000:
-                    numIterations = 0
-                    if nHood > 8:
-                        currSolution = iterSolution
-                        nHood = 1
-                    elif calcDistance(iterSolution) >= .995*calcDistance(currSolution):
-                        currSolution = iterSolution                    
-                    elif nHood == nHoodMax:
-                        nHood = 1
-                        numIterations += 1
-                    else:
-                        nHood += 1
-                        numIterations += 1  
-    return currSolution
+            #If we have gone 8000 iterations with no improvement to bestSolution
+            # If criteria for selection are true, select a new currSolution
+            elif numIterations > 8000:
+                numIterations = 0
+                
+                if nHood > 8:
+                    currSolution = iterSolution
+                    nHood = 1
+                #Criteria for nHoods 1-8:
+                # If the new solution is not more than .5% longer (distance), accept
+                elif calcDistance(iterSolution) >= .995*calcDistance(currSolution):
+                    currSolution = iterSolution
+            else:
+                numIterations += 1
+    return bestSolution
 
 '''
 @return: total distance of a solution
@@ -94,36 +106,57 @@ def shaking(currSolution, nHoodIndex):
         newSolution = optionalExchange1(currSolution, nHoodIndex)
     else:
         newSolution = optionalExchange2(currSolution, nHoodIndex)
+    return newSolution
+
+'''
+@return: modified solution
+'''
+def crossExchange(currSolution, nHoodIndex):
+    # choose two distinct random days
+    # find the length of the routes to be exchanged:
+    #    for route1 (removed and inserted), length = rand(1, min(numberCustomers, nHoodIndex))
+    #    for route2 (just removed), length = rand(0, min(numberCustomers, nHoodIndex))
+    # route1: choose random segment w/ customers who have a valid time window in day2
+    # route2: choose random segment
+    # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange1(currSolution, nHoodIndex):
+    # set p and q according to nHood Index
+    # pick a random day and starting time to exchange customers
+    # using the p and q values, add and remove however many customers you need to
+    # use the customerQueue to do this
+    # replace the chosen days with the updated days
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange2(currSolution, nHoodIndex):
+    # calculate number to remove (nHoodIndex-12)
+    # pick a random day and position
+    # remove those number of customers starting at that point
+    # update the chosen days
     return currSolution
 
-'''
-@return: modified solution
-'''
-def crossExchange(currSolution, nHoodIndex):
-    return currSolution
 
 '''
 @return: modified solution
 '''
 def iterativeImprovement(taskList, currSolution, nHoodIndex):
+    #If nHoodIndex< 13: do 3-OPT
+    #Otherwise: Best Insertion
     return currSolution
 
 '''
 @return: True if sol1 has more profit than sol2
 '''
 def isBetter(sol1, sol2):
+    sum1 = 0 #sum profits in sol1 (number of tasks, right now)
+    sum2 = 0 #sum profits in sol2
     return True
 
 '''
@@ -152,3 +185,5 @@ def minRoute(taskList, currSolution):
 
 def calcDominantSolution(taskList, currSolution):
     return currSolution
+
+
