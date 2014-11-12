@@ -113,6 +113,7 @@ def shaking(currSolution, nHoodIndex):
 '''
 def crossExchange(currSolution, nHoodIndex):
     # choose two distinct random days
+    
     # find the length of the routes to be exchanged:
     #    for route1 (removed and inserted), length = rand(1, min(numberCustomers, nHoodIndex))
     #    for route2 (just removed), length = rand(0, min(numberCustomers, nHoodIndex))
@@ -137,6 +138,7 @@ def optionalExchange1(currSolution, nHoodIndex):
 '''
 def optionalExchange2(currSolution, nHoodIndex):
     # calculate number to remove (nHoodIndex-12)
+    numRemove = nHoodIndex - 12
     # pick a random day and position
     # remove those number of customers starting at that point
     # update the chosen days
@@ -148,8 +150,72 @@ def optionalExchange2(currSolution, nHoodIndex):
 '''
 def iterativeImprovement(taskList, currSolution, nHoodIndex):
     #If nHoodIndex< 13: do 3-OPT
+    if nHoodIndex < 13:
+        #only currSolution because we believe edges are being removed and inserted within the solution
+        newSolution = threeOPT(currSolution)
     #Otherwise: Best Insertion
+    else:
+        newSolution = bestInsertion(taskList, currSolution)
     return currSolution
+'''
+@return: solution that has been modified by 3-Opt
+'''
+def threeOPT(currSolution):
+    #MUST ASSUME START AND END ARE CONNECTED?
+    duration = getDuration(currSolution)
+    improvement = False
+    #CHECK DEPENDING ON HOW WE STORE SCHEDULES
+    scheduleLength = len(currSolution)
+    #2
+    while improvement == False:
+        #5
+        for n in range(1, scheduleLength):
+            #8
+            for k in range(1, scheduleLength - 3):
+                #9
+                for j in range(1, scheduleLength - 1):
+                    #10
+                    distance1 = dist(currSolution[k], currSolution[j+1]) + dist(currSolution[1], currSolution[j])
+                    distance2 = dist(currSolution[1], currSolution[j+1]) + dist(currSolution[k], currSolution[j])
+                    #11
+                    distance3 = dist(currSolution[1], currSolution[scheduleLength]) + dist(currSolution[k], currSolution[k+1]) + dist(currSolution[j], currSolution[j+1])
+                    #10
+                    if  distance1 <= distance2:
+                        d = distance1
+                        #11
+                        if d + dist(currSolution[k+1], currSolution[scheduleLength]) < distance3:
+                            #16
+                            # make newSchedule = [j+2....schedulelength, k+1, 1...k,j+1] 
+                            #newDuration = check duration
+                            if newDuration < duration:
+                                newSolution = newSchedule
+                                improvement = True
+                                break
+                    #10
+                    else:
+                        d = distance2
+                        #11
+                        if d + dist(currSolution[k+1], currSolution[scheduleLength]) < distance3:
+                            #18
+                            # make newSchedule = [j+2....schedulelength, k+1, k...1,j+1]
+                            #newDuration = check duration
+                            if newDuration < duration:
+                                newSolution = newSchedule
+                                improvement = True
+                                break
+    
+    return newSolution
+
+def getDuration(currSolution):
+    return 0
+
+'''
+@return: solution that has been modified by 3-Opt
+'''
+def bestInsertion(taskList, currSolution):
+    
+    return currSolution
+
 
 '''
 @return: True if sol1 has more profit than sol2
