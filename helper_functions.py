@@ -1,5 +1,5 @@
 # Comps 2014
-# Larkin Flodin, Avery Johnson, Maraki Keteman, 
+# Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 from math import ceil

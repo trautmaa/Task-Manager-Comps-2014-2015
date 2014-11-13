@@ -1,3 +1,7 @@
+# Comps 2014
+# Larkin Flodin, Avery Johnson, Maraki Ketema, 
+# Abby Lewis, Will Schifeling, and  Alex Trautman
+
 from greedy_by_order import *
 from create_tasks_from_csv import *
 from helper_functions import *
