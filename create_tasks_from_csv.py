@@ -3,38 +3,9 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import csv
+import Objects
 
-'''
-Task is a class that contains five variables:
-task.x is the task's x coordinate.
-task.y is the task's y coordinate.
-task.release_time is the task's release time.
-task.duration is the task's duration.
-task.deadline is the task's deadline.
-'''
-class Task(object):
-    
-    def setX(self, x):
-    	self.x = int(x)
 
-    def setY(self, y):
-    	self.y = int(y)
-
-    def set_release_time(self, r):
-    	self.release_time = int(r)
-
-    def set_duration(self, dur):
-    	self.duration = int(dur)
-
-    def set_deadline(self, dead):
-    	self.deadline = int(dead)
-
-    def __str__(self):
-        string_representation = "(Location: (" + str(self.x) + " " \
-        + str(self.y) + "), Release Time: " + str(self.release_time) \
-        + ", Duration: " + str(self.duration) + ", Deadline: " \
-        + str(self.deadline) + ")"
-        return string_representation
 
 
 '''
@@ -74,7 +45,7 @@ def make_objects(attribute_list):
     for i in range(len(attribute_list)):
         newobject = Task()
         task_list.append(newobject)
-        # task_list[i][j] is xcoord, ycoord, release time, duration, deadline
+        # task_list[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
         for j in range(len(attribute_list[i])): 
             if (j == 0): #x coordinate value
                 task_list[i].setX(attribute_list[i][0])
@@ -90,6 +61,12 @@ def make_objects(attribute_list):
                 
             if (j == 4): #deadline
                 task_list[i].set_deadline(attribute_list[i][4])
+                
+            if (j == 5): #priority
+                task_list[i].set_priority(attribute_list[i][5])
+                
+            if (j == 6): #required
+                task_list[i].set_required(attribute_list[i][6])
             # With added features, we must add statements here.
     return task_list
 
