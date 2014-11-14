@@ -52,8 +52,22 @@ def add_connectivity_constraints(prob, xij_variables, num_tasks, yi_variables):
         prob += lpSum(xji_list) == lpSum(xij_list) #for job i sum xij = sum xji
         prob += lpSum(xij_list) == yi_variables[i] #for job i sum xij = yi
        
-        
+    
+    
+def add_completion_time_constraints(prob, release_constants, service_time_constants, 
+                                    ai_variables, deadline_constants, B, yi_variables):
+    for i in range(num_tasks):
+        prob += release_constants[i] + service_time_constants[i] <= ai_variables[i] # ri + si <= ai
+        prob += ai_variables[i] <= deadline_constants[i] + B * (1 - yi_variables[i]) # ai <= B(1-yi)
 
+        
+def add_travel_and_service_time_constraints(prob, ai_variables, dij_constants, service_time_constants,
+                                            B, xij_variables):
+    for i in range(num_tasks):
+        for j in range(num_tasks):
+            if i != j:
+                prob += ai_variables[i] + dij_constants[i][j] + service_time_constants[j] \
+                <= ai_variables[j] + B *(1-xij_variables[i][j])
 
 yi_variables = [LpVariable(("y"+str(i)), 0, 1, LpBinary) for i in range(num_tasks)] # included or not
 ai_variables = [LpVariable(("a"+str(i)), 0, 1000) for i in range(num_tasks)] # ending time
@@ -71,7 +85,11 @@ prob += lpSum(yi_variables) #OBJECTIVE FUNCTION
 
 add_xij_binary_constraints(prob, xij_variables, num_tasks)
 add_connectivity_constraints(prob, xij_variables, num_tasks, yi_variables)
+add_completion_time_constraints(prob, release_constants, service_time_constants, 
+                                ai_variables, deadline_constants, B, yi_variables)
 
+add_travel_and_service_time_constraints(prob, ai_variables, dij_constants, 
+                                        service_time_constants, B, xij_variables)
 
 print prob
 
