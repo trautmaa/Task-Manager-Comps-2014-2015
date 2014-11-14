@@ -15,7 +15,7 @@ def get_distance_between_tasks(task_a, task_b):
 A function that returns the distance between 2 tuple coordinates.
 '''
 def get_distance_between_coords(location_a, location_b):
-    return int(ceil(((location_a[0] - location_b[0]) ** 2 + (location_a[1] - location_b[1]) ** 2) ** 0.5))
+    return ((location_a[0] - location_b[0]) ** 2 + (location_a[1] - location_b[1]) ** 2) ** 0.5
 
 '''
 A function that returns a tuple of a task's coordinates.
