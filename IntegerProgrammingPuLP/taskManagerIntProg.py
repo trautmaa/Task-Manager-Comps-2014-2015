@@ -44,4 +44,6 @@ prob += sum(taskVariablesList)
 #constraint: each task may only be scheduled directly before or after one other task
 for i in range(len(taskList)):
     prob += sum(taskPairsList[i][]) <= 1
-    prob += sum(taskPairsList[][i]) <= 1
+
+
+prob += sum(taskPairsList[][i]) <= 1
