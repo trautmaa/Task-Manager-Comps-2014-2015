@@ -4,7 +4,7 @@
 import csv
 from random import randint
 
-task_features = ['x_coord', 'y_coord', 'release_time', 'deadline', 'duration']
+task_features = ['x_coord', 'y_coord', 'release_time', 'duration', 'deadline']
 
 '''
 Generates a task as a list so that it may be written to a csv file.

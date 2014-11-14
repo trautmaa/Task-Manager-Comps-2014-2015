@@ -37,7 +37,7 @@ task j.  Note that if i == j, that entry is None.
 '''
 def make_dij_constants(task_list):
     num_tasks = len(task_list)
-    dij_constraints = [[None for i in range(num_tasks)] for j in range(num_tasks)]
+    dij_constants = [[None for i in range(num_tasks)] for j in range(num_tasks)]
     for i in range(num_tasks):
         for j in range(num_tasks):
             if i != j:
@@ -50,7 +50,7 @@ A function that adds constraints to the problem.  This constraint is
 for all jobs i, the sum of the variables xij = the sum of the variables xji
                 the sum of the variables xij = yi
 '''
-def add_connectivity_constraints(prob, xij_variables, xhi_variables, num_tasks, yi_variables):
+def add_connectivity_constraints(prob, xij_variables, xhi_variables, xih_variables, num_tasks, yi_variables):
     for i in range(num_tasks):
         xji_list = []
         xij_list = []
@@ -58,8 +58,8 @@ def add_connectivity_constraints(prob, xij_variables, xhi_variables, num_tasks, 
             if i != j:
                 xji_list += xij_variables[j][i]
                 xij_list += xij_variables[i][j]
-        prob += lpSum(xji_list) + xhi_variables[i] == lpSum(xij_list) # for job i sum xij = sum xji + xhi
-        prob += lpSum(xij_list) == yi_variables[i] # for job i sum xij = yi
+        prob += lpSum(xji_list) + xhi_variables[i] == lpSum(xij_list) + xih_variables[i] # for job i sum xij = sum xji + xhi
+        prob += lpSum(xij_list) + xih_variables[i] == yi_variables[i] # for job i sum xij = yi
        
     
 '''
@@ -119,14 +119,21 @@ def get_latest_deadline(task_list):
 A function that takes a solved integer program and converts it into a makeSchedule
 object.
 '''
-def make_schedule(prob):
-    # Sort everything by yi, then by ai
-    # Then extract the original numbers from the yi variable names
-    # task_list = sort something
+def make_schedule(yi_variables, ai_variables, task_list):
+    solved_task_tuples = []
+    for index, task_var in enumerate(yi_variables):
+        if (task_var.varValue == 1):
+            solved_task_tuples.append((task_list[index], ai_variables[index].varValue))
+    sorted_task_tuples = sorted(solved_task_tuples, key = lambda tuple:tuple[1])
+    solved_task_list = []
+    solved_task_completion_times = []
+    for taskTuple in sorted_task_tuples:
+        solved_task_list.append(taskTuple[0])
+        solved_task_completion_times.append(taskTuple[1])
     route = Route()
-    route.set_task_list(task_list)
+    route.set_task_list(solved_task_list, solved_task_completion_times)
     schedule = Schedule()
-    schedule.set_route_list([route])
+    schedule.add_to_list(route)
     return schedule
 
 
@@ -144,6 +151,7 @@ def integer_program_solve(task_list):
     xij_variables = make_xij_variables(num_tasks)
     service_time_constants = [task.duration for task in task_list]
     xhi_variables = [LpVariable(("xH" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)]
+    xih_variables = [LpVariable(("x" + str(i) + "H"), 0, 1, LpBinary) for i in range(num_tasks)]
     dij_constants = make_dij_constants(task_list)
     dhi_constants = [get_distance_between_coords(starting_location, get_coords(task)) for task in task_list]
     deadline_constants = [task.deadline for task in task_list]
@@ -156,7 +164,7 @@ def integer_program_solve(task_list):
 
 
     # Add all constraints
-    add_connectivity_constraints(prob, xij_variables, xhi_variables, num_tasks, yi_variables)
+    add_connectivity_constraints(prob, xij_variables, xhi_variables, xih_variables, num_tasks, yi_variables)
     
     add_completion_time_constraints(prob, release_constants, service_time_constants, 
                                     ai_variables, deadline_constants, latest_deadline, yi_variables,
@@ -171,7 +179,23 @@ def integer_program_solve(task_list):
                                         num_tasks)
 
     prob.solve()
-    return make_schedule(prob)
+    prob.writeLP("Scheduling.lp")
+    # print(prob)
+    # print LpStatus[prob.status]
+    # for var in yi_variables:
+    #     print var.name, var.varValue
+    # for var in ai_variables:
+    #     print var.name, var.varValue
+    # for var in xhi_variables:
+    #     print var.name, var.varValue
+    # for index in xij_variables:
+    #     for var in index:
+    #         try:
+    #             print var.name, var.varValue
+    #         except AttributeError:
+    #             print var
+
+    return make_schedule(yi_variables, ai_variables, task_list)
 
 
 '''    
@@ -181,7 +205,7 @@ and print the solution it produces.
 def main():
     task_list = get_task_list("test.csv")
     schedule = integer_program_solve(task_list)
-    print_schedule(schedule.route_list[1].task_list)
+    print_schedule(schedule.route_list[0].task_list)
 
 
 if __name__ == '__main__':

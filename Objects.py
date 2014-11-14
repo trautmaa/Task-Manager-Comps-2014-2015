@@ -81,9 +81,6 @@ class Schedule:
     def __init__(self):
         self.route_list = []
         
-    def __init__(self, route_list):
-        self.route_list = route_list
-        
     def add_to_list(self, route):
         self.route_list.append(route)
                 
