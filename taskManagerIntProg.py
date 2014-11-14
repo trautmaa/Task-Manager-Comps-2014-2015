@@ -178,34 +178,27 @@ def integer_program_solve(task_list):
                                         latest_deadline, xhi_variables,
                                         num_tasks)
 
-    prob.solve()
     prob.writeLP("Scheduling.lp")
-    # print(prob)
-    # print LpStatus[prob.status]
-    # for var in yi_variables:
-    #     print var.name, var.varValue
-    # for var in ai_variables:
-    #     print var.name, var.varValue
-    # for var in xhi_variables:
-    #     print var.name, var.varValue
-    # for index in xij_variables:
-    #     for var in index:
-    #         try:
-    #             print var.name, var.varValue
-    #         except AttributeError:
-    #             print var
-
+    prob.solve()
+    assert(prob.status == 1) # Problem was solved
     return make_schedule(yi_variables, ai_variables, task_list)
 
+'''
+A helper function that does everything but print the solution,
+for use in comparing different algorithms.
+'''
+def run_integer_program(csv_file):
+    task_list = get_task_list(csv_file)
+    schedule = integer_program_solve(task_list)
+    return schedule.route_list[0].task_list
 
 '''    
 A main function that will read in the list of tasks from a csv, construct the integer program,
 and print the solution it produces.
 '''
 def main():
-    task_list = get_task_list("test.csv")
-    schedule = integer_program_solve(task_list)
-    print_schedule(schedule.route_list[0].task_list)
+    solved_task_list = run_integer_program("test.csv")
+    print_schedule(solved_task_list)
 
 
 if __name__ == '__main__':
