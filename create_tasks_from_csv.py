@@ -3,7 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import csv
-import Objects
+from Objects import *
 
 
 
