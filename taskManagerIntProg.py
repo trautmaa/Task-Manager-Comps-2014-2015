@@ -178,6 +178,8 @@ def integer_program_solve(task_list):
                                         latest_deadline, xhi_variables,
                                         num_tasks)
 
+    prob += lpSum(xhi_variables) == 1 # Ending job constraint
+
     prob.writeLP("Scheduling.lp")
     prob.solve()
     assert(prob.status == 1) # Problem was solved
