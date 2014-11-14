@@ -35,6 +35,24 @@ def get_dij_constants(task_list):
                 dij_constraints[i][j] = get_distance_between_tasks(task_list[i], task_list[j])
     return dij_constraints
 
+def add_xij_binary_constraints(prob, xij_variables, num_tasks):
+    for i in range(num_tasks):
+        for j in range(num_tasks):
+            if xij_variables[i][j] != None:
+                prob += xij_variables[i][j] <= 1
+                
+def add_connectivity_constraints(prob, xij_variables, num_tasks, yi_variables):
+    for i in range(num_tasks):
+        xji_list = []
+        xij_list = []
+        for j in range(num_tasks):
+            if i != j:
+                xji_list += xij_variables[j][i]
+                xij_list += xij_variables[i][j]
+        prob += lpSum(xji_list) == lpSum(xij_list) #for job i sum xij = sum xji
+        prob += lpSum(xij_list) == yi_variables[i] #for job i sum xij = yi
+       
+        
 
 
 yi_variables = [LpVariable(("y"+str(i)), 0, 1, LpBinary) for i in range(num_tasks)] # included or not
@@ -43,45 +61,18 @@ xij_variables = get_xij_variables(num_tasks)
 service_time_constants = [task_list[i].duration for i in range(num_tasks)]
 dij_constants = get_dij_constants(task_list)
 deadline_constants = [task_list[i].deadline for i in range(num_tasks)]
+release_constants = [task_list[i].release_time for i in range(num_tasks)]
+B = 100000000 # Just a big number!
 
-print yi_variables
-print ai_variables
-print xij_variables
-print service_time_constants
-print dij_constants
-print deadline_constants
-
-'''
-Objective function problem variable created to contain problem data
-'''
  
 prob = LpProblem("Scheduling",LpMaximize)
-prob += lpSum(yi_variables) 
+prob += lpSum(yi_variables) #OBJECTIVE FUNCTION
+
+
+add_xij_binary_constraints(prob, xij_variables, num_tasks)
+add_connectivity_constraints(prob, xij_variables, num_tasks, yi_variables)
+
 
 print prob
-##make a list of task variables
-#taskVariablesList = []
-#for task in taskList:
-#    taskVariablesList.append(LpVariable(taskName,0,1,LpBinary))
-#
-##make a list for pairs of task variables
-#
-##initialize array to none        
-#taskPairsList = [[None for i in range len(taskList)] for j in range len(taskList)]
-##populate the taskPairsList
-#for i in range(len(taskList)):
-#    for j in range(len(taskList)):
-#        if taskList[i] != taskList[j]:
-#            taskPairsList[i][j] = LpVariable(taskList,0,1,LpBinary)
-#
-##add the objective function to our problem
-##prob += (sum of task variables in taskVariablesList) #pseudo
-#prob += sum(taskVariablesList)
-#
-##constraint: each task may only be scheduled directly before or after one other task
-#for i in range(len(taskList)):
-#    prob += sum(taskPairsList[i][]) <= 1
-#
-#
-#prob += sum(taskPairsList[][i]) <= 1
+
 
