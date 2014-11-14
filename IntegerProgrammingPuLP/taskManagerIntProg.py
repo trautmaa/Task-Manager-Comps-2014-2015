@@ -28,20 +28,20 @@ for task in taskList:
     taskVariablesList.append(LpVariable(taskName,0,1,LpBinary))
 
 #make a list for pairs of task variables
-#initialize array to none
-for i in range(len(taskList)):
-    for j in range(len(taskList)):
-        taskList[i][j] = None
-        
+
+#initialize array to none        
 taskPairsList = [[None for i in range len(taskList)] for j in range len(taskList)]
+#populate the taskPairsList
 for i in range(len(taskList)):
     for j in range(len(taskList)):
-        if taskPairsList[i] != taskPairsList[j]:
-            taskPairsList.append(LpVariable(task1task2,0,1,LpBinary))
+        if taskList[i] != taskList[j]:
+            taskPairsList[i][j] = LpVariable(taskList,0,1,LpBinary)
 
 #add the objective function to our problem
 #prob += (sum of task variables in taskVariablesList) #pseudo
 prob += sum(taskVariablesList)
 
 #constraint: each task may only be scheduled directly before or after one other task
-prob += sum
+for i in range(len(taskList)):
+    prob += sum(taskPairsList[i][]) <= 1
+    prob += sum(taskPairsList[][i]) <= 1
