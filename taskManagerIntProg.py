@@ -130,15 +130,13 @@ def make_schedule(prob):
     return schedule
 
 
-'''    
-A main function that will read in the list of tasks from a csv, construct the integer program,
-and print the solution it produces.
 '''
-def main():
-    task_list = get_task_list("test.csv")
+Function that, given a list of tasks, constructs and solves an integer program,
+returning the resulting schedule.
+'''
+def integer_program_solve(task_list):
     num_tasks = len(task_list)
     latest_deadline = get_latest_deadline(task_list)
-
     starting_location = (0, 0) # probably update this eventually
 
     yi_variables = [LpVariable(("y" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)] # included or not
@@ -157,7 +155,7 @@ def main():
     prob += lpSum(yi_variables) 
 
 
-    # Add all constraints, WE HAVE YET TO ADD HOME CONSTRAINTS!!!!!!!!!
+    # Add all constraints
     add_connectivity_constraints(prob, xij_variables, xhi_variables, num_tasks, yi_variables)
     
     add_completion_time_constraints(prob, release_constants, service_time_constants, 
@@ -173,8 +171,16 @@ def main():
                                         num_tasks)
 
     prob.solve()
+    return make_schedule(prob)
 
-    schedule = make_schedule(prob)
+
+'''    
+A main function that will read in the list of tasks from a csv, construct the integer program,
+and print the solution it produces.
+'''
+def main():
+    task_list = get_task_list("test.csv")
+    schedule = integer_program_solve(task_list)
     print_schedule(schedule.route_list[1].task_list)
 
 
