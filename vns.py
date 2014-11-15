@@ -11,6 +11,8 @@ import math
 import random
 
 
+global timeLimit
+timeLimit = 8
 
 
 '''
@@ -31,6 +33,13 @@ def solve(csvFile):
 '''
 
 def vns(taskList, currSolution):
+    
+    global unplannedTasks
+    unplannedTasks = deque(taskList[:])
+    
+    for day in currSolution:
+        for task in day:
+            unplannedTasks.remove(task)
     
     #Number of seconds VNS is allowed to run
     stoppingCondition = 300
@@ -90,17 +99,12 @@ def vns(taskList, currSolution):
                     nHood = 1
                 #Criteria for nHoods 1-8:
                 # If the new solution is not more than .5% longer (distance), accept
-                elif calcDistance(iterSolution) >= .995*calcDistance(currSolution):
+                elif calcTotalDistance(iterSolution) >= .995*calcTotalDistance(currSolution):
                     currSolution = iterSolution
             else:
                 numIterations += 1
     return bestSolution
 
-'''
-@return: total distance of a solution
-'''
-def calcDistance(currSolution):
-    return 0
 
 '''
 @return: modified solution
@@ -139,42 +143,64 @@ def crossExchange(currSolution, nHoodIndex):
     route2Len = random.randint(0, min(len2, nHoodIndex))
     
     n = 0
+    # whole route for day one
     origRoute1 = currSolution[day1]
+    #list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
     possRouteStarts = []
+    #start index of the current route we are looking at 
     currRouteStart = 0
+    #start index of the longest route
     longestRouteStart = 0
+    #length of longest route 
     longestRouteLen = 0
+    
     # route1: choose random segment w/ customers who have a valid time window in day2
     # if there is no such route, choose the longest route.
     while n < len(origRoute1):
+        
+        # checking to see if the current route is longer than longest route, if it is update 
+        #longest route start and length
         if (n - currRouteStart) > len(longestRoute):
             longestRouteStart = currRouteStart
             longestRouteLen = n - currRouteStart
+        
+        #if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
+        # long enough, if so add it to possible list of routes
         if(len(origRoute1[n].time_windows[day2]) > 0):
-            if n - currRouteStart == route1Len:
+            if n - currRouteStart == route1Len - 1:
                 possRoutes.append(currRouteStart)
                 currRouteStart += 1
+        
+        #move on to the next route if previous conditional statement was no satisfied 
         else:
-            currRouteStart = n
+            currRouteStart = n + 1
         n+=1
+    
+    #if we found a viable route, choose a random one 
     if len(possRoutes) > 0:
         route1Start = possRoutes[random.randint(len(possRouteStarts))]
+
+    # otherwise choose longest 
     else:
         route1Start = longestRouteIndex
         route1Len = longestRouteLen
 
+    #setting route and  new day to be what they should be
     route1 = currSolution[day1][route1Start : route1Start + route1Len]
     newDay1 = currSolution[day1][:route1Start] + currSolution[day1][route1Start + route1Len:]
     
     
     #starting index of the sub-route we will be removing
-    route2Start = random.randint(0, len2 - route2Len)
+    route2Start = random.randint(0, len2 - route2Len + 1)
     route2 = currSolution[day2][route2Start:route2Start + route2Len]
-    newDay2 = currSolution[day2][:route2Start] + currSolution[day2][route2Start + route2Len:]
+    newDay2 = currSolution[day2][:route2Start] + route1 + currSolution[day2][route2Start + route2Len:]
     
-    
+    for task in route2:
+        unplannedTasks.append(task)
     
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
+    currSolution[day1] = newDay1
+    currSolution[day2] = newDay2
     return currSolution
 
 '''
@@ -182,10 +208,32 @@ def crossExchange(currSolution, nHoodIndex):
 '''
 def optionalExchange1(currSolution, nHoodIndex):
     # set p and q according to nHood Index
+    numToRemove = nHoodIndex - 9
+    numToAdd = 1
+    if nHoodIndex == 12:
+        numToRemove= 0
+        numToAdd = 2
+    
     # pick a random day and starting time to exchange customers
-    # using the p and q values, add and remove however many customers you need to
-    # use the customerQueue to do this
-    # replace the chosen days with the updated days
+    day = random.randint(0, len(currSolution))
+    pos = random.randint(0, len(currSolution[day]))
+    
+    # using the numToRemove and numToAdd values, add and remove however many customers you need to
+    for task in currSolution[day][pos:pos+ numToRemove]:
+        unplannedTasks.append(task)
+    newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+    
+    #selecting which unplanned tasks to add
+    addingTasks = []
+    for t in range(numToAdd):
+        addingTasks.append(unplannedTasks.popleft())
+    
+    #adding new tasks to day 
+    newDay = newDay[:pos] + addingTasks + newDay[pos:]
+ 
+     # replace the chosen days with the updated days   
+    currSolution[day] = newDay
+    
     return currSolution
 
 '''
@@ -193,10 +241,20 @@ def optionalExchange1(currSolution, nHoodIndex):
 '''
 def optionalExchange2(currSolution, nHoodIndex):
     # calculate number to remove (nHoodIndex-12)
-    numRemove = nHoodIndex - 12
+    numToRemove = nHoodIndex - 12
     # pick a random day and position
-    # remove those number of customers starting at that point
-    # update the chosen days
+    
+    # pick a random day and starting time to exchange customers
+    day = random.randint(0, len(currSolution))
+    pos = random.randint(0, len(currSolution[day]))
+    
+    # using the numToRemove and numToAdd values, add and remove however many customers you need to
+    for task in currSolution[day][pos:pos+ numToRemove]:
+        unplannedTasks.append(task)
+    newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+    
+    currSolution[day] = newDay
+    
     return currSolution
 
 
@@ -268,14 +326,74 @@ def threeOPT(currSolution):
     
     return newSolution
 
-def getDuration(currSolution):
-    return 0
+
 
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def bestInsertion(taskList, currSolution):
+    # Sequentially consider tasks from unplannedTasks
+    # For each day, if that task:
+        # has a time window in that day
+        # and the duration of that day + that task's duration <= timeLimit
+    # find the additional distance of adding that task in that location
+    # if that is smaller than the smallest so far, update smallest
     
+    #otherwise, enqueue it and go to the next task
+
+    tasksSinceLastInsertion = 0
+    
+    # while we have not explored all of the unplanned tasks
+    while tasksSinceLastInsertion < len(unplannedTasks):
+        
+        # shortestDistance set to infinity 
+        shortestDistance = float("inf")
+        # keeps track of the day and position within the day at which to insert task
+        insertLocation = (0, 0)
+        
+        #bool that keeps track of whether a give task is valid 
+        isValid = False
+    
+        currTask = unplannedTasks.popleft()
+        
+        #looping through each day in the current solution list 
+        for day in range(len(currSolution)):
+            
+            #if the duration of the task under consideration added to the current day is less than the time limit then accept it as
+            # valid  
+            if len(currTask.time_windows[day]) > 0 and getDuration(currSolution[day]) + currTask.duration < timeLimit:
+                isValid = True
+                
+                #for each position within the day 
+                for pos in range(len(currSolution[day])-1):
+                    
+                    task1 = currSolution[day][pos]
+                    task2 = currSolution[day][pos + 1]
+                   
+                    #calculates what the distance would be if the task under consideration where to be added between task1 and task2
+                    addedDist = calcDistance(task1, currTask) + calcDistance(currTask, task2) - calcDistance(task1, task2)
+                    
+                    #if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
+                    if addedDist < shortestDistance:
+                        shortestDistance = addedDist
+                        insertLocation = (day, pos)
+        
+        #adding the 'valid' task to the day at the specified position 
+        if isValid:
+            currSolution[day] = currSolution[day][:pos].append(currTask) + currSolution[day][pos:]
+            tasksSinceLastInsertion = 0
+        
+        # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
+        else:
+            tasksSinceLastInsertion += 1
+            unplannedTasks.append(currTask)
+                        
+                
+    
+    
+    
+    # after all that, add the task to the solution in the time with smallest added distance.
+        
     return currSolution
 
 
@@ -314,4 +432,18 @@ def minRoute(taskList, currSolution):
 def calcDominantSolution(taskList, currSolution):
     return currSolution
 
+def getDuration(currSolution):
+    return 0
+
+'''
+@return: total distance of a solution
+'''
+def calcTotalDistance(currSolution):
+    return 0
+
+'''
+@return: distance between two tasks
+'''
+def calcDistance(task1, task2):
+    return 0
 
