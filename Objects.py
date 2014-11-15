@@ -89,8 +89,6 @@ class Route:
         self.task_list = self.task_list[:startIndex] + self.task_list[endIndex:]
         self.ending_times = self.ending_times[:startIndex] + self.ending_times[endIndex:]
     
-
-
     def __len__(self):
         return len(task_list)
 
