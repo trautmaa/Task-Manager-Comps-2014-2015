@@ -117,11 +117,10 @@ def shaking(currSolution, nHoodIndex):
 
 '''
 @param currSolution: list (schedule) of lists (days/routes) of task objects
-TESTING THE PUSH  PROBLEM
-TAKE 2???????
 @return: modified solution
 '''
 def crossExchange(currSolution, nHoodIndex):
+    
     if(len(currSolution) <= 1):
         return currSolution
     # choose two distinct random days
@@ -141,20 +140,40 @@ def crossExchange(currSolution, nHoodIndex):
     
     n = 0
     origRoute1 = currSolution[day1]
-    route1 = []
-    #FIX THIS it is not RANDOM right now
+    possRouteStarts = []
+    currRouteStart = 0
+    longestRouteStart = 0
+    longestRouteLen = 0
     # route1: choose random segment w/ customers who have a valid time window in day2
-    while len(route1) < route1Len and n < len(origRoute1):
+    # if there is no such route, choose the longest route.
+    while n < len(origRoute1):
+        if (n - currRouteStart) > len(longestRoute):
+            longestRouteStart = currRouteStart
+            longestRouteLen = n - currRouteStart
         if(len(origRoute1[n].time_windows[day2]) > 0):
-            route1.append(origRoute1[n])
+            if n - currRouteStart == route1Len:
+                possRoutes.append(currRouteStart)
+                currRouteStart += 1
         else:
-            route1 = []
+            currRouteStart = n
         n+=1
-    #starting index of the sub-route we will be removing
-    route2Index = random.randint(0, len2 - route2Len)    
-        
+    if len(possRoutes) > 0:
+        route1Start = possRoutes[random.randint(len(possRouteStarts))]
+    else:
+        route1Start = longestRouteIndex
+        route1Len = longestRouteLen
+
+    route1 = currSolution[day1][route1Start : route1Start + route1Len]
+    newDay1 = currSolution[day1][:route1Start] + currSolution[day1][route1Start + route1Len:]
     
-    # route2: choose random segment
+    
+    #starting index of the sub-route we will be removing
+    route2Start = random.randint(0, len2 - route2Len)
+    route2 = currSolution[day2][route2Start:route2Start + route2Len]
+    newDay2 = currSolution[day2][:route2Start] + currSolution[day2][route2Start + route2Len:]
+    
+    
+    
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     return currSolution
 
