@@ -58,7 +58,7 @@ def add_connectivity_constraints(prob, xij_variables, xhi_variables, xih_variabl
             if i != j:
                 xji_list += xij_variables[j][i]
                 xij_list += xij_variables[i][j]
-        prob += lpSum(xji_list) + xhi_variables[i] == lpSum(xij_list) + xih_variables[i] # for job i sum xij = sum xji + xhi
+        prob += lpSum(xji_list) + xhi_variables[i] == lpSum(xij_list) + xih_variables[i] # for job i sum xij +xhi = sum xji + xih
         prob += lpSum(xij_list) + xih_variables[i] == yi_variables[i] # for job i sum xij = yi
        
     
@@ -149,13 +149,13 @@ def integer_program_solve(task_list):
     yi_variables = [LpVariable(("y" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)] # included or not
     ai_variables = [LpVariable(("a" + str(i)), 0, latest_deadline) for i in range(num_tasks)] # completion time
     xij_variables = make_xij_variables(num_tasks)
-    service_time_constants = [task.duration for task in task_list]
     xhi_variables = [LpVariable(("xH" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)]
     xih_variables = [LpVariable(("x" + str(i) + "H"), 0, 1, LpBinary) for i in range(num_tasks)]
     dij_constants = make_dij_constants(task_list)
     dhi_constants = [get_distance_between_coords(starting_location, get_coords(task)) for task in task_list]
     deadline_constants = [task.deadline for task in task_list]
     release_constants = [task.release_time for task in task_list]
+    service_time_constants = [task.duration for task in task_list]
 
     # Initialize problem 
     prob = LpProblem("Scheduling", LpMaximize)
@@ -177,8 +177,9 @@ def integer_program_solve(task_list):
     add_starting_location_constraints(prob, dhi_constants, service_time_constants, ai_variables,
                                         latest_deadline, xhi_variables,
                                         num_tasks)
-
-    prob += lpSum(xhi_variables) == 1 # Ending job constraint
+    
+    # Below is already done in add_starting_location_constraints()...
+    #prob += lpSum(xhi_variables) == 1 # Ending job constraint
 
     prob.writeLP("Scheduling.lp")
     prob.solve()
