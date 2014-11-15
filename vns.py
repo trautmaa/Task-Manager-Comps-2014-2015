@@ -149,6 +149,7 @@ def crossExchange(currSolution, nHoodIndex):
     while n < len(origRoute1):
         if (n - currRouteStart) > len(longestRoute):
             longestRouteStart = currRouteStart
+            longestRouteLen = n - currRouteStart
         if(len(origRoute1[n].time_windows[day2]) > 0):
             if n - currRouteStart == route1Len:
                 possRoutes.append(currRouteStart)
