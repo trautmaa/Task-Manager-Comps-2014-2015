@@ -5,7 +5,10 @@
 from greedy_by_order import *
 from create_tasks_from_csv import *
 from helper_functions import *
+from Objects import *
 import time
+import math
+import random
 
 
 
@@ -113,15 +116,44 @@ def shaking(currSolution, nHoodIndex):
     return newSolution
 
 '''
+@param currSolution: list (schedule) of lists (days/routes) of task objects
+TESTING THE PUSH  PROBLEM
+TAKE 2???????
 @return: modified solution
 '''
 def crossExchange(currSolution, nHoodIndex):
+    if(len(currSolution) <= 1):
+        return currSolution
     # choose two distinct random days
-    
+    day1 = random.randint(0, len(currSolution))
+    day2 = random.randint(0, len(currSolution))
+    while (day1 == day2):
+        day2 = random.randint(0,len(currSolution))
+        
     # find the length of the routes to be exchanged:
-    #    for route1 (removed and inserted), length = rand(1, min(numberCustomers, nHoodIndex))
-    #    for route2 (just removed), length = rand(0, min(numberCustomers, nHoodIndex))
+    len1 = len(currSolution[day1])
+    len2 = len(currSolution[day2])
+    
+    # for route1 (removed and inserted)
+    route1Len = random.randint(1, min(len1, nHoodIndex))
+    # for route2 (replaced by route1)
+    route2Len = random.randint(0, min(len2, nHoodIndex))
+    
+    n = 0
+    origRoute1 = currSolution[day1]
+    route1 = []
+    #FIX THIS it is not RANDOM right now
     # route1: choose random segment w/ customers who have a valid time window in day2
+    while len(route1) < route1Len and n < len(origRoute1):
+        if(len(origRoute1[n].time_windows[day2]) > 0):
+            route1.append(origRoute1[n])
+        else:
+            route1 = []
+        n+=1
+    #starting index of the sub-route we will be removing
+    route2Index = random.randint(0, len2 - route2Len)    
+        
+    
     # route2: choose random segment
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     return currSolution
@@ -171,13 +203,15 @@ def threeOPT(currSolution):
     #CHECK DEPENDING ON HOW WE STORE SCHEDULES
     scheduleLength = len(currSolution)
     #2
-    while improvement == False:
+    maxM = math.factorial(scheduleLength)/(6*math.factorial(scheduleLength-3))
+    m = 0
+    while improvement == False or m <= maxM:
         #5
-        for n in range(1, scheduleLength):
+        for n in range(0, scheduleLength):
             #8
-            for k in range(1, scheduleLength - 3):
-                #9
-                for j in range(1, scheduleLength - 1):
+            for k in range(0, scheduleLength - 3):
+                #9 limiting the number of nodes that can move to 3
+                for j in range(k+1, min(k + 4, scheduleLength-1)):
                     #10
                     distance1 = dist(currSolution[k], currSolution[j+1]) + dist(currSolution[1], currSolution[j])
                     distance2 = dist(currSolution[1], currSolution[j+1]) + dist(currSolution[k], currSolution[j])
@@ -207,6 +241,11 @@ def threeOPT(currSolution):
                                 newSolution = newSchedule
                                 improvement = True
                                 break
+                if(improvement):
+                    break
+            if(improvement):
+                    break
+        m+=1
     
     return newSolution
 

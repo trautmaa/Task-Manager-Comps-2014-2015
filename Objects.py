@@ -50,6 +50,10 @@ class Task:
         
     def set_required(self, required):
         self.required = required
+        
+    #This is a list of days. Each day has a list of time windows
+    def set_time_windows(self, time_windows):
+        self.time_windows = time_windows
 
     def __str__(self):
         string_representation = "(Location: (" + str(self.x) + " " \
@@ -69,10 +73,26 @@ class Route:
     def set_task_list(self, task_list, ending_times):
         self.task_list = task_list
         self.ending_times = ending_times
+    
         
     def add_to_task_list(self, task, ending_time, index):
         self.task_list[index] = task
         self.ending_times[index] = ending_time
+    
+    def get_task(self, index):
+        return self.task_list[index]
+    
+    def get_ending_time(self, index):
+        return self.ending_times[index]
+    
+    def remove_segment(self, startIndex, endIndex):
+        self.task_list = self.task_list[:startIndex] + self.task_list[endIndex:]
+        self.ending_times = self.ending_times[:startIndex] + self.ending_times[endIndex:]
+    
+
+
+    def __len__(self):
+        return len(task_list)
 
 '''
  A class to hold the routes for an individual day, representing the entire schedule
@@ -83,7 +103,12 @@ class Schedule:
         
     def add_to_list(self, route):
         self.route_list.append(route)
-                
+    
+    def get_route(self, index):
+        return self.route_list[index]
+    
+    def __len__(self):
+        return len(self.route_list)
         
     
     
