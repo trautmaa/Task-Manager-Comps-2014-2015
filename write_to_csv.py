@@ -19,7 +19,7 @@ def generate_task(x_constraint, y_constraint, release_time, max_duration, deadli
     for feature in [x_constraint, y_constraint, release_time]:
         task.append(randint(0, feature))
     task.append(randint(0, max_duration)) # task duration
-    task.append(randint(release_time, deadline)) # task deadline
+    task.append(randint(release_time + task[3], deadline)) # task deadline
     return task
 
 '''
