@@ -64,7 +64,6 @@ def make_objects(attribute_list):
             
             if (j == 5): #name
                 task_list[i].set_name(attribute_list[i][5])
-                print "made it"
             
             if (j == 6): #priority
                 task_list[i].set_priority(attribute_list[i][6])

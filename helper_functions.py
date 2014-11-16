@@ -113,16 +113,16 @@ Help from http://stackoverflow.com/questions/5084743/how-to-print-pretty-string-
 def print_schedule(schedule):
     current_time = 0
     last_location = (0, 0)
-    template = "{0:10}{1:10}{2:15}{3:15}{4:15}{5:15}{6:15}" # column widths: 8, 10, 15, 7, 10, 10, 10
-    print template.format("Start", "Finish", "Name", "Location", "WindowStart", "WindowFinish", "TravelTimeFromPrevious")
+    template = "{0:10}{1:10}{2:25}{3:15}{4:15}{5:15}{6:15}" # column widths: 8, 10, 15, 7, 10, 10, 10
+    print template.format("Start", "Finish", "Task Name", "Location", "Release", "Deadline", "TravelTimeFromPrevious")
     for i, task in enumerate(schedule):
         starting_time = get_starting_time_of_next_task(
             current_time, last_location, get_coords(task), task.release_time)
         finishing_time = starting_time + task.duration
         if i == 0:
-            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:10], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_coords(last_location, get_coords(task)))[0:4])
+            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:20], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_coords(last_location, get_coords(task)))[0:4])
         elif i != (len(schedule) - 1):
-            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:10], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_tasks(task, schedule[i -1]))[0:4])
+            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:20], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_tasks(task, schedule[i -1]))[0:4])
         current_time = finishing_time
         last_location = get_coords(task)
 
