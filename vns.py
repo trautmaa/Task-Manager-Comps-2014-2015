@@ -10,9 +10,10 @@ import time
 import math
 import random
 from collections import deque
-
+from brute_force import run_brute_force_alg
+from matplotlib.testing.jpl_units import day
 global timeLimit
-timeLimit = 8
+timeLimit = 500
 
 '''
 @return: an ordering of tasks
@@ -20,7 +21,16 @@ timeLimit = 8
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = get_task_list(csvFile)
-    modTasks = [run_greedy_by_order(csvFile, order_by_deadline).task_list]
+    greedy = run_greedy_by_order(csvFile, order_by_deadline)
+#     brute = run_brute_force_alg(csvFile)
+# 
+#     print brute
+#     print
+    
+#     print greedy
+#     print
+    modTasks = [greedy.task_list]
+    
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
     
@@ -30,10 +40,10 @@ def solve(csvFile):
     
     return create_schedule(ordering, taskList)
 
+
 '''
 @return: modified solution
 '''
-
 def vns(taskList, currSolution):
     
     global unplannedTasks
@@ -41,7 +51,13 @@ def vns(taskList, currSolution):
     for day in currSolution:
         for task in day:
             unplannedTasks.remove(task)
-    
+            
+            
+    #Printing all unplanned tasks throughout to check for duplicates        
+    print "Initialize"
+    printSolution(currSolution)
+    printUnplanned()
+    print "End initialize\n"
     #Number of seconds VNS is allowed to run
     stoppingCondition = 10
     
@@ -55,14 +71,24 @@ def vns(taskList, currSolution):
     initTime = time.time()
     
     #until the stopping condition is met
-    while time.time() - initTime > 0:
+    while time.time() - initTime < stoppingCondition:
         #If we have gone through all neighborhood structures,
         #start again
+        
         nHood = 1
-        while nHood < nHoodMax:
+        while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
+            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
+                print "repeat when restarting while loop in vns"
+                exit()
             shakeSolution = shaking(currSolution, nHood)
+            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
+                print "repeat when exiting shaking in vns"
+                exit()
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
-            
+            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
+                print "repeat when exiting iterativeImprovement in vns"
+                exit()
+
             #make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
@@ -104,6 +130,9 @@ def vns(taskList, currSolution):
                     currSolution = iterSolution
             else:
                 numIterations += 1
+            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
+                print "repeat when exiting deterioration in vns"
+                exit()
     return bestSolution
 
 
@@ -114,10 +143,20 @@ def shaking(currSolution, nHood):
     #Based on the neighborhood perform a different operation
     if nHood <= 8:
         newSolution = crossExchange(currSolution, nHood)
+        if (len(currSolution[0]) == 0):
+            print "empty when exiting crossExchange in shaking"
+            exit()
+        
     elif nHood > 8 and nHood <= 12:
         newSolution = optionalExchange1(currSolution, nHood)
+        if (len(currSolution[0]) == 0):
+            print "empty when exiting optionalExchange1 in shaking"
+            exit()
     else:
         newSolution = optionalExchange2(currSolution, nHood)
+        if (len(currSolution[0]) == 0):
+            print "empty when exiting optionalExchange2 in shaking"
+            exit()
     return newSolution
 
 '''
@@ -127,6 +166,7 @@ def shaking(currSolution, nHood):
 def crossExchange(currSolution, nHood):
     
     if len(currSolution) <= 1:
+        print "Not doing cross exchange"
         return currSolution
     # choose two distinct random days
     day1 = random.randint(0, len(currSolution))
@@ -134,7 +174,7 @@ def crossExchange(currSolution, nHood):
     while (day1 == day2):
         day2 = random.randint(0,len(currSolution))
         
-    # find the length of the routes to be exchanged:
+    # find the length of the routes:
     len1 = len(currSolution[day1])
     len2 = len(currSolution[day2])
     
@@ -142,6 +182,8 @@ def crossExchange(currSolution, nHood):
     route1Len = random.randint(1, min(len1, nHood))
     # for route2 (replaced by route1)
     route2Len = random.randint(0, min(len2, nHood))
+    
+#     print "route1Len = " + str(route1Len) + " route2Len " + str(route2Len)
     
     n = 0
     # whole route for day one
@@ -202,33 +244,44 @@ def crossExchange(currSolution, nHood):
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     currSolution[day1] = newDay1
     currSolution[day2] = newDay2
+    print "did cross exchange"
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange1(currSolution, nHood):
+    
     # set p and q according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
     if nHood == 12:
         numToRemove= 0
         numToAdd = 2
-    
+
     # pick a random day and starting time to exchange customers
-    day = random.randint(0, len(currSolution))
-    pos = random.randint(0, len(currSolution[day]))
+    day = random.randint(0, len(currSolution)-1)
     
-    # using the numToRemove and numToAdd values, add and remove however many customers you need to
-    for task in currSolution[day][pos:pos+ numToRemove]:
-        unplannedTasks.append(task)
-    newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+    pos = random.randint(0, len(currSolution[day]))
+
+    if numToRemove > 0:
+        # using the numToRemove and numToAdd values, add and remove however many customers you need to
+        for task in currSolution[day][pos:pos + numToRemove]:
+            unplannedTasks.append(task)
+        newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+    else:
+        newDay = currSolution[day][:]
     
     #selecting which unplanned tasks to add
     addingTasks = []
+    print "IN OPEXCHANGE1 LOOOOP"
     for t in range(numToAdd):
-        addingTasks.append(unplannedTasks.popleft())
-    
+        if len(unplannedTasks)>0:
+            printUnplanned()
+            printSolution([addingTasks])
+            addingTasks.append(unplannedTasks.popleft())
+          
+    print "done looping"
     #adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
  
@@ -246,14 +299,17 @@ def optionalExchange2(currSolution, nHood):
     # pick a random day and position
     
     # pick a random day and starting time to exchange customers
-    day = random.randint(0, len(currSolution))
+    day = random.randint(0, len(currSolution)-1)
     pos = random.randint(0, len(currSolution[day]))
     
     # using the numToRemove and numToAdd values, add and remove however many customers you need to
+    print "IN OPEX2 Loop"
     for task in currSolution[day][pos:pos+ numToRemove]:
+        printUnplanned()
         unplannedTasks.append(task)
+        printUnplanned()
     newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
-    
+    print "done opex2"
     currSolution[day] = newDay
     
     return currSolution
@@ -266,22 +322,35 @@ def iterativeImprovement(taskList, currSolution, nHood):
     #If nHood< 13: do 3-OPT
     if nHood < 13:
         #only currSolution because we believe edges are being removed and inserted within the solution
+        
         newSolution = threeOPT(currSolution)
+        if len(newSolution[0])>1 and  newSolution[0][0] == newSolution[0][1]:
+            print "repeat when exiting 3OPT in iterativeImprovement"
+            exit()
     #Otherwise: Best Insertion
     else:
         newSolution = bestInsertion(taskList, currSolution)
-    return currSolution
+        if len(newSolution[0])>1 and  newSolution[0][0] == newSolution[0][1]:
+            print "repeat when exiting bestInsertion in iterativeImprovement"
+            exit()
+   
+    return newSolution
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def threeOPT(currSolution):
+    
     #MUST ASSUME START AND END ARE CONNECTED?
     duration = getDuration(currSolution)
     improvement = False
     #CHECK DEPENDING ON HOW WE STORE SCHEDULES
+    
+    #CHANGE THIS
     scheduleLength = len(currSolution)
     #2
+    
     if scheduleLength >= 3:
+        
         maxM = math.factorial(scheduleLength)/(6*math.factorial(scheduleLength-3))
     else:
         return currSolution
@@ -328,7 +397,7 @@ def threeOPT(currSolution):
                     break
         m+=1
     
-    return newSolution
+    return currSolution
 
 
 
@@ -346,6 +415,8 @@ def bestInsertion(taskList, currSolution):
     #otherwise, enqueue it and go to the next task
 
     tasksSinceLastInsertion = 0
+    print "begin best insertion"
+    printUnplanned()
     
     # while we have not explored all of the unplanned tasks
     while tasksSinceLastInsertion < len(unplannedTasks):
@@ -357,9 +428,10 @@ def bestInsertion(taskList, currSolution):
         
         #bool that keeps track of whether a give task is valid 
         isValid = False
-    
-        currTask = unplannedTasks.popleft()
         
+        currTask = unplannedTasks.popleft()
+        print "after popping"
+        printUnplanned()
         #looping through each day in the current solution list 
         for day in range(len(currSolution)):
             
@@ -375,7 +447,7 @@ def bestInsertion(taskList, currSolution):
                     task2 = currSolution[day][pos + 1]
                    
                     #calculates what the distance would be if the task under consideration where to be added between task1 and task2
-                    addedDist = calcDistance(task1, currTask) + calcDistance(currTask, task2) - calcDistance(task1, task2)
+                    addedDist = get_distance_between_tasks(task1, currTask) + get_distance_between_tasks(currTask, task2) - get_distance_between_tasks(task1, task2)
                     
                     #if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
                     if addedDist < shortestDistance:
@@ -384,16 +456,30 @@ def bestInsertion(taskList, currSolution):
         
         #adding the 'valid' task to the day at the specified position 
         if isValid:
-            currSolution[day] = currSolution[day][:pos].append(currTask) + currSolution[day][pos:]
+            day = insertLocation[0]
+            pos = insertLocation[1]
+            newSolution = currSolution[day][:pos]
+            newSolution.append(currTask)
+            
+            
+            currSolution[day] = newSolution + currSolution[day][pos:]
+            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
+                print "repeat in isValid check in bestInsertion"
+                exit()
             tasksSinceLastInsertion = 0
+            print "unplanned: ",
+            printUnplanned()
+            print "currSolution: ",
+            printSolution(currSolution)
+            
+            print "\n"
         
         # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
         else:
             tasksSinceLastInsertion += 1
             unplannedTasks.append(currTask)
-                        
-                
-    
+            print "after appending since we did not add to schedule"
+            printUnplanned()
     
     
     # after all that, add the task to the solution in the time with smallest added distance.
@@ -407,7 +493,7 @@ def bestInsertion(taskList, currSolution):
 def isBetter(sol1, sol2):
     sum1 = 0 #sum profits in sol1 (number of tasks, right now)
     sum2 = 0 #sum profits in sol2
-    return True
+    return False
 
 '''
 @return: solution if currSolution is feasible
@@ -445,15 +531,27 @@ def getDuration(currSolution):
 def calcTotalDistance(currSolution):
     return 0
 
-'''
-@return: distance between two tasks
-'''
-def calcDistance(task1, task2):
-    return 0
+
+def printUnplanned():
+    print "unplanned tasks: (",
+    for task in unplannedTasks:
+        print str(task) + ", "
+    print ")"
+
+def printSolution(sol):
+    print "["
+    for route in sol:
+        for task in route:
+            print str(task) + ", "
+    print "]"
+            
+    
 
 def main():
     print solve("test.csv")
     
 if __name__ == "__main__":
     main()
+    
+
 

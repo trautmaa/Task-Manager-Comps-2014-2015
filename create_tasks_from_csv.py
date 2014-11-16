@@ -27,8 +27,8 @@ tasks list will be returned.
 '''
 def read_in_task(csv_file):
     tasks = []
-    with open(csv_file, 'rb') as f:
-        reader = csv.reader(f)
+    with open(csv_file, 'rU') as f:
+        reader = csv.reader(f, delimiter = "\t")
         for row in reader:
             tasks.append(row)
     return tasks[1:] # tasks[0] is the list of names of the features.
@@ -62,14 +62,15 @@ def make_objects(attribute_list):
             if (j == 4): #deadline
                 task_list[i].set_deadline(attribute_list[i][4])
             
-            if (j == 5): #name
-                task_list[i].set_name(attribute_list[i][5])
-            
-            if (j == 6): #priority
-                task_list[i].set_priority(attribute_list[i][6])
+            if (j == 5): #priority
+                task_list[i].set_priority(attribute_list[i][5])
                 
-            if (j == 7): #required
-                task_list[i].set_required(attribute_list[i][7])
+            if (j == 6): #required
+                task_list[i].set_required(attribute_list[i][6])
+            
+            if (j == 7): #time windows
+                task_list[i].set_time_windows(attribute_list[i][7])
+                
             # With added features, we must add statements here.
     return task_list
 

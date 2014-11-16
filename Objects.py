@@ -31,15 +31,11 @@ class Task:
         self.id = id
         pass
     
-    
     def setX(self, x):
         self.x = int(x)
 
     def setY(self, y):
         self.y = int(y)
-
-    def set_name(self, name):
-        self.name = name
         
     def set_release_time(self, r):
         self.release_time = int(r)
@@ -61,10 +57,10 @@ class Task:
         self.time_windows = time_windows
 
     def __str__(self):
-        string_representation = "(Location: (" + str(self.x) + " " \
+        string_representation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
         + str(self.y) + "), Release Time: " + str(self.release_time) \
         + ", Duration: " + str(self.duration) + ", Deadline: " \
-        + str(self.deadline) + "Priority" + str(self.priority) + "Required" + str(self.required) + ")"
+        + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required) + ")"
         return string_representation
     
     def __eq__(self, other):
@@ -109,7 +105,7 @@ class Route:
     def __str__(self):
         result = "["
         for task in range(len(self.task_list)):
-            result = str(result) + "(task: " + str(self.task_list[task]) + ", ending at: " + str(self.ending_times[task]) + ")"
+            result = str(result) + "(task: " + str(self.task_list[task]) + ", ending at: " + str(self.ending_times[task]) + ")\n"
         return result + "]"
 
 '''
