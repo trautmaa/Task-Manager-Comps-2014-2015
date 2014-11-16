@@ -4,7 +4,9 @@
 import csv
 from random import randint
 
-task_features = ['x_coord', 'y_coord', 'release_time', 'duration', 'deadline']
+task_features = ['x_coord', 'y_coord', 'release_time', 'duration', 'deadline', 'name']
+
+task_names = ['Grocery shopping', 'Get gas', 'Mow the lawn', 'Shovel the driveway', 'Go to laundromat', 'Go to curling practice', 'Meet with comps group', 'Apply to jobs', 'Make travel plans', 'Go to work', 'Take garbage out','Set the table', 'Clear the table', 'Clean room with direction' 'Put away groceries', 'Clean the bathroom with direction', 'Clean the kitchen', 'Dust', 'Vacuum', 'Mow lawn', 'Feed pets', 'Water plants', 'Put laundry in hamper', 'Help with laundry and eventually start doing own laundry', 'Help make dinner/make small meals on own', 'Help wash the car/wash car', 'Make bed', 'Help with yard work', 'Shovel snow', 'Wash dishes/load or empty dishwasher']
 
 '''
 Generates a task as a list so that it may be written to a csv file.
@@ -20,6 +22,10 @@ def generate_task(x_constraint, y_constraint, release_time, max_duration, deadli
         task.append(randint(0, feature))
     task.append(randint(0, max_duration)) # task duration
     task.append(randint(release_time + task[3], deadline)) # task deadline
+    random = randint(0, len(task_names) - 1)
+    task.append(task_names[random]) # task name
+    task_names.remove(task_names[random])
+
     return task
 
 '''

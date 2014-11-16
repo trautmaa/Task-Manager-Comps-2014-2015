@@ -36,6 +36,9 @@ class Task:
     def setY(self, y):
         self.y = int(y)
 
+    def set_name(self, name):
+        self.name = name
+        
     def set_release_time(self, r):
         self.release_time = int(r)
 
