@@ -27,8 +27,10 @@ task.priority is the task's priority
 task.required represents whether the task is required
 '''    
 class Task:
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         pass
+    
     
     def setX(self, x):
         self.x = int(x)
@@ -62,6 +64,12 @@ class Task:
         + str(self.deadline) + "Priority" + str(self.priority) + "Required" + str(self.required) + ")"
         return string_representation
     
+    def __eq__(self, other):
+        return self.id == other.id
+    
+    def __ne__(self, other):
+        return self.id != other.id
+    
 '''
  A class to hold the schedule for an individual day
 '''   
@@ -74,7 +82,10 @@ class Route:
         self.task_list = task_list
         self.ending_times = ending_times
     
-        
+    def append(self, task, ending_time):
+        self.task_list.append(task)
+        self.ending_times.append(ending_time)
+    
     def add_to_task_list(self, task, ending_time, index):
         self.task_list[index] = task
         self.ending_times[index] = ending_time
@@ -90,7 +101,13 @@ class Route:
         self.ending_times = self.ending_times[:startIndex] + self.ending_times[endIndex:]
     
     def __len__(self):
-        return len(task_list)
+        return len(self.task_list)
+    
+    def __str__(self):
+        result = "["
+        for task in range(len(self.task_list)):
+            result = str(result) + "(task: " + str(self.task_list[task]) + ", ending at: " + str(self.ending_times[task]) + ")"
+        return result + "]"
 
 '''
  A class to hold the routes for an individual day, representing the entire schedule
@@ -99,7 +116,7 @@ class Schedule:
     def __init__(self):
         self.route_list = []
         
-    def add_to_list(self, route):
+    def append(self, route):
         self.route_list.append(route)
     
     def get_route(self, index):

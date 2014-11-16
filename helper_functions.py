@@ -3,6 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 from math import ceil
+from Objects import *
 
 '''
 A function given two task objects will return the euclidean distance
@@ -35,20 +36,23 @@ def is_finishable_task(task, present_location, present_time):
 '''
 A function that given an ordering of tasks and a list of objects
 will output the schedule that can be created from that ordering.
+@return: a schedule object based on the earliest possible schedule
 '''
 def create_schedule(task_ordering, task_list):
     current_location = (0, 0)
     current_time = 0
-    schedule = []
+    route = Route()
     for i in task_ordering:
         task = task_list[i] # task_ordering is a permutation
         includable, ending_time = is_finishable_task(
             task, current_location, current_time)
         if includable:
             current_location = get_coords(task)
-            schedule.append(task)
+            route.append(task, ending_time)
             current_time = ending_time
-    return schedule
+    schedule = Schedule()
+    schedule.append(route)
+    return route
     
 '''
 A function that given a bunch of tasks will order them by their

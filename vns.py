@@ -9,11 +9,10 @@ from Objects import *
 import time
 import math
 import random
-
+from collections import deque
 
 global timeLimit
 timeLimit = 8
-
 
 '''
 @return: an ordering of tasks
@@ -21,12 +20,15 @@ timeLimit = 8
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = get_task_list(csvFile)
-    modTasks = run_greedy_by_order(csvFile, order_by_deadline)
-    
+    modTasks = [run_greedy_by_order(csvFile, order_by_deadline).task_list]
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
     
-    return create_schedule(modTasks, taskList)
+    ordering = []
+    for i in range(len(modTasks[0])):
+        ordering.append(modTasks[0][i].id)
+    
+    return create_schedule(ordering, taskList)
 
 '''
 @return: modified solution
@@ -36,13 +38,12 @@ def vns(taskList, currSolution):
     
     global unplannedTasks
     unplannedTasks = deque(taskList[:])
-    
     for day in currSolution:
         for task in day:
             unplannedTasks.remove(task)
     
     #Number of seconds VNS is allowed to run
-    stoppingCondition = 300
+    stoppingCondition = 10
     
     #Number of neighborhood structures
     nHoodMax = 17
@@ -60,7 +61,7 @@ def vns(taskList, currSolution):
         nHood = 1
         while nHood < nHoodMax:
             shakeSolution = shaking(currSolution, nHood)
-            iterSolution = iterativeImprovement(taskList, shakeSolution, nHoodIndex)
+            iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
             
             #make sure the modified solution is still feasible. 
             # If it is not, try again
@@ -109,23 +110,23 @@ def vns(taskList, currSolution):
 '''
 @return: modified solution
 '''
-def shaking(currSolution, nHoodIndex):
+def shaking(currSolution, nHood):
     #Based on the neighborhood perform a different operation
-    if nHoodIndex <= 8:
-        newSolution = crossExchange(currSolution, nHoodIndex)
-    elif nHoodIndex > 8 and nHoodIndex <= 12:
-        newSolution = optionalExchange1(currSolution, nHoodIndex)
+    if nHood <= 8:
+        newSolution = crossExchange(currSolution, nHood)
+    elif nHood > 8 and nHood <= 12:
+        newSolution = optionalExchange1(currSolution, nHood)
     else:
-        newSolution = optionalExchange2(currSolution, nHoodIndex)
+        newSolution = optionalExchange2(currSolution, nHood)
     return newSolution
 
 '''
 @param currSolution: list (schedule) of lists (days/routes) of task objects
 @return: modified solution
 '''
-def crossExchange(currSolution, nHoodIndex):
+def crossExchange(currSolution, nHood):
     
-    if(len(currSolution) <= 1):
+    if len(currSolution) <= 1:
         return currSolution
     # choose two distinct random days
     day1 = random.randint(0, len(currSolution))
@@ -138,9 +139,9 @@ def crossExchange(currSolution, nHoodIndex):
     len2 = len(currSolution[day2])
     
     # for route1 (removed and inserted)
-    route1Len = random.randint(1, min(len1, nHoodIndex))
+    route1Len = random.randint(1, min(len1, nHood))
     # for route2 (replaced by route1)
-    route2Len = random.randint(0, min(len2, nHoodIndex))
+    route2Len = random.randint(0, min(len2, nHood))
     
     n = 0
     # whole route for day one
@@ -206,11 +207,11 @@ def crossExchange(currSolution, nHoodIndex):
 '''
 @return: modified solution
 '''
-def optionalExchange1(currSolution, nHoodIndex):
+def optionalExchange1(currSolution, nHood):
     # set p and q according to nHood Index
-    numToRemove = nHoodIndex - 9
+    numToRemove = nHood - 9
     numToAdd = 1
-    if nHoodIndex == 12:
+    if nHood == 12:
         numToRemove= 0
         numToAdd = 2
     
@@ -239,9 +240,9 @@ def optionalExchange1(currSolution, nHoodIndex):
 '''
 @return: modified solution
 '''
-def optionalExchange2(currSolution, nHoodIndex):
-    # calculate number to remove (nHoodIndex-12)
-    numToRemove = nHoodIndex - 12
+def optionalExchange2(currSolution, nHood):
+    # calculate number to remove (nHood-12)
+    numToRemove = nHood - 12
     # pick a random day and position
     
     # pick a random day and starting time to exchange customers
@@ -261,9 +262,9 @@ def optionalExchange2(currSolution, nHoodIndex):
 '''
 @return: modified solution
 '''
-def iterativeImprovement(taskList, currSolution, nHoodIndex):
-    #If nHoodIndex< 13: do 3-OPT
-    if nHoodIndex < 13:
+def iterativeImprovement(taskList, currSolution, nHood):
+    #If nHood< 13: do 3-OPT
+    if nHood < 13:
         #only currSolution because we believe edges are being removed and inserted within the solution
         newSolution = threeOPT(currSolution)
     #Otherwise: Best Insertion
@@ -280,7 +281,10 @@ def threeOPT(currSolution):
     #CHECK DEPENDING ON HOW WE STORE SCHEDULES
     scheduleLength = len(currSolution)
     #2
-    maxM = math.factorial(scheduleLength)/(6*math.factorial(scheduleLength-3))
+    if scheduleLength >= 3:
+        maxM = math.factorial(scheduleLength)/(6*math.factorial(scheduleLength-3))
+    else:
+        return currSolution
     m = 0
     while improvement == False or m <= maxM:
         #5
@@ -409,19 +413,19 @@ def isBetter(sol1, sol2):
 @return: solution if currSolution is feasible
 '''
 def isFeasible(taskList, currSolution):
-    return True
+    return currSolution
 
 '''
 @return: Graph with modified release times
 '''
 def tightenReleaseTimes(taskList, currSolution):
-    return G
+    return currSolution
 
 '''
 @return: Graph with modified deadlines
 '''
 def tightenDeadlines(taskList, currSolution):
-    return G
+    return currSolution
 
 '''
 @return: shortest duration of this schedule ordering
@@ -446,4 +450,10 @@ def calcTotalDistance(currSolution):
 '''
 def calcDistance(task1, task2):
     return 0
+
+def main():
+    print solve("test.csv")
+    
+if __name__ == "__main__":
+    main()
 

@@ -43,7 +43,7 @@ them to objects and adds them to the task_list.
 def make_objects(attribute_list):
     task_list = []
     for i in range(len(attribute_list)):
-        newobject = Task()
+        newobject = Task(i)
         task_list.append(newobject)
         # task_list[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
         for j in range(len(attribute_list[i])): 

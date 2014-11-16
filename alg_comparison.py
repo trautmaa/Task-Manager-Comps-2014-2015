@@ -7,7 +7,7 @@ from greedy_by_order import run_greedy_by_order
 from greedy_by_present_choice import run_greedy_by_present_choice
 from brute_force import run_brute_force_alg
 from write_to_csv import write_n_tasks
-from taskManagerIntProg import run_integer_program
+# from taskManagerIntProg import run_integer_program
 from time import time
 
 file_name = "test.csv"
@@ -38,6 +38,7 @@ def comparison_loop():
 	tasks_completed_order_release = 0
 	tasks_completed_choice_starting = 0
 	tasks_completed_choice_completion = 0
+
 	tasks_completed_integer_program = 0
 	brute_force_time = 0
 	integer_program_time = 0
