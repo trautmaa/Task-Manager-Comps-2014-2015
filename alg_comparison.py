@@ -70,6 +70,10 @@ def comparison_loop():
 		print_alg_results(
 			"Greedy by finish time", total_tasks_seen, tasks_completed_brute, tasks_completed_choice_completion, None)
 		print
+		if (tasks_completed_brute != tasks_completed_integer_program):
+			print
+			print "Integer program produced a non-optimal solution, halting comparison for debugging."
+			print
 
 def main():
 	comparison_loop()

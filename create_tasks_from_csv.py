@@ -61,12 +61,15 @@ def make_objects(attribute_list):
                 
             if (j == 4): #deadline
                 task_list[i].set_deadline(attribute_list[i][4])
+            
+            if (j == 5): #name
+                task_list[i].set_name(attribute_list[i][5])
+            
+            if (j == 6): #priority
+                task_list[i].set_priority(attribute_list[i][6])
                 
-            if (j == 5): #priority
-                task_list[i].set_priority(attribute_list[i][5])
-                
-            if (j == 6): #required
-                task_list[i].set_required(attribute_list[i][6])
+            if (j == 7): #required
+                task_list[i].set_required(attribute_list[i][7])
             # With added features, we must add statements here.
     return task_list
 

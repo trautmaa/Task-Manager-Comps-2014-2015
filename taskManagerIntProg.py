@@ -178,11 +178,24 @@ def integer_program_solve(task_list):
                                         latest_deadline, xhi_variables,
                                         num_tasks)
     
-    # Below is already done in add_starting_location_constraints()...
-    #prob += lpSum(xhi_variables) == 1 # Ending job constraint
+    prob += lpSum(xih_variables) == 1 # Ending job constraint
 
     prob.writeLP("Scheduling.lp")
     prob.solve()
+    # for yvar in yi_variables:
+    #     print yvar, yvar.varValue
+    # for avar in ai_variables:
+    #     print avar, avar.varValue
+    # for xvar in xhi_variables:
+    #     print xvar, xvar.varValue
+    # for xvar in xih_variables:
+    #     print xvar, xvar.varValue
+    # for index in xij_variables:
+    #     for var in index:
+    #         try:
+    #             print var, var.varValue
+    #         except AttributeError:
+    #             print var 
     assert(prob.status == 1) # Problem was solved
     return make_schedule(yi_variables, ai_variables, task_list)
 

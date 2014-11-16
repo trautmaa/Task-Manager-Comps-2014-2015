@@ -112,28 +112,56 @@ def get_starting_time_of_next_task(finishing_time, present_location, next_locati
 
 '''
 A function that will print out the schedule in a semi-readable fashion.
+Help from http://stackoverflow.com/questions/5084743/how-to-print-pretty-string-output-in-python
 '''
 def print_schedule(schedule):
     current_time = 0
     last_location = (0, 0)
+    template = "{0:10}{1:10}{2:25}{3:15}{4:15}{5:15}{6:15}" # column widths: 8, 10, 15, 7, 10, 10, 10
+    print template.format("Start", "Finish", "Task Name", "Location", "Release", "Deadline", "TravelTimeFromPrevious")
     for i, task in enumerate(schedule):
         starting_time = get_starting_time_of_next_task(
             current_time, last_location, get_coords(task), task.release_time)
         finishing_time = starting_time + task.duration
         if i == 0:
-            print "Travel time is", get_distance_between_coords((0, 0), get_coords(task)),\
+            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:20], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_coords(last_location, get_coords(task)))[0:4])
+        elif i != (len(schedule) - 1):
+            print template.format(str(starting_time)[0:6], str(finishing_time)[0:6], str(task.name)[0:20], str(get_coords(task)), str(task.release_time)[0:4], str(task.deadline)[0:4], str(get_distance_between_tasks(task, schedule[i -1]))[0:4])
+        current_time = finishing_time
+        last_location = get_coords(task)
+
+'''
+OLD FUNCTION:
+
+def print_schedule(schedule):
+    current_time = 0
+    last_location = (0, 0)
+    template = "{0:8}{1:10}{2:15}{3:15}{4:15}{5:15}{6:15}" # column widths: 8, 10, 15, 7, 10, 10, 10
+    print template.format("Start", "Finish", "Name", "Location", "WindowStart", "WindowFinish", "TravelTime")
+    for i, task in enumerate(schedule):
+        starting_time = get_starting_time_of_next_task(
+            current_time, last_location, get_coords(task), task.release_time)
+        finishing_time = starting_time + task.duration
+        
+        
+        if i == 0:
+            print task.name, ": Travel time is", get_distance_between_coords((0, 0), get_coords(task)),\
                 "to travel from Start at (0, 0) to Task 1 at", get_coords(task)
             print "Task", i + 1, "will start at", starting_time,\
                 "and finish at", finishing_time, "because it must start after",\
                 task.release_time, "and must finish before", task.deadline
+            taskInformation = (starting_time, finishing_time, task.name, (get_coords(task)), task.release_time, task.deadline, 4)
+            print template.format(taskInformation)
         else:
-            print "Task", i + 1, "will start at", starting_time, "and finish at",\
+            print task.name, ": Task", i + 1, "will start at", starting_time, "and finish at",\
                 finishing_time, "because it must start after", task.release_time,\
                 "and must finish before", task.deadline
         if i != (len(schedule) - 1):
             print "Travel time is", get_distance_between_tasks(task, schedule[i + 1]),\
                 "to travel from Task", i + 1, "at", get_coords(task), "to Task", i + 2,\
                 "at", get_coords(schedule[i + 1])
+            taskInformation = (starting_time, finishing_time, task.name, (get_coords(task)), task.release_time, task.deadline, get_distance_between_tasks(task, schedule[i + 1]))
+            print template.format(taskInformation)
         current_time = finishing_time
         last_location = get_coords(task)
-
+'''
