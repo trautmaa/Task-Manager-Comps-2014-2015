@@ -29,10 +29,17 @@ def solve(csvFile):
 #     print greedy
 #     print
     modTasks = [greedy.task_list]
-    
+#     greedysol = modTasks
+
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
     
+    print '################ FINAL SOLUTION from VNS #############'
+    printSolution(modTasks)
+    print '#############################'
+#     print 'greedy'
+#     printSolution(greedysol)
+
     ordering = []
     for i in range(len(modTasks[0])):
         ordering.append(modTasks[0][i].id)
@@ -310,8 +317,8 @@ def optionalExchange1(currSolution, nHood):
     
      # replace the chosen days with the updated days   
     currSolution[day] = newDay
-    print "did opex1"
-    printUnplanned()
+#     print "did opex1"
+#     printUnplanned()
     print "current schedule being returned from opex1: "
     printSolution(currSolution)
     return currSolution
@@ -320,6 +327,7 @@ def optionalExchange1(currSolution, nHood):
 @return: modified solution
 '''
 def optionalExchange2(currSolution, nHood):
+    print '&&&&&&&&&&&&& IN OPTIONAL 2 &&&&&&&&&&&&&&&'
     # calculate number to remove (nHood-12)
     numToRemove = nHood - 12
     # pick a random day and position
@@ -334,11 +342,11 @@ def optionalExchange2(currSolution, nHood):
         printUnplanned()
         unplannedTasks.append(task)
         printUnplanned()
-    newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+    newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
     print "done opex2"
     currSolution[day] = newDay
-    print "did opex2"
-    printUnplanned()
+#     print "did opex2"
+#     printUnplanned()
     print "current schedule being returned from opex2: "
     printSolution(currSolution)
     return currSolution
@@ -509,10 +517,10 @@ def bestInsertion(taskList, currSolution):
     
     
     # after all that, add the task to the solution in the time with smallest added distance.
-    print "done with best insertion"
-    printUnplanned()
-    print "current schedule being returned from best insertion: "
-    printSolution(currSolution) 
+#     print "done with best insertion"
+#     printUnplanned()
+#     print "current schedule being returned from best insertion: "
+#     printSolution(currSolution) 
     return currSolution
 
 
