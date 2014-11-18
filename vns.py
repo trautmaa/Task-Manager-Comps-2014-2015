@@ -22,13 +22,12 @@ def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = get_task_list(csvFile)
     greedy = run_greedy_by_order(csvFile, order_by_deadline)
-    print "Brute: \n"
     #brute = run_brute_force_alg(csvFile)
 
     #print brute
     
-    print greedy
-    print
+#     print greedy
+#     print
     modTasks = [greedy.task_list]
     
     #Modify the greedy algorithm
@@ -245,13 +244,16 @@ def crossExchange(currSolution, nHood):
     currSolution[day1] = newDay1
     currSolution[day2] = newDay2
     print "did cross exchange"
+    printUnplanned()
+    print "current schedule being returned from crossExchange: "
+    printSolution(currSolution)
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange1(currSolution, nHood):
-    
+    print "************IN OPTIONAL EXCHANGE 1***************"
     # set p and q according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
@@ -263,31 +265,55 @@ def optionalExchange1(currSolution, nHood):
     day = random.randint(0, len(currSolution)-1)
     
     pos = random.randint(0, len(currSolution[day]))
-
+    print 'original day'
+    printSolution([currSolution[day]])
+#     print 'numToRemove' + str(numToRemove)
+    
     if numToRemove > 0:
+#         print "what we should be removing"
+#         printSolution([currSolution[day][pos:pos + numToRemove]])
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSolution[day][pos:pos + numToRemove]:
             unplannedTasks.append(task)
-        newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
+#         print 'first part to add to new day'
+#         printSolution([currSolution[day][:pos]])
+#         print 'second part to add to new day'
+#         printSolution([currSolution[day][pos + numToRemove:]])
+        newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
+#         print "removed " + str(numToRemove) + " tasks"
+#         printSolution([newDay])
+        
     else:
         newDay = currSolution[day][:]
-    
+#         print "removed " + str(numToRemove) + " tasks"
+#         printSolution([newDay])
+    printUnplanned()
     #selecting which unplanned tasks to add
     addingTasks = []
-    print "IN OPEXCHANGE1 LOOOOP"
+#     print "IN OPEXCHANGE1 LOOOOP"
+    #DEBUG: added the -1 in order to reduce the looping here
     for t in range(numToAdd):
+#         print "iterator for numToAdd: "+ str(t)
         if len(unplannedTasks)>0:
-            printUnplanned()
-            printSolution([addingTasks])
+#             printUnplanned()
+            
             addingTasks.append(unplannedTasks.popleft())
+#             printSolution([addingTasks])
           
     print "done looping"
+    
     #adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
- 
+#     print "added " + str(numToAdd) + " tasks"
+#     printSolution([newDay])
+#     printUnplanned()
+    
      # replace the chosen days with the updated days   
     currSolution[day] = newDay
-    
+    print "did opex1"
+    printUnplanned()
+    print "current schedule being returned from opex1: "
+    printSolution(currSolution)
     return currSolution
 
 '''
@@ -311,7 +337,10 @@ def optionalExchange2(currSolution, nHood):
     newDay = currSolution[day][:pos] + currSolution[day][:pos + numToRemove]
     print "done opex2"
     currSolution[day] = newDay
-    
+    print "did opex2"
+    printUnplanned()
+    print "current schedule being returned from opex2: "
+    printSolution(currSolution)
     return currSolution
 
 
@@ -467,23 +496,23 @@ def bestInsertion(taskList, currSolution):
                 print "repeat in isValid check in bestInsertion"
                 exit()
             tasksSinceLastInsertion = 0
-            print "unplanned: ",
-            printUnplanned()
-            print "currSolution: ",
-            printSolution(currSolution)
             
-            print "\n"
+            
+           
         
         # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
         else:
             tasksSinceLastInsertion += 1
             unplannedTasks.append(currTask)
-            print "after appending since we did not add to schedule"
-            printUnplanned()
+#             print "after appending since we did not add to schedule"
+#             printUnplanned()
     
     
     # after all that, add the task to the solution in the time with smallest added distance.
-        
+    print "done with best insertion"
+    printUnplanned()
+    print "current schedule being returned from best insertion: "
+    printSolution(currSolution) 
     return currSolution
 
 
