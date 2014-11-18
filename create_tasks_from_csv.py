@@ -28,7 +28,7 @@ tasks list will be returned.
 def read_in_task(csv_file):
     tasks = []
     with open(csv_file, 'rU') as f:
-        reader = csv.reader(f, delimiter = "\t")
+        reader = csv.reader(f, delimiter = ",")
         for row in reader:
             tasks.append(row)
     return tasks[1:] # tasks[0] is the list of names of the features.

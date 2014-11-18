@@ -22,13 +22,13 @@ def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = get_task_list(csvFile)
     greedy = run_greedy_by_order(csvFile, order_by_deadline)
-#     brute = run_brute_force_alg(csvFile)
-# 
-#     print brute
-#     print
+    print "Brute: \n"
+    #brute = run_brute_force_alg(csvFile)
+
+    #print brute
     
-#     print greedy
-#     print
+    print greedy
+    print
     modTasks = [greedy.task_list]
     
     #Modify the greedy algorithm
