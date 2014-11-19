@@ -29,7 +29,7 @@ def solve(csvFile):
 #     print greedy
 #     print
     modTasks = [greedy.task_list]
-#     greedysol = modTasks
+    greedysol = modTasks
 
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
@@ -37,13 +37,14 @@ def solve(csvFile):
     print '################ FINAL SOLUTION from VNS #############'
     printSolution(modTasks)
     print '#############################'
-#     print 'greedy'
-#     printSolution(greedysol)
+    print 'greedy'
+    printSolution(greedysol)
 
     ordering = []
     for i in range(len(modTasks[0])):
         ordering.append(modTasks[0][i].id)
-    
+    print 'ordering'
+    print ordering
     return create_schedule(ordering, taskList)
 
 
@@ -529,25 +530,72 @@ def bestInsertion(taskList, currSolution):
 '''
 def isBetter(sol1, sol2):
     sum1 = 0 #sum profits in sol1 (number of tasks, right now)
+    for i in range(len(sol1)):
+        for j in range(len(sol1[i])):
+            sum1 += sol1[i][j].getProfit()
+    
     sum2 = 0 #sum profits in sol2
-    return False
+    for i in range(len(sol2)):
+        for j in range(len(sol2[i])):
+            sum2 += sol2[i][j].getProfit()
+    print 'sum1'
+    print sum1
+    
+    print 'sum2'
+    print sum2
+    
+    return sol1 < sol2
 
 '''
 @return: solution if currSolution is feasible
 '''
 def isFeasible(taskList, currSolution):
+    # pass in a list-solution
+    # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
+    # with no ending times in the routes yet
+    # pass that into tightenTWStarts and tightenTWEnds. 
+    # those functions will modify those tasks' time windows and return the modified schedule
+    # If those terminate early and return None, the schedule is infeasible. Return None
+    # then other stuff.
+    
     return currSolution
 
 '''
 @return: Graph with modified release times
 '''
-def tightenReleaseTimes(taskList, currSolution):
+def tightenTWStarts(taskList, currSolution):
+#     i = 1
+#     while i < n and len(tw[i]) > 0:
+#         if service[i] does not fit in tw[i][0] or
+#             service[i] can fit between the start of tw[i][1] and the start of tw[i + 1][0]:
+#             remove tw[i][0] from tw[i]
+#         elif service[i] starting at the beginning of tw[i][0] ends before the start of tw[i+1][0]:
+#             start of tw[i][0] = min((start of tw[i+1][0]), (end of tw[i][0])) - service[i]
+#         elif service[i] starting at the beginning of tw[i][0] overlaps the start of tw[i+1][0]:
+#             for window in tw[i+1]:
+#                 window[0] = max(start of tw[i][0] + service[i], window[0])
+#         i += 1
+#     if i < n:
+#         return -1 //infeasible solution.
     return currSolution
 
 '''
 @return: Graph with modified deadlines
 '''
-def tightenDeadlines(taskList, currSolution):
+def tightenTWEnds(taskList, currSolution):
+#     i = n
+#     while i > 1 and len(tw[i]) > 0:
+#         if service[i] can’t fit in tw[i][-1] or
+#             service[i] can fit between the end of tw[i][-2] and the end of tw[i-1][-1]:
+#             remove tw[i][-1] from tw[i]
+#         elif service[i] ending at the end of tw[i][-1] starts before the end of tw[i-1][-1]:
+#             end of tw[i][-1] = max(end of tw[i-1][-1], start of tw[i][-1]) + service[i]
+#         elif service[i] ending at the end of tw[i][-1] overlaps with the end of tw[i-1][-1]:
+#             for window in tw[i-1]:
+#                 window[1] = min(end of tw[i][-1] - service[i], window[1])
+#         i += 1
+#     if i > 1:
+#         return -1 // infeasible solution.
     return currSolution
 
 '''
@@ -560,6 +608,7 @@ def calcDominantSolution(taskList, currSolution):
     return currSolution
 
 def getDuration(currSolution):
+    
     return 0
 
 '''

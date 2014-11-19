@@ -55,6 +55,9 @@ class Task:
     #This is a list of days. Each day has a list of time windows
     def set_time_windows(self, time_windows):
         self.time_windows = time_windows
+        
+    def getProfit (self):
+        return self.priority
 
     def __str__(self):
         string_representation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
