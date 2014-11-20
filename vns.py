@@ -556,8 +556,8 @@ def isFeasible(taskList, currSolution):
     # pass that into tightenTWStarts and tightenTWEnds. 
     # those functions will modify those tasks' time windows and return the modified schedule
     # If those terminate early and return None, the schedule is infeasible. Return None
-    # then other stuff.
-    
+
+    # return minRoute(tasklist, tightenedSol)
     return currSolution
 
 '''
@@ -602,9 +602,40 @@ def tightenTWEnds(taskList, currSolution):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSolution):
+    # then other stuff.
+    # tightenedSol = using the returned schedules from tighten functions, look at first task and first tw for that task and schedule it as early as possible
+        # repeat for all tasks in order
+    # currBestSol = calcDominantSolution(tasklist, tightenSol)
+    # find the latest waiting customer and store 
+    # while there is a waiting customer and while this is not the last time window for that customer
+        # newSol = switchTimeWindows(solution, latest waiting customer)
+        # newDomSol = calcDominantSolution(tasklist, newSol)
+        # if getDuration(newDomSol) < getDuration(currBestSol)
+            # currSol = domSol
+        # update latest waiting customer
+    #return currBestSol
     return 0
 
+'''
+@return: the index for the last task with waiting time in the route
+'''
+def getLatestWaitingTask(currSolution):
+    return 0
+
+'''
+@return: the updated schedule after moving the latestWaitingTask to the next time window and updating the other tasks
+'''
+def switchTimeWindows(currSolution, latestWaitingTask):
+    # move the task latestWaitingTask - 1 to the next time window as early as possible
+    # moves all tasks before it as late as possible and all those after it as early as possible
+    
+    return currSolution
+
+'''
+@return: the dominant version of the schedule being passed in (squidging)
+'''
 def calcDominantSolution(taskList, currSolution):
+    # given the ending time of currSolution, move all tasks to the latest possible time without changing that ending time
     return currSolution
 
 def getDuration(currSolution):
