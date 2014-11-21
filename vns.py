@@ -586,19 +586,41 @@ def isFeasible(taskList, currSolution):
 def tightenTWStarts(taskList, currSchedule):
     if currSchedule == None:
         return None
-#     i = 1
-#     while i < n and len(tw[i]) > 0:
-#         if service[i] does not fit in tw[i][0] or
-#             service[i] can fit between the start of tw[i][1] and the start of tw[i + 1][0]:
-#             remove tw[i][0] from tw[i]
-#         elif service[i] starting at the beginning of tw[i][0] ends before the start of tw[i+1][0]:
-#             start of tw[i][0] = min((start of tw[i+1][0]), (end of tw[i][0])) - service[i]
-#         elif service[i] starting at the beginning of tw[i][0] overlaps the start of tw[i+1][0]:
-#             for window in tw[i+1]:
-#                 window[0] = max(start of tw[i][0] + service[i], window[0])
-#         i += 1
-#     if i < n:
-#         return -1 //infeasible solution.
+    for dayIndex in range(len(currSchedule)):
+        custIndex = 0
+        day = currSchedule[dayIndex]
+        while custIndex < len(day) - 1 and len(day.task_list[custIndex].time_windows) > 0 :
+            task = day.task_list[custIndex]
+            tw = task.time_windows[dayIndex]
+            twNext = day.task_list[custIndex+1].time_windows[dayIndex]
+         # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
+         #  and the start of the next task's first tw:        
+            if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
+                #remove that task's first tw
+                tw = tw[1:]
+                
+        # else if duration of task i at the beginning of its first tw ends before the start of the next task's first tw
+            elif task.duration + tw[0][0] < twNext[0][0]:
+                # set the beginning of that time window to be the minimum of the the ending time of task i's first time window
+                # and the start of task i+1's first time window
+                tw[0][0] = min(twNext[0][0], tw[0][1]) - task.duration
+
+        # else if the duration of task i set at the beginning of its first tw overlaps any tws for the next customer
+            elif task.duration + tw[0][0] > twNext[0][0]:
+                # reset the beginnings of all time windows to be as early as possible
+                # after the end of task i (with i scheduled as early as possible)
+                for window in twNext:
+                    window[0] = max(tw[0][0] + task.duration, window[0])
+            custIndex+= 1
+        if custIndex == len(day) -1 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+            #remove that task's first tw
+            tw = tw[1:]
+            
+        custIndex += 1
+        
+        if custIndex < len(day.task_list):
+            return None
+
     return currSchedule
 
 '''
@@ -607,26 +629,49 @@ def tightenTWStarts(taskList, currSchedule):
 def tightenTWEnds(taskList, currSchedule):
     if currSchedule == None:
         return None
-#     i = n
-#     while i > 1 and len(tw[i]) > 0:
-#         if service[i] can't fit in tw[i][-1] or
-#             service[i] can fit between the end of tw[i][-2] and the end of tw[i-1][-1]:
-#             remove tw[i][-1] from tw[i]
-#         elif service[i] ending at the end of tw[i][-1] starts before the end of tw[i-1][-1]:
-#             end of tw[i][-1] = max(end of tw[i-1][-1], start of tw[i][-1]) + service[i]
-#         elif service[i] ending at the end of tw[i][-1] overlaps with the end of tw[i-1][-1]:
-#             for window in tw[i-1]:
-#                 window[1] = min(end of tw[i][-1] - service[i], window[1])
-#         i += 1
-#     if i > 1:
-#         return -1 // infeasible solution.
+    
+    for dayIndex in range(len(currSchedule)):
+        custIndex = len(currSchedule[dayIndex].task_list) - 1
+        day = currSchedule[dayIndex]
+
+        while custIndex > 0 and len(day.task_list[custIndex].time_windows) > 0:
+            task = day.task_list[custIndex]
+            tw = task.time_windows[dayIndex]
+            twPrev = day.task_list[custIndex-1].time_windows[dayIndex]
+            #  if service[i] can't fit in tw[i][-1] or
+            # service[i] can fit between the end of tw[i][-2] and the end of tw[i-1][-1]:
+            if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
+                # remove the last time window
+                tw = tw[:-1] 
+
+            # elif service[i] ending at the end of tw[i][-1] starts before the end of tw[i-1][-1]:
+            elif tw[-1][1] - task.duration < twPrev[-1][1]:
+                # end of tw[i][-1] = max(end of tw[i-1][-1], start of tw[i][-1]) + service[i]
+                tw[-1][1] = max(twPrev[-1][1], tw[-1][0] + task.duration)
+             
+            # elif service[i] ending at the end of tw[i][-1] overlaps with the end of tw[i-1][-1]:    
+            elif tw[-1][1] - task.duration > twPrev[-1][1]:
+                # reset the endings of all time windows to be as late as possible
+                # before the beginning of task i (with i scheduled as late as possible)
+                for window in twPrev:
+                    window[1] = min(tw[-1][1] - task.duration, window[1])
+
+            custIndex -= 1
+        if custIndex == 0 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+            #remove that task's first tw
+            tw = tw[:-1]
+            
+        custIndex -= 1
+        
+        if custIndex > 0:
+            return None
+        
     return currSchedule
 
 '''
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSolution):
-    # then other stuff.
     # tightenedSol = using the returned schedules from tighten functions, look at first task and first tw for that task and schedule it as early as possible
         # repeat for all tasks in order
     # currBestSol = calcDominantSolution(tasklist, tightenSol)
