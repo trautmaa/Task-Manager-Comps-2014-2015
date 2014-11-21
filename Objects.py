@@ -56,8 +56,20 @@ class Task:
     def set_time_windows(self, time_windows):
         self.time_windows = time_windows
         
-    def getProfit (self):
+    def getProfit(self):
         return self.priority
+
+    def deepCopy(self):
+        other = Task(self.id)
+        other.x = self.x
+        other.y = self.y
+        other.release_time = self.release_time
+        other.duration = self.duration
+        other.deadline = self.deadline
+        other.priority = self.priority
+        other.required = self.required
+        other.time_windows = self.time_windows[:]
+        return other
 
     def __str__(self):
         string_representation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
@@ -67,10 +79,10 @@ class Task:
         return string_representation
     
     def __eq__(self, other):
-        return self.id == other.id
+        return isinstance(other, Task) and self.id == other.id
     
     def __ne__(self, other):
-        return self.id != other.id
+        return not (isinstance(other, Task) and self.id == other.id)
     
 '''
  A class to hold the schedule for an individual day
@@ -121,8 +133,22 @@ class Schedule:
     def append(self, route):
         self.route_list.append(route)
     
-    def get_route(self, index):
+    def getRoute(self, index):
         return self.route_list[index]
+    
+    def getProfit(self):
+        profit = 0
+        for route in self.route_list:
+            for task in route.task_list:
+                if task != None:
+                    profit += task.getProfit()
+        return profit
+    
+    def __str__(self):
+        result = "["
+        for route in range(len(self.route_list)):
+            result = result + str(self.route_list[route]) + "\n"
+        result = result + "]"
     
     def __len__(self):
         return len(self.route_list)

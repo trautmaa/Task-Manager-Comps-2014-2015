@@ -2,26 +2,27 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-from greedy_by_order import *
-from create_tasks_from_csv import *
-from helper_functions import *
-from Objects import *
+import greedy_by_order
+import create_tasks_from_csv
+import helper_functions
+import Objects
 import time
 import math
 import random
 from collections import deque
 from brute_force import run_brute_force_alg
 from matplotlib.testing.jpl_units import day
+
 global timeLimit
-timeLimit = 500
+timeLimit = 50
 
 '''
 @return: an ordering of tasks
 '''
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
-    taskList = get_task_list(csvFile)
-    greedy = run_greedy_by_order(csvFile, order_by_deadline)
+    taskList = create_tasks_from_csv.get_task_list(csvFile)
+    greedy = greedy_by_order.run_greedy_by_order(csvFile, greedy_by_order.order_by_deadline)
     #brute = run_brute_force_alg(csvFile)
 
     #print brute
@@ -45,7 +46,7 @@ def solve(csvFile):
         ordering.append(modTasks[0][i].id)
     print 'ordering'
     print ordering
-    return create_schedule(ordering, taskList)
+    return helper_functions.create_schedule(ordering, taskList)
 
 
 '''
@@ -55,12 +56,13 @@ def vns(taskList, currSolution):
     
     global unplannedTasks
     unplannedTasks = deque(taskList[:])
+   
     for day in currSolution:
         for task in day:
             unplannedTasks.remove(task)
             
             
-    #Printing all unplanned tasks throughout to check for duplicates        
+    #Printing all unplanned tasks throughout to check for duplicates
     print "Initialize"
     printSolution(currSolution)
     printUnplanned()
@@ -75,6 +77,9 @@ def vns(taskList, currSolution):
     numIterations = 0
     
     bestSolution = currSolution
+    currSchedule = isFeasible(taskList, currSolution)
+    bestSchedule = currSchedule
+    
     initTime = time.time()
     
     #until the stopping condition is met
@@ -99,28 +104,29 @@ def vns(taskList, currSolution):
             #make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
-            feasibleSolution = isFeasible(taskList, iterSolution)
-            if feasibleSolution == None:
+            feasibleSchedule = isFeasible(taskList, iterSolution)
+            if feasibleSchedule == None:
                 feasible = False
             else:
                 feasible = True
-                iterSolution = feasibleSolution
             
             #if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
             
             if feasible:
                 #If our solution is better than the current solution, update.
-                if isBetter(iterSolution, currSolution):
+                if isBetterSchedule(feasibleSchedule, currSchedule):
                     currSolution = iterSolution
+                    currSchedule = feasibleSchedule
                     nHood = 1
                 #Otherwise, increment nHood
                 else:
                     nHood += 1
                 
                 #If our solution is better than the best solution so far, update.
-                if isBetter(iterSolution, bestSolution):
+                if isBetterSchedule(feasibleSchedule, bestSchedule):
                     bestSolution = iterSolution
+                    bestSchedule = feasibleSchedule
                     numIterations = 0
                     
             #If we have gone 8000 iterations with no improvement to bestSolution
@@ -130,11 +136,13 @@ def vns(taskList, currSolution):
                 
                 if nHood > 8:
                     currSolution = iterSolution
+                    currSchedule = feasibleSchedule
                     nHood = 1
                 #Criteria for nHoods 1-8:
                 # If the new solution is not more than .5% longer (distance), accept
                 elif calcTotalDistance(iterSolution) >= .995*calcTotalDistance(currSolution):
                     currSolution = iterSolution
+                    currSchedule = feasibleSchedule
             else:
                 numIterations += 1
             if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
@@ -485,7 +493,9 @@ def bestInsertion(taskList, currSolution):
                     task2 = currSolution[day][pos + 1]
                    
                     #calculates what the distance would be if the task under consideration where to be added between task1 and task2
-                    addedDist = get_distance_between_tasks(task1, currTask) + get_distance_between_tasks(currTask, task2) - get_distance_between_tasks(task1, task2)
+                    addedDist = helper_functions.get_distance_between_tasks(task1, currTask) + \
+                    helper_functions.get_distance_between_tasks(currTask, task2) - \
+                    helper_functions.get_distance_between_tasks(task1, task2)
                     
                     #if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
                     if addedDist < shortestDistance:
@@ -526,25 +536,23 @@ def bestInsertion(taskList, currSolution):
 
 
 '''
+This works with Schedule objects
 @return: True if sol1 has more profit than sol2
 '''
-def isBetter(sol1, sol2):
-    sum1 = 0 #sum profits in sol1 (number of tasks, right now)
-    for i in range(len(sol1)):
-        for j in range(len(sol1[i])):
-            sum1 += sol1[i][j].getProfit()
+def isBetterSchedule(sched1, sched2):
+    print "Schedule 1 in isBetter"
+    print sched1.route_list[0].task_list
+    print
+    sum1 = sched1.getProfit()
+    sum2 = sched2.getProfit()
     
-    sum2 = 0 #sum profits in sol2
-    for i in range(len(sol2)):
-        for j in range(len(sol2[i])):
-            sum2 += sol2[i][j].getProfit()
     print 'sum1'
     print sum1
     
     print 'sum2'
     print sum2
     
-    return sol1 < sol2
+    return sum1 > sum2
 
 '''
 @return: solution if currSolution is feasible
@@ -553,17 +561,31 @@ def isFeasible(taskList, currSolution):
     # pass in a list-solution
     # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
     # with no ending times in the routes yet
+    currSchedule = Objects.Schedule()
+    for day in currSolution:
+        route = Objects.Route()
+        for task in day:
+            route.append(task.deepCopy(), None)
+        currSchedule.append(route)
+    
     # pass that into tightenTWStarts and tightenTWEnds. 
     # those functions will modify those tasks' time windows and return the modified schedule
+    currSchedule = tightenTWStarts(taskList, currSchedule)
+    currSchedule = tightenTWEnds(taskList, currSchedule)
+    
     # If those terminate early and return None, the schedule is infeasible. Return None
-
-    # return minRoute(tasklist, tightenedSol)
-    return currSolution
+    if currSchedule == None:
+        return None
+    
+    # Otherwise, squidge to find the best schedule for this solution
+    return minRoute(taskList, currSchedule)
 
 '''
 @return: Graph with modified release times
 '''
-def tightenTWStarts(taskList, currSolution):
+def tightenTWStarts(taskList, currSchedule):
+    if currSchedule == None:
+        return None
 #     i = 1
 #     while i < n and len(tw[i]) > 0:
 #         if service[i] does not fit in tw[i][0] or
@@ -577,15 +599,17 @@ def tightenTWStarts(taskList, currSolution):
 #         i += 1
 #     if i < n:
 #         return -1 //infeasible solution.
-    return currSolution
+    return currSchedule
 
 '''
 @return: Graph with modified deadlines
 '''
-def tightenTWEnds(taskList, currSolution):
+def tightenTWEnds(taskList, currSchedule):
+    if currSchedule == None:
+        return None
 #     i = n
 #     while i > 1 and len(tw[i]) > 0:
-#         if service[i] can’t fit in tw[i][-1] or
+#         if service[i] can't fit in tw[i][-1] or
 #             service[i] can fit between the end of tw[i][-2] and the end of tw[i-1][-1]:
 #             remove tw[i][-1] from tw[i]
 #         elif service[i] ending at the end of tw[i][-1] starts before the end of tw[i-1][-1]:
@@ -596,7 +620,7 @@ def tightenTWEnds(taskList, currSolution):
 #         i += 1
 #     if i > 1:
 #         return -1 // infeasible solution.
-    return currSolution
+    return currSchedule
 
 '''
 @return: shortest duration of this schedule ordering
@@ -614,7 +638,7 @@ def minRoute(taskList, currSolution):
             # currSol = domSol
         # update latest waiting customer
     #return currBestSol
-    return 0
+    return currSolution
 
 '''
 @return: the index for the last task with waiting time in the route
