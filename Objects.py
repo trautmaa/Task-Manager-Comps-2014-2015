@@ -153,11 +153,15 @@ class Schedule:
     def __getitem__(self, index):
         return self.route_list[index]
     
+    def __setitem__(self, index, route):
+        self.route_list[index] = route
+    
     def __str__(self):
         result = "["
         for route in range(len(self.route_list)):
             result = result + str(self.route_list[route]) + "\n"
         result = result + "]"
+        return result
     
     def __len__(self):
         return len(self.route_list)

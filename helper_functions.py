@@ -52,7 +52,21 @@ def create_schedule(task_ordering, task_list):
             current_time = ending_time
     schedule = Schedule()
     schedule.append(route)
-    return route
+    return schedule
+
+def createSolution(taskOrdering, taskList):
+    currentLocation = (0, 0)
+    currentTime = 0
+    solution = []
+    for i in task_ordering:
+        task = task_list[i]
+        includable, endingTime = is_finishable_task(task, currentLocation, currentTime)
+        if includable:
+            currentLocation = get_coords(task)
+            currentTime = endingTime
+            solution.append(task)
+    return [solution]
+
     
 '''
 A function that given a bunch of tasks will order them by their

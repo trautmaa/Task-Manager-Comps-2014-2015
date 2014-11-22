@@ -3,10 +3,8 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import csv
-from Objects import *
-
-
-
+import re
+import Objects
 
 '''
 Given a csv file, this function will call the read_in_task
@@ -43,7 +41,7 @@ them to objects and adds them to the task_list.
 def make_objects(attribute_list):
     task_list = []
     for i in range(len(attribute_list)):
-        newobject = Task(i)
+        newobject = Objects.Task(i)
         task_list.append(newobject)
         # task_list[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
         for j in range(len(attribute_list[i])): 
@@ -69,15 +67,41 @@ def make_objects(attribute_list):
                 task_list[i].set_required(attribute_list[i][6])
             
             if (j == 7): #time windows
-                task_list[i].set_time_windows(attribute_list[i][7])
+                task_list[i].set_time_windows(getTimeWindows(attribute_list[i][7]))
                 
             # With added features, we must add statements here.
     return task_list
 
-
-
-
-
-
+def getTimeWindows(timeWindowString):
+    timeWindows = []
+    result = re.split("\],\[", timeWindowString)
+    for i in result:
+        daySplit = re.split(",", i)
+        day = []
+        t = 0
+        while t < len(daySplit):
+            a = re.search("([0-9]+)", daySplit[t])
+            t+=1
+            b = re.search("([0-9]+)", daySplit[t])
+            t+=1
+            day.append((int(a.group()),int(b.group())))
+        timeWindows.append(day)
             
     
+    return timeWindows
+
+
+
+
+
+
+
+def main():
+    get_task_list("test.csv")
+
+if __name__ == "__main__":
+    main()     
+    
+
+
+

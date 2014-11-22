@@ -14,7 +14,7 @@ from brute_force import run_brute_force_alg
 from matplotlib.testing.jpl_units import day
 
 global timeLimit
-timeLimit = 50
+timeLimit = 5000
 
 '''
 @return: an ordering of tasks
@@ -22,31 +22,25 @@ timeLimit = 50
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = create_tasks_from_csv.get_task_list(csvFile)
-    greedy = greedy_by_order.run_greedy_by_order(csvFile, greedy_by_order.order_by_deadline)
-    #brute = run_brute_force_alg(csvFile)
-
-    #print brute
+    modTasks = greedy_by_order.run_greedy_by_order(csvFile, greedy_by_order.order_by_deadline)
+    brute = run_brute_force_alg(csvFile)
     
 #     print greedy
 #     print
-    modTasks = [greedy.task_list]
     greedysol = modTasks
 
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
     
     print '################ FINAL SOLUTION from VNS #############'
-    printSolution(modTasks)
+    print modTasks
     print '#############################'
     print 'greedy'
     printSolution(greedysol)
+    print 'brute'
+    printSolution(brute)
 
-    ordering = []
-    for i in range(len(modTasks[0])):
-        ordering.append(modTasks[0][i].id)
-    print 'ordering'
-    print ordering
-    return helper_functions.create_schedule(ordering, taskList)
+    return modTasks
 
 
 '''
@@ -148,7 +142,7 @@ def vns(taskList, currSolution):
             if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
                 print "repeat when exiting deterioration in vns"
                 exit()
-    return bestSolution
+    return bestSchedule
 
 
 '''
@@ -594,7 +588,9 @@ def tightenTWStarts(taskList, currSchedule):
             tw = task.time_windows[dayIndex]
             twNext = day.task_list[custIndex+1].time_windows[dayIndex]
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
-         #  and the start of the next task's first tw:        
+         #  and the start of the next task's first tw:
+            print "tw: ", tw
+            print "twNext: ", twNext 
             if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
                 #remove that task's first tw
                 tw = tw[1:]
@@ -610,7 +606,7 @@ def tightenTWStarts(taskList, currSchedule):
                 # reset the beginnings of all time windows to be as early as possible
                 # after the end of task i (with i scheduled as early as possible)
                 for window in twNext:
-                    window[0] = max(tw[0][0] + task.duration, window[0])
+                    window = (max(tw[0][0] + task.duration, window[0]), window[1])
             custIndex+= 1
         if custIndex == len(day) -1 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
             #remove that task's first tw
@@ -638,23 +634,24 @@ def tightenTWEnds(taskList, currSchedule):
             task = day.task_list[custIndex]
             tw = task.time_windows[dayIndex]
             twPrev = day.task_list[custIndex-1].time_windows[dayIndex]
-            #  if service[i] can't fit in tw[i][-1] or
-            # service[i] can fit between the end of tw[i][-2] and the end of tw[i-1][-1]:
+            # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time window
+            #  and the end of the previous task's last tw:
             if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
                 # remove the last time window
                 tw = tw[:-1] 
 
-            # elif service[i] ending at the end of tw[i][-1] starts before the end of tw[i-1][-1]:
+            # else if duration of task i at the end of its last tw starts before the end of the previous task's last tw
             elif tw[-1][1] - task.duration < twPrev[-1][1]:
-                # end of tw[i][-1] = max(end of tw[i-1][-1], start of tw[i][-1]) + service[i]
-                tw[-1][1] = max(twPrev[-1][1], tw[-1][0] + task.duration)
+                # set the end of that time window to be the maximum of the the starting time of task i's last time window
+                # and the end of task i-1's last time window
+                tw[-1] = (tw[-1][0], max(twPrev[-1][1], tw[-1][0] + task.duration))
              
-            # elif service[i] ending at the end of tw[i][-1] overlaps with the end of tw[i-1][-1]:    
+            # else if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
             elif tw[-1][1] - task.duration > twPrev[-1][1]:
                 # reset the endings of all time windows to be as late as possible
                 # before the beginning of task i (with i scheduled as late as possible)
                 for window in twPrev:
-                    window[1] = min(tw[-1][1] - task.duration, window[1])
+                    window = (window[0], min(tw[-1][1] - task.duration, window[1]))
 
             custIndex -= 1
         if custIndex == 0 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
