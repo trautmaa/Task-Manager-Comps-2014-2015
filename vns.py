@@ -23,10 +23,8 @@ def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = create_tasks_from_csv.get_task_list(csvFile)
     modTasks = greedy_by_order.run_greedy_by_order(csvFile, greedy_by_order.order_by_deadline)
-    brute = run_brute_force_alg(csvFile)
+#     brute = run_brute_force_alg(csvFile)
     
-#     print greedy
-#     print
     greedysol = modTasks
 
     #Modify the greedy algorithm
@@ -35,18 +33,23 @@ def solve(csvFile):
     print '################ FINAL SOLUTION from VNS #############'
     print modTasks
     print '#############################'
-    print 'greedy'
+    print 'greedy solution'
     printSolution(greedysol)
-    print 'brute'
-    printSolution(brute)
+#     print 'brute force solution'
+#     printSolution(brute)
 
     return modTasks
 
 
 '''
-@return: modified solution
+@return: best schedule found in time limit
 '''
 def vns(taskList, currSolution):
+    
+#     print "********** Entering VNS **********"
+#     print "initial solution: "
+#     printSolution(currSolution)
+
     
     global unplannedTasks
     unplannedTasks = deque(taskList[:])
@@ -54,20 +57,14 @@ def vns(taskList, currSolution):
     for day in currSolution:
         for task in day:
             unplannedTasks.remove(task)
-            
-            
-    #Printing all unplanned tasks throughout to check for duplicates
-    print "Initialize"
-    printSolution(currSolution)
-    printUnplanned()
-    print "End initialize\n"
-    #Number of seconds VNS is allowed to run
-    stoppingCondition = 10
     
-    #Number of neighborhood structures
+    # Number of seconds VNS is allowed to run
+    stoppingCondition = 60
+    
+    # Number of neighborhood structures
     nHoodMax = 17
     
-    #Number of iterations since last bestSolution update
+    # Number of iterations since last bestSolution update
     numIterations = 0
     
     bestSolution = currSolution
@@ -76,24 +73,18 @@ def vns(taskList, currSolution):
     
     initTime = time.time()
     
-    #until the stopping condition is met
+    iterCount = 0
+    
+    # until the stopping condition is met
     while time.time() - initTime < stoppingCondition:
-        #If we have gone through all neighborhood structures,
-        #start again
-        
+        # If we have gone through all neighborhood structures, start again
         nHood = 1
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
-            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
-                print "repeat when restarting while loop in vns"
-                exit()
+            print iterCount, "VNS loops so far with numIterations", numIterations, "nHood:", nHood
+            iterCount += 1
             shakeSolution = shaking(currSolution, nHood)
-            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
-                print "repeat when exiting shaking in vns"
-                exit()
+            
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
-            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
-                print "repeat when exiting iterativeImprovement in vns"
-                exit()
 
             #make sure the modified solution is still feasible. 
             # If it is not, try again
@@ -123,25 +114,26 @@ def vns(taskList, currSolution):
                     bestSchedule = feasibleSchedule
                     numIterations = 0
                     
-            #If we have gone 8000 iterations with no improvement to bestSolution
-            # If criteria for selection are true, select a new currSolution
-            elif numIterations > 8000:
-                numIterations = 0
-                
-                if nHood > 8:
-                    currSolution = iterSolution
-                    currSchedule = feasibleSchedule
-                    nHood = 1
-                #Criteria for nHoods 1-8:
-                # If the new solution is not more than .5% longer (distance), accept
-                elif calcTotalDistance(iterSolution) >= .995*calcTotalDistance(currSolution):
-                    currSolution = iterSolution
-                    currSchedule = feasibleSchedule
+                #If we have gone 8000 iterations with no improvement to bestSolution
+                # If criteria for selection are true, select a new currSolution
+                elif numIterations > 8000:
+                    numIterations = 0
+                    
+                    if nHood > 8:
+                        currSolution = iterSolution
+                        currSchedule = feasibleSchedule
+                        nHood = 1
+                    #Criteria for nHoods 1-8:
+                    # If the new solution is not more than .5% longer (distance), accept
+                    elif calcTotalDistance(iterSolution) >= .995*calcTotalDistance(currSolution):
+                        currSolution = iterSolution
+                        currSchedule = feasibleSchedule
+                else:
+                    numIterations += 1 
             else:
                 numIterations += 1
-            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
-                print "repeat when exiting deterioration in vns"
-                exit()
+                
+#     print "********** Exiting VNS **********"
     return bestSchedule
 
 
@@ -149,23 +141,19 @@ def vns(taskList, currSolution):
 @return: modified solution
 '''
 def shaking(currSolution, nHood):
+#     print "********** Entering shaking **********"
+    
     #Based on the neighborhood perform a different operation
-    if nHood <= 8:
+    if nHood < 8:
         newSolution = crossExchange(currSolution, nHood)
-        if (len(currSolution[0]) == 0):
-            print "empty when exiting crossExchange in shaking"
-            exit()
         
-    elif nHood > 8 and nHood <= 12:
+    elif nHood >= 8 and nHood < 12:
         newSolution = optionalExchange1(currSolution, nHood)
-        if (len(currSolution[0]) == 0):
-            print "empty when exiting optionalExchange1 in shaking"
-            exit()
+        
     else:
         newSolution = optionalExchange2(currSolution, nHood)
-        if (len(currSolution[0]) == 0):
-            print "empty when exiting optionalExchange2 in shaking"
-            exit()
+        
+#     print "********** Exiting shaking **********"
     return newSolution
 
 '''
@@ -173,10 +161,15 @@ def shaking(currSolution, nHood):
 @return: modified solution
 '''
 def crossExchange(currSolution, nHood):
+#     print "********** Entering crossExchange **********"
+    
+    #NOTE TO AVERY: MAKE SURE EXCHANGE
     
     if len(currSolution) <= 1:
-        print "Not doing cross exchange"
+#         print "Not doing cross exchange"
+#         print "********** Exiting crossExchange **********"
         return currSolution
+    
     # choose two distinct random days
     day1 = random.randint(0, len(currSolution))
     day2 = random.randint(0, len(currSolution))
@@ -192,7 +185,6 @@ def crossExchange(currSolution, nHood):
     # for route2 (replaced by route1)
     route2Len = random.randint(0, min(len2, nHood))
     
-#     print "route1Len = " + str(route1Len) + " route2Len " + str(route2Len)
     
     n = 0
     # whole route for day one
@@ -253,17 +245,16 @@ def crossExchange(currSolution, nHood):
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     currSolution[day1] = newDay1
     currSolution[day2] = newDay2
-    print "did cross exchange"
-    printUnplanned()
-    print "current schedule being returned from crossExchange: "
-    printSolution(currSolution)
+    
+#     print "********** Exiting crossExchange **********"
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange1(currSolution, nHood):
-    print "************IN OPTIONAL EXCHANGE 1***************"
+#     print "********** Entering optExchange1**********"
+    
     # set p and q according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
@@ -275,62 +266,38 @@ def optionalExchange1(currSolution, nHood):
     day = random.randint(0, len(currSolution)-1)
     
     pos = random.randint(0, len(currSolution[day]))
-    print 'original day'
-    printSolution([currSolution[day]])
-#     print 'numToRemove' + str(numToRemove)
     
     if numToRemove > 0:
-#         print "what we should be removing"
-#         printSolution([currSolution[day][pos:pos + numToRemove]])
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSolution[day][pos:pos + numToRemove]:
             unplannedTasks.append(task)
-#         print 'first part to add to new day'
-#         printSolution([currSolution[day][:pos]])
-#         print 'second part to add to new day'
-#         printSolution([currSolution[day][pos + numToRemove:]])
         newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
-#         print "removed " + str(numToRemove) + " tasks"
-#         printSolution([newDay])
         
     else:
         newDay = currSolution[day][:]
-#         print "removed " + str(numToRemove) + " tasks"
-#         printSolution([newDay])
-    printUnplanned()
+
     #selecting which unplanned tasks to add
     addingTasks = []
-#     print "IN OPEXCHANGE1 LOOOOP"
-    #DEBUG: added the -1 in order to reduce the looping here
     for t in range(numToAdd):
-#         print "iterator for numToAdd: "+ str(t)
         if len(unplannedTasks)>0:
-#             printUnplanned()
-            
             addingTasks.append(unplannedTasks.popleft())
-#             printSolution([addingTasks])
           
-    print "done looping"
-    
     #adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
-#     print "added " + str(numToAdd) + " tasks"
-#     printSolution([newDay])
-#     printUnplanned()
     
      # replace the chosen days with the updated days   
     currSolution[day] = newDay
-#     print "did opex1"
-#     printUnplanned()
-    print "current schedule being returned from opex1: "
-    printSolution(currSolution)
+
+
+#     print "********** Exiting optExchange1 **********"
     return currSolution
 
 '''
 @return: modified solution
 '''
 def optionalExchange2(currSolution, nHood):
-    print '&&&&&&&&&&&&& IN OPTIONAL 2 &&&&&&&&&&&&&&&'
+#     print "********** Entering optExchange2 **********"
+    
     # calculate number to remove (nHood-12)
     numToRemove = nHood - 12
     # pick a random day and position
@@ -340,18 +307,14 @@ def optionalExchange2(currSolution, nHood):
     pos = random.randint(0, len(currSolution[day]))
     
     # using the numToRemove and numToAdd values, add and remove however many customers you need to
-    print "IN OPEX2 Loop"
     for task in currSolution[day][pos:pos+ numToRemove]:
-        printUnplanned()
         unplannedTasks.append(task)
-        printUnplanned()
+
     newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
-    print "done opex2"
+
     currSolution[day] = newDay
-#     print "did opex2"
-#     printUnplanned()
-    print "current schedule being returned from opex2: "
-    printSolution(currSolution)
+    
+#     print "********** Exiting optExchange2 **********"
     return currSolution
 
 
@@ -359,26 +322,24 @@ def optionalExchange2(currSolution, nHood):
 @return: modified solution
 '''
 def iterativeImprovement(taskList, currSolution, nHood):
+#     print "********** Entering iterativeImprovement **********"
+    
     #If nHood< 13: do 3-OPT
     if nHood < 13:
         #only currSolution because we believe edges are being removed and inserted within the solution
-        
         newSolution = threeOPT(currSolution)
-        if len(newSolution[0])>1 and  newSolution[0][0] == newSolution[0][1]:
-            print "repeat when exiting 3OPT in iterativeImprovement"
-            exit()
+
     #Otherwise: Best Insertion
     else:
         newSolution = bestInsertion(taskList, currSolution)
-        if len(newSolution[0])>1 and  newSolution[0][0] == newSolution[0][1]:
-            print "repeat when exiting bestInsertion in iterativeImprovement"
-            exit()
    
+#     print "********** Exiting iterativeImprovement **********"
     return newSolution
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def threeOPT(currSolution):
+#     print "********** Entering threeOPT **********"
     
     #MUST ASSUME START AND END ARE CONNECTED?
     duration = getDuration(currSolution)
@@ -436,7 +397,7 @@ def threeOPT(currSolution):
             if(improvement):
                     break
         m+=1
-    
+#     print "********** Exiting threeOPT **********"
     return currSolution
 
 
@@ -445,6 +406,8 @@ def threeOPT(currSolution):
 @return: solution that has been modified by 3-Opt
 '''
 def bestInsertion(taskList, currSolution):
+#     print "********** Entering bestInsertion **********"
+    
     # Sequentially consider tasks from unplannedTasks
     # For each day, if that task:
         # has a time window in that day
@@ -455,8 +418,6 @@ def bestInsertion(taskList, currSolution):
     #otherwise, enqueue it and go to the next task
 
     tasksSinceLastInsertion = 0
-    print "begin best insertion"
-    printUnplanned()
     
     # while we have not explored all of the unplanned tasks
     while tasksSinceLastInsertion < len(unplannedTasks):
@@ -470,8 +431,7 @@ def bestInsertion(taskList, currSolution):
         isValid = False
         
         currTask = unplannedTasks.popleft()
-        print "after popping"
-        printUnplanned()
+
         #looping through each day in the current solution list 
         for day in range(len(currSolution)):
             
@@ -502,30 +462,17 @@ def bestInsertion(taskList, currSolution):
             pos = insertLocation[1]
             newSolution = currSolution[day][:pos]
             newSolution.append(currTask)
-            
-            
             currSolution[day] = newSolution + currSolution[day][pos:]
-            if len(currSolution[0])>1 and  currSolution[0][0] == currSolution[0][1]:
-                print "repeat in isValid check in bestInsertion"
-                exit()
             tasksSinceLastInsertion = 0
-            
-            
-           
         
         # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
         else:
             tasksSinceLastInsertion += 1
             unplannedTasks.append(currTask)
-#             print "after appending since we did not add to schedule"
-#             printUnplanned()
-    
     
     # after all that, add the task to the solution in the time with smallest added distance.
-#     print "done with best insertion"
-#     printUnplanned()
-#     print "current schedule being returned from best insertion: "
-#     printSolution(currSolution) 
+
+#     print "********** Exiting threeOPT **********"
     return currSolution
 
 
@@ -534,17 +481,8 @@ This works with Schedule objects
 @return: True if sol1 has more profit than sol2
 '''
 def isBetterSchedule(sched1, sched2):
-    print "Schedule 1 in isBetter"
-    print sched1.route_list[0].task_list
-    print
     sum1 = sched1.getProfit()
     sum2 = sched2.getProfit()
-    
-    print 'sum1'
-    print sum1
-    
-    print 'sum2'
-    print sum2
     
     return sum1 > sum2
 
@@ -552,6 +490,10 @@ def isBetterSchedule(sched1, sched2):
 @return: solution if currSolution is feasible
 '''
 def isFeasible(taskList, currSolution):
+#     print "********** Entering isFeasible **********"
+    
+    #NOTE FROM AVERY: Does not yet take travel times into account!
+    
     # pass in a list-solution
     # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
     # with no ending times in the routes yet
@@ -572,12 +514,16 @@ def isFeasible(taskList, currSolution):
         return None
     
     # Otherwise, squidge to find the best schedule for this solution
-    return minRoute(taskList, currSchedule)
+    feasSol = minRoute(taskList, currSchedule)
+    
+#     print "********** Exiting isFeasible **********" 
+    return feasSol
 
 '''
 @return: Graph with modified release times
 '''
 def tightenTWStarts(taskList, currSchedule):
+    
     if currSchedule == None:
         return None
     for dayIndex in range(len(currSchedule)):
@@ -589,8 +535,6 @@ def tightenTWStarts(taskList, currSchedule):
             twNext = day.task_list[custIndex+1].time_windows[dayIndex]
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
          #  and the start of the next task's first tw:
-            print "tw: ", tw
-            print "twNext: ", twNext 
             if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
                 #remove that task's first tw
                 tw = tw[1:]
@@ -731,6 +675,7 @@ def printSolution(sol):
     
 
 def main():
+    print "********** Main **********"
     print solve("test.csv")
     
 if __name__ == "__main__":

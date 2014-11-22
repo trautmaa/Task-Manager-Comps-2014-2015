@@ -7,15 +7,15 @@ import re
 import Objects
 
 '''
-Given a csv file, this function will call the read_in_task
+Given a csv file, this function will call the readInTask
 function to retrieve the tasks and with those will call 
-make_objects that returns a list of task objects, which
+makeObjects that returns a list of task objects, which
 is then returned.
 '''
-def get_task_list(csv_file):
-    tasks_from_csv = read_in_task(csv_file)
-    task_list = make_objects(tasks_from_csv)
-    return task_list
+def getTaskList(csvFile):
+    tasksFromCsv = readInTask(csvFile)
+    taskList = makeObjects(tasksFromCsv)
+    return taskList
 
 '''
 Given a csv file, it will read a row from the csv and 
@@ -23,9 +23,9 @@ turn that into a list of a task's features. Each task
 will be appended to the tasks list and finally the 
 tasks list will be returned.
 '''
-def read_in_task(csv_file):
+def readInTask(csvFile):
     tasks = []
-    with open(csv_file, 'rU') as f:
+    with open(csvFile, 'rU') as f:
         reader = csv.reader(f, delimiter = ",")
         for row in reader:
             tasks.append(row)
@@ -36,41 +36,41 @@ def read_in_task(csv_file):
 '''
 A function that returns a list of task objects.
 It takes a list of tasks in list form, and converts
-them to objects and adds them to the task_list.
+them to objects and adds them to the taskList.
 '''
-def make_objects(attribute_list):
-    task_list = []
-    for i in range(len(attribute_list)):
+def makeObjects(attributeList):
+    taskList = []
+    for i in range(len(attributeList)):
         newobject = Objects.Task(i)
-        task_list.append(newobject)
-        # task_list[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
-        for j in range(len(attribute_list[i])): 
+        taskList.append(newobject)
+        # taskList[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
+        for j in range(len(attributeList[i])): 
             if (j == 0): #x coordinate value
-                task_list[i].setX(attribute_list[i][0])
+                taskList[i].setX(attributeList[i][0])
             
             if (j == 1): #y coordinate value
-                task_list[i].setY(attribute_list[i][1])
+                taskList[i].setY(attributeList[i][1])
                 
             if (j == 2): #release time
-                task_list[i].set_release_time(attribute_list[i][2])
+                taskList[i].setReleaseTime(attributeList[i][2])
                 
             if (j == 3): #duration
-                task_list[i].set_duration(attribute_list[i][3])
+                taskList[i].setDuration(attributeList[i][3])
                 
             if (j == 4): #deadline
-                task_list[i].set_deadline(attribute_list[i][4])
+                taskList[i].setDeadline(attributeList[i][4])
             
             if (j == 5): #priority
-                task_list[i].set_priority(attribute_list[i][5])
+                taskList[i].setPriority(attributeList[i][5])
                 
             if (j == 6): #required
-                task_list[i].set_required(attribute_list[i][6])
+                taskList[i].setRequired(attributeList[i][6])
             
             if (j == 7): #time windows
-                task_list[i].set_time_windows(getTimeWindows(attribute_list[i][7]))
+                taskList[i].setTimeWindows(getTimeWindows(attributeList[i][7]))
                 
             # With added features, we must add statements here.
-    return task_list
+    return taskList
 
 def getTimeWindows(timeWindowString):
     timeWindows = []
@@ -89,19 +89,3 @@ def getTimeWindows(timeWindowString):
             
     
     return timeWindows
-
-
-
-
-
-
-
-def main():
-    get_task_list("test.csv")
-
-if __name__ == "__main__":
-    main()     
-    
-
-
-
