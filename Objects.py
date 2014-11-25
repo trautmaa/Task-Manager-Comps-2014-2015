@@ -8,19 +8,19 @@ A class to represent how many different locations there are for each task
 '''
 class Category:
     def __init__(self):
-        self.category_list = []
+        self.categoryList = []
         
-    def __init__(self, task_list):
-        self.category_list = task_list
+    def __init__(self, taskList):
+        self.categoryList = taskList
             
-    def add_to_list(self, task):
-        self.category_list.append(task)
+    def addToList(self, task):
+        self.categoryList.append(task)
 
 '''
 Task is a class that contains seven variables:
 task.x is the task's x coordinate.
 task.y is the task's y coordinate.
-task.release_time is the task's release time.
+task.releaseTime is the task's release time.
 task.duration is the task's duration.
 task.deadline is the task's deadline.
 task.priority is the task's priority
@@ -37,27 +37,26 @@ class Task:
     def setY(self, y):
         self.y = int(y)
         
-    def set_release_time(self, r):
-        self.release_time = int(r)
+    def setReleaseTime(self, r):
+        self.releaseTime = int(r)
 
-    def set_duration(self, dur):
+    def setDuration(self, dur):
         self.duration = int(dur)
 
-    def set_deadline(self, dead):
+    def setDeadline(self, dead):
         self.deadline = int(dead)
         
-    def set_priority(self, priority):
+    def setPriority(self, priority):
         self.priority = int(priority)
         
-    def set_required(self, required):
+    def setRequired(self, required):
         self.required = required
         
     #This is a list of days. Each day has a list of time windows
-    # AVERY: DO STUFF TO READING IN TWs
     #    they will come in as a string: "[[(twStart1, twEnd1),(twStart2, twEnd2)], [day2..], etc.]
     #    do a regex to read it in. List of lists (days) of tuples (tw starts and ends)
-    def set_time_windows(self, time_windows):
-        self.time_windows = time_windows
+    def setTimeWindows(self, timeWindows):
+        self.timeWindows = timeWindows
         
     def getProfit(self):
         return self.priority
@@ -66,20 +65,24 @@ class Task:
         other = Task(self.id)
         other.x = self.x
         other.y = self.y
-        other.release_time = self.release_time
+        other.releaseTime = self.releaseTime
         other.duration = self.duration
         other.deadline = self.deadline
         other.priority = self.priority
         other.required = self.required
-        other.time_windows = self.time_windows[:]
+        other.timeWindows = [[]*len(self.timeWindows)]
+        for day in range(len(self.timeWindows)):
+            for tw in range(len(self.timeWindows[day])):
+                other.timeWindows[day].append(tuple(self.timeWindows[day][tw]))
+                
         return other
 
     def __str__(self):
-        string_representation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
-        + str(self.y) + "), Release Time: " + str(self.release_time) \
+        stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
+        + str(self.y) + "), Release Time: " + str(self.releaseTime) \
         + ", Duration: " + str(self.duration) + ", Deadline: " \
         + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required) + ")"
-        return string_representation
+        return stringRepresentation
     
     def __eq__(self, other):
         return isinstance(other, Task) and self.id == other.id
@@ -92,41 +95,44 @@ class Task:
 '''   
 class Route:
     def __init__(self):
-        self.task_list = []
-        self.ending_times = []
+        self.taskList = []
+        self.endingTimes = []
         
-    def set_task_list(self, task_list, ending_times):
-        self.task_list = task_list
-        self.ending_times = ending_times
+    def setTaskList(self, taskList, endingTimes):
+        self.taskList = taskList
+        self.endingTimes = endingTimes
     
-    def append(self, task, ending_time):
-        self.task_list.append(task)
-        self.ending_times.append(ending_time)
+    def append(self, task, endingTime):
+        self.taskList.append(task)
+        self.endingTimes.append(endingTime)
     
-    def add_to_task_list(self, task, ending_time, index):
-        self.task_list[index] = task
-        self.ending_times[index] = ending_time
+    def addToTaskList(self, task, endingTime, index):
+        self.taskList[index] = task
+        self.endingTimes[index] = endingTime
     
-    def get_task(self, index):
-        return self.task_list[index]
+    def getTask(self, index):
+        return self.taskList[index]
     
-    def get_ending_time(self, index):
-        return self.ending_times[index]
+    def getEndingTime(self, index):
+        return self.endingTimes[index]
     
-    def remove_segment(self, startIndex, endIndex):
-        self.task_list = self.task_list[:startIndex] + self.task_list[endIndex:]
-        self.ending_times = self.ending_times[:startIndex] + self.ending_times[endIndex:]
+    def removeSegment(self, startIndex, endIndex):
+        self.taskList = self.taskList[:startIndex] + self.taskList[endIndex:]
+        self.endingTimes = self.endingTimes[:startIndex] + self.endingTimes[endIndex:]
     
     def __getitem__(self, index):
-        return self.task_list[index]
+        return self.taskList[index]
+    
+    def __setitem__(self, index, task):
+        self.taskList[index] = task
     
     def __len__(self):
-        return len(self.task_list)
+        return len(self.taskList)
     
     def __str__(self):
         result = "["
-        for task in range(len(self.task_list)):
-            result = str(result) + "(task: " + str(self.task_list[task]) + ", ending at: " + str(self.ending_times[task]) + ")\n"
+        for task in range(len(self.taskList)):
+            result = str(result) + "(task: " + str(self.taskList[task]) + ", ending at: " + str(self.endingTimes[task]) + ")\n"
         return result + "]"
 
 '''
@@ -134,37 +140,37 @@ class Route:
 '''  
 class Schedule:
     def __init__(self):
-        self.route_list = []
+        self.routeList = []
         
     def append(self, route):
-        self.route_list.append(route)
+        self.routeList.append(route)
     
     def getRoute(self, index):
-        return self.route_list[index]
+        return self.routeList[index]
     
     def getProfit(self):
         profit = 0
-        for route in self.route_list:
-            for task in route.task_list:
+        for route in self.routeList:
+            for task in route.taskList:
                 if task != None:
                     profit += task.getProfit()
         return profit
     
     def __getitem__(self, index):
-        return self.route_list[index]
+        return self.routeList[index]
     
     def __setitem__(self, index, route):
-        self.route_list[index] = route
+        self.routeList[index] = route
     
     def __str__(self):
         result = "["
-        for route in range(len(self.route_list)):
-            result = result + str(self.route_list[route]) + "\n"
+        for route in range(len(self.routeList)):
+            result = result + str(self.routeList[route]) + "\n"
         result = result + "]"
         return result
     
     def __len__(self):
-        return len(self.route_list)
+        return len(self.routeList)
         
     
     

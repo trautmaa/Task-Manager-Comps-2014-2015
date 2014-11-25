@@ -2,15 +2,15 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-import greedy_by_order
-import create_tasks_from_csv
-import helper_functions
+import greedyByOrder
+import createTasksFromCsv
+import helperFunctions
 import Objects
 import time
 import math
 import random
 from collections import deque
-from brute_force import run_brute_force_alg
+from bruteForce import runBruteForceAlg
 from matplotlib.testing.jpl_units import day
 
 global timeLimit
@@ -21,9 +21,9 @@ timeLimit = 5000
 '''
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
-    taskList = create_tasks_from_csv.get_task_list(csvFile)
-    modTasks = greedy_by_order.run_greedy_by_order(csvFile, greedy_by_order.order_by_deadline)
-#     brute = run_brute_force_alg(csvFile)
+    taskList = createTasksFromCsv.getTaskList(csvFile)
+    modTasks = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
+    brute = runBruteForceAlg(csvFile)
     
     greedysol = modTasks
 
@@ -35,8 +35,8 @@ def solve(csvFile):
     print '#############################'
     print 'greedy solution'
     printSolution(greedysol)
-#     print 'brute force solution'
-#     printSolution(brute)
+    print 'brute force solution'
+    printSolution(brute)
 
     return modTasks
 
@@ -59,7 +59,7 @@ def vns(taskList, currSolution):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 60
+    stoppingCondition = 1
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -80,7 +80,7 @@ def vns(taskList, currSolution):
         # If we have gone through all neighborhood structures, start again
         nHood = 1
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
-            print iterCount, "VNS loops so far with numIterations", numIterations, "nHood:", nHood
+#             print iterCount, "VNS loops so far with numIterations", numIterations, "nHood:", nHood
             iterCount += 1
             shakeSolution = shaking(currSolution, nHood)
             
@@ -210,7 +210,7 @@ def crossExchange(currSolution, nHood):
         
         #if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
-        if(len(origRoute1[n].time_windows[day2]) > 0):
+        if(len(origRoute1[n].timeWindows[day2]) > 0):
             if n - currRouteStart == route1Len - 1:
                 possRoutes.append(currRouteStart)
                 currRouteStart += 1
@@ -437,7 +437,7 @@ def bestInsertion(taskList, currSolution):
             
             #if the duration of the task under consideration added to the current day is less than the time limit then accept it as
             # valid  
-            if len(currTask.time_windows[day]) > 0 and getDuration(currSolution[day]) + currTask.duration < timeLimit:
+            if len(currTask.timeWindows[day]) > 0 and getDuration(currSolution[day]) + currTask.duration < timeLimit:
                 isValid = True
                 
                 #for each position within the day 
@@ -447,9 +447,9 @@ def bestInsertion(taskList, currSolution):
                     task2 = currSolution[day][pos + 1]
                    
                     #calculates what the distance would be if the task under consideration where to be added between task1 and task2
-                    addedDist = helper_functions.get_distance_between_tasks(task1, currTask) + \
-                    helper_functions.get_distance_between_tasks(currTask, task2) - \
-                    helper_functions.get_distance_between_tasks(task1, task2)
+                    addedDist = helperFunctions.getDistanceBetweenTasks(task1, currTask) + \
+                    helperFunctions.getDistanceBetweenTasks(currTask, task2) - \
+                    helperFunctions.getDistanceBetweenTasks(task1, task2)
                     
                     #if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
                     if addedDist < shortestDistance:
@@ -492,22 +492,39 @@ def isBetterSchedule(sched1, sched2):
 def isFeasible(taskList, currSolution):
 #     print "********** Entering isFeasible **********"
     
-    #NOTE FROM AVERY: Does not yet take travel times into account!
-    
     # pass in a list-solution
     # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
     # with no ending times in the routes yet
     currSchedule = Objects.Schedule()
-    for day in currSolution:
+    for i in range(len(currSolution)):
+        day = currSolution[i]
         route = Objects.Route()
-        for task in day:
-            route.append(task.deepCopy(), None)
+        
+        # Add a copy of the first route to the route
+        # (there is no travel time to the first task)
+        newTask = day[0].deepCopy()
+        route.append(newTask, None)
+        
+        # for each task except the first, add travel time from prev task to curr task
+        # to the duration of task, then subtract that same time from each time window
+        # start, and from release time.
+        for task in range(1, len(day)):
+            newTask = day[task].deepCopy()
+            #include travel time in these duplicate tasks. (added to duration of task, and 
+            travelTime = helperFunctions.getDistanceBetweenTasks(newTask, day[task-1])
+            newTask.duration = newTask.duration + travelTime
+            newTask.releaseTime = newTask.releaseTime - travelTime
+            for j in range(len(newTask.timeWindows[i])):
+                oldTW = newTask.timeWindows[i][j]
+                newTW = (oldTW[0]-travelTime, oldTW[1])
+                newTask.timeWindows[i][j] = newTW
+            route.append(newTask, None)
         currSchedule.append(route)
     
     # pass that into tightenTWStarts and tightenTWEnds. 
     # those functions will modify those tasks' time windows and return the modified schedule
-    currSchedule = tightenTWStarts(taskList, currSchedule)
-    currSchedule = tightenTWEnds(taskList, currSchedule)
+    currSchedule = tightenTWStarts(currSchedule)
+    currSchedule = tightenTWEnds(currSchedule)
     
     # If those terminate early and return None, the schedule is infeasible. Return None
     if currSchedule == None:
@@ -522,17 +539,16 @@ def isFeasible(taskList, currSolution):
 '''
 @return: Graph with modified release times
 '''
-def tightenTWStarts(taskList, currSchedule):
-    
+def tightenTWStarts(currSchedule):
     if currSchedule == None:
         return None
     for dayIndex in range(len(currSchedule)):
         custIndex = 0
         day = currSchedule[dayIndex]
-        while custIndex < len(day) - 1 and len(day.task_list[custIndex].time_windows) > 0 :
-            task = day.task_list[custIndex]
-            tw = task.time_windows[dayIndex]
-            twNext = day.task_list[custIndex+1].time_windows[dayIndex]
+        while custIndex < len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 :
+            task = day.taskList[custIndex]
+            tw = task.timeWindows[dayIndex]
+            twNext = day.taskList[custIndex+1].timeWindows[dayIndex]
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
          #  and the start of the next task's first tw:
             if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
@@ -543,7 +559,7 @@ def tightenTWStarts(taskList, currSchedule):
             elif task.duration + tw[0][0] < twNext[0][0]:
                 # set the beginning of that time window to be the minimum of the the ending time of task i's first time window
                 # and the start of task i+1's first time window
-                tw[0][0] = min(twNext[0][0], tw[0][1]) - task.duration
+                tw[0] = (min(twNext[0][0], tw[0][1]) - task.duration, tw[0][1])
 
         # else if the duration of task i set at the beginning of its first tw overlaps any tws for the next customer
             elif task.duration + tw[0][0] > twNext[0][0]:
@@ -552,13 +568,13 @@ def tightenTWStarts(taskList, currSchedule):
                 for window in twNext:
                     window = (max(tw[0][0] + task.duration, window[0]), window[1])
             custIndex+= 1
-        if custIndex == len(day) -1 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+        if custIndex == len(day) -1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
             #remove that task's first tw
             tw = tw[1:]
             
         custIndex += 1
         
-        if custIndex < len(day.task_list):
+        if custIndex < len(day.taskList):
             return None
 
     return currSchedule
@@ -566,18 +582,18 @@ def tightenTWStarts(taskList, currSchedule):
 '''
 @return: Graph with modified deadlines
 '''
-def tightenTWEnds(taskList, currSchedule):
+def tightenTWEnds(currSchedule):
     if currSchedule == None:
         return None
     
     for dayIndex in range(len(currSchedule)):
-        custIndex = len(currSchedule[dayIndex].task_list) - 1
+        custIndex = len(currSchedule[dayIndex].taskList) - 1
         day = currSchedule[dayIndex]
 
-        while custIndex > 0 and len(day.task_list[custIndex].time_windows) > 0:
-            task = day.task_list[custIndex]
-            tw = task.time_windows[dayIndex]
-            twPrev = day.task_list[custIndex-1].time_windows[dayIndex]
+        while custIndex > 0 and len(day.taskList[custIndex].timeWindows) > 0:
+            task = day.taskList[custIndex]
+            tw = task.timeWindows[dayIndex]
+            twPrev = day.taskList[custIndex-1].timeWindows[dayIndex]
             # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time window
             #  and the end of the previous task's last tw:
             if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
@@ -598,7 +614,7 @@ def tightenTWEnds(taskList, currSchedule):
                     window = (window[0], min(tw[-1][1] - task.duration, window[1]))
 
             custIndex -= 1
-        if custIndex == 0 and len(day.task_list[custIndex].time_windows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+        if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
             #remove that task's first tw
             tw = tw[:-1]
             
@@ -612,7 +628,7 @@ def tightenTWEnds(taskList, currSchedule):
 '''
 @return: shortest duration of this schedule ordering
 '''
-def minRoute(taskList, currSolution):
+def minRoute(taskList, currSchedule):
     # tightenedSol = using the returned schedules from tighten functions, look at first task and first tw for that task and schedule it as early as possible
         # repeat for all tasks in order
     # currBestSol = calcDominantSolution(tasklist, tightenSol)
@@ -624,7 +640,16 @@ def minRoute(taskList, currSolution):
             # currSol = domSol
         # update latest waiting customer
     #return currBestSol
-    return currSolution
+    
+    #DELETE THIS LINE ONCE THE CODE IS WRITTEN
+    bestSchedule = currSchedule
+    for r in range(len(bestSchedule)):
+        for t in range(len(bestSchedule[r])):
+            bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
+    
+        
+    #USE ORIGINAL TASKS FROM TASKLIST TO CONSTRUCT FINAL SCHEDULE
+    return bestSchedule
 
 '''
 @return: the index for the last task with waiting time in the route
