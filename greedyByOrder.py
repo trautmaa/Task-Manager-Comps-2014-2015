@@ -13,10 +13,10 @@ A function that prints the result of runGreedyByOrder
 in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderFunction):
-	schedule = runGreedyByOrder(csvFile, orderFunction)
-	printSchedule(schedule)
+	print runGreedyByOrder(csvFile, orderFunction)
 	print
-
+	
+	
 '''
 A function that will create a schedule based on just ordering
 all tasks by their release time or deadline and then outputting that 
@@ -26,7 +26,7 @@ def runGreedyByOrder(csvFile, orderFunction):
     taskList = getTaskList(csvFile)
     taskList = orderFunction(taskList)
     ordering = [i for i in range(len(taskList))]
-    bestSchedule = createSolution(ordering, taskList)
+    bestSchedule = createSchedule(ordering, taskList)
     return bestSchedule
 
 def main():

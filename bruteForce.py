@@ -4,30 +4,30 @@
 
 import itertools
 
-from createTasksFromCsv import *
-from writeToCsv import *
-from helperFunctions import *
+import createTasksFromCsv
+import helperFunctions
 
+#No longer true! time windows and stuff now
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline']
 
 
 '''
-A function given a list of task objects and all the potential ways
-to order the tasks will create a schedule for each ordering
-and output one of the schedules with the most tasks scheduled.
+A function given a list of task objects and all the potential task permutations
+will create a schedule for each ordering and output one of the schedules with 
+the most tasks scheduled.
 '''
-def findMaximalSchedule(objectList, taskOrderings):
-    maxSchedule = []
-    for taskOrdering in taskOrderings:
-        newSchedule = createSchedule(taskOrdering, objectList)
-        if len(newSchedule) > len(maxSchedule):
-            maxSchedule = newSchedule
-    return maxSchedule
+def findBestSchedule(taskList, permutations):
+    bestSchedule = []
+    for perm in permutations:
+        newSchedule = helperFunctions.createSchedule(perm, taskList)
+        if len(newSchedule) > len(bestSchedule):
+            bestSchedule = newSchedule
+    return bestSchedule
 
 
 '''
-A function that returns all potential orderings of tasks as a list.
-It just takes a number of how many elements you want to be permutated.
+A function that returns all potential task permutations as a list.
+It just takes a number of how many elements you want in your solution.
 '''
 def getAllPermutations(lengthOfPerms):
     permutations = [i for i in range(lengthOfPerms)]
@@ -40,9 +40,9 @@ A function that will run our brute force algorithm to find the
 best schedule.
 '''
 def runBruteForceAlg(csvFile):
-    objectList = getTaskList(csvFile)
+    objectList = createTasksFromCsv.getTaskList(csvFile)
     taskOrderings = getAllPermutations(len(objectList))
-    bestSchedule = findMaximalSchedule(objectList, taskOrderings)
+    bestSchedule = findBestSchedule(objectList, taskOrderings)
     return bestSchedule
 
 '''
@@ -51,7 +51,7 @@ detailed format.
 '''
 def printBruteForce(csvFile):
     schedule = runBruteForceAlg(csvFile)
-    printSchedule(schedule)
+    print schedule
     print
 
 def main():

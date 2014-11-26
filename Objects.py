@@ -78,10 +78,17 @@ class Task:
         return other
 
     def __str__(self):
-        stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + " " \
+        stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + ", "\
         + str(self.y) + "), Release Time: " + str(self.releaseTime) \
         + ", Duration: " + str(self.duration) + ", Deadline: " \
-        + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required) + ")"
+        + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required)\
+        + ", Time Windows: ["
+        
+        for day in self.timeWindows:
+            for tw in day:
+                stringRepresentation = stringRepresentation + "(" + str(tw[0]) + ", "  + str(tw[1]) + "), "
+        stringRepresentation += "])"
+        
         return stringRepresentation
     
     def __eq__(self, other):

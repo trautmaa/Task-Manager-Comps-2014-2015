@@ -4,6 +4,7 @@
 
 from math import ceil
 from Objects import *
+import createTasksFromCsv
 
 '''
 A function given two task objects will return the euclidean distance
@@ -143,4 +144,28 @@ def printSchedule(schedule):
             print template.format(str(startingTime)[0:6], str(finishingTime)[0:6], str(task.name)[0:20], str(getCoords(task)), str(task.releaseTime)[0:4], str(task.deadline)[0:4], str(getDistanceBetweenTasks(task, schedule[i -1]))[0:4])
         currentTime = finishingTime
         lastLocation = getCoords(task)
+
+'''
+For each task in the taskList, make sure the time windows do not occur before the release time
+or after the deadlines
+'''
+def preprocessTimeWindows(taskList):
+    for task in taskList:
+        for day in task.timeWindows:
+            tw = 0
+            while tw < len(day):
+                if day[tw][1] < task.releaseTime or day[tw][0] > task.deadline:
+                    day.remove(day[tw])
+                    break
+                if day[tw][0] < task.releaseTime:
+                    day[tw] = (task.releaseTime, day[tw][1])
+                if day[tw][1] > task.deadline:
+                    day[tw] = (day[tw][0], task.deadline)
+                tw += 1
+                
+if __name__ == "__main__":
+    taskList = createTasksFromCsv.getTaskList("test.csv")
+    preprocessTimeWindows(taskList)
+                
+                
 

@@ -22,10 +22,11 @@ timeLimit = 5000
 def solve(csvFile):
     #Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
-    modTasks = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
-    brute = runBruteForceAlg(csvFile)
+    helperFunctions.preprocessTimeWindows(taskList)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
+#     brute = runBruteForceAlg(csvFile)
     
-    greedysol = modTasks
+    modTasks = greedySol[:]
 
     #Modify the greedy algorithm
     modTasks = vns(taskList, modTasks)
@@ -34,9 +35,9 @@ def solve(csvFile):
     print modTasks
     print '#############################'
     print 'greedy solution'
-    printSolution(greedysol)
-    print 'brute force solution'
-    printSolution(brute)
+    printSolution(greedySol)
+#     print 'brute force solution'
+#     printSolution(brute)
 
     return modTasks
 
@@ -59,7 +60,7 @@ def vns(taskList, currSolution):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 1
+    stoppingCondition = 10
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -549,13 +550,15 @@ def tightenTWStarts(currSchedule):
             task = day.taskList[custIndex]
             tw = task.timeWindows[dayIndex]
             twNext = day.taskList[custIndex+1].timeWindows[dayIndex]
+            
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
-         #  and the start of the next task's first tw:
+         #  and the start of the next task's first tw
             if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
                 #remove that task's first tw
                 tw = tw[1:]
+                if len(tw) == 0:
+                    break
                 
-        # else if duration of task i at the beginning of its first tw ends before the start of the next task's first tw
             elif task.duration + tw[0][0] < twNext[0][0]:
                 # set the beginning of that time window to be the minimum of the the ending time of task i's first time window
                 # and the start of task i+1's first time window
@@ -598,8 +601,9 @@ def tightenTWEnds(currSchedule):
             #  and the end of the previous task's last tw:
             if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
                 # remove the last time window
-                tw = tw[:-1] 
-
+                tw = tw[:-1]
+                if len(tw) == 0:
+                    break
             # else if duration of task i at the end of its last tw starts before the end of the previous task's last tw
             elif tw[-1][1] - task.duration < twPrev[-1][1]:
                 # set the end of that time window to be the maximum of the the starting time of task i's last time window
@@ -614,9 +618,10 @@ def tightenTWEnds(currSchedule):
                     window = (window[0], min(tw[-1][1] - task.duration, window[1]))
 
             custIndex -= 1
-        if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
-            #remove that task's first tw
-            tw = tw[:-1]
+        if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0:
+            if task.duration > tw[0][1] - tw[0][0]:
+                #remove that task's first tw
+                tw = tw[:-1]
             
         custIndex -= 1
         
