@@ -9,9 +9,10 @@ import Objects
 import time
 import math
 import random
+import copy
 from collections import deque
 from bruteForce import runBruteForceAlg
-from matplotlib.testing.jpl_units import day
+from enaml.application import schedule
 
 global timeLimit
 timeLimit = 5000
@@ -20,47 +21,49 @@ timeLimit = 5000
 @return: an ordering of tasks
 '''
 def solve(csvFile):
-    #Get a greedy algorithm to then modify with VNS
+    # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
 #     brute = runBruteForceAlg(csvFile)
     
     modTasks = greedySol[:]
-
-    #Modify the greedy algorithm
-    modTasks = vns(taskList, modTasks)
+    currSchedule = createSchedule(modTasks)
+    # Modify the greedy algorithm
+    currSchedule = vns(taskList, currSchedule)
     
-    print '################ FINAL SOLUTION from VNS #############'
-    print modTasks
-    print '#############################'
     print 'greedy solution'
     printSolution(greedySol)
 #     print 'brute force solution'
 #     printSolution(brute)
+    
+#     helperFunctions.printJourney(brute)
+    print "greedy journey"
+    helperFunctions.printJourney(greedySol)
+    print "vns journey"
+    helperFunctions.printJourney(modTasks)
 
-    return modTasks
+    return currSchedule
 
 
 '''
 @return: best schedule found in time limit
 '''
-def vns(taskList, currSolution):
+def vns(taskList, currSchedule):
     
 #     print "********** Entering VNS **********"
 #     print "initial solution: "
-#     printSolution(currSolution)
-
+#     print currSchedule
     
     global unplannedTasks
     unplannedTasks = deque(taskList[:])
    
-    for day in currSolution:
+    for day in currSchedule:
         for task in day:
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 10
+    stoppingCondition = 5
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -68,8 +71,7 @@ def vns(taskList, currSolution):
     # Number of iterations since last bestSolution update
     numIterations = 0
     
-    bestSolution = currSolution
-    currSchedule = isFeasible(taskList, currSolution)
+    currSchedule = isFeasible(taskList, currSchedule)
     bestSchedule = currSchedule
     
     initTime = time.time()
@@ -83,11 +85,11 @@ def vns(taskList, currSolution):
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
 #             print iterCount, "VNS loops so far with numIterations", numIterations, "nHood:", nHood
             iterCount += 1
-            shakeSolution = shaking(currSolution, nHood)
+            shakeSolution = shaking(currSchedule, nHood)
             
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
 
-            #make sure the modified solution is still feasible. 
+            # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
             feasibleSchedule = isFeasible(taskList, iterSolution)
@@ -96,38 +98,34 @@ def vns(taskList, currSolution):
             else:
                 feasible = True
             
-            #if feasible and better
+            # if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
             
             if feasible:
-                #If our solution is better than the current solution, update.
+                # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
-                    currSolution = iterSolution
                     currSchedule = feasibleSchedule
                     nHood = 1
-                #Otherwise, increment nHood
+                # Otherwise, increment nHood
                 else:
                     nHood += 1
                 
-                #If our solution is better than the best solution so far, update.
+                # If our solution is better than the best solution so far, update.
                 if isBetterSchedule(feasibleSchedule, bestSchedule):
-                    bestSolution = iterSolution
                     bestSchedule = feasibleSchedule
                     numIterations = 0
                     
-                #If we have gone 8000 iterations with no improvement to bestSolution
+                # If we have gone 8000 iterations with no improvement to bestSolution
                 # If criteria for selection are true, select a new currSolution
                 elif numIterations > 8000:
                     numIterations = 0
                     
                     if nHood > 8:
-                        currSolution = iterSolution
                         currSchedule = feasibleSchedule
                         nHood = 1
-                    #Criteria for nHoods 1-8:
+                    # Criteria for nHoods 1-8:
                     # If the new solution is not more than .5% longer (distance), accept
-                    elif calcTotalDistance(iterSolution) >= .995*calcTotalDistance(currSolution):
-                        currSolution = iterSolution
+                    elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSolution):
                         currSchedule = feasibleSchedule
                 else:
                     numIterations += 1 
@@ -141,45 +139,48 @@ def vns(taskList, currSolution):
 '''
 @return: modified solution
 '''
-def shaking(currSolution, nHood):
-#     print "********** Entering shaking **********"
+def shaking(currSchedule, nHood):
+    print "********** Entering shaking **********"
+    print isinstance(currSchedule[0], Objects.Route)   
     
-    #Based on the neighborhood perform a different operation
+    # Based on the neighborhood perform a different operation
     if nHood < 8:
-        newSolution = crossExchange(currSolution, nHood)
+        newSolution = crossExchange(currSchedule, nHood)
         
     elif nHood >= 8 and nHood < 12:
-        newSolution = optionalExchange1(currSolution, nHood)
+        newSolution = optionalExchange1(currSchedule, nHood)
         
     else:
-        newSolution = optionalExchange2(currSolution, nHood)
+        newSolution = optionalExchange2(currSchedule, nHood)
         
-#     print "********** Exiting shaking **********"
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting shaking **********"
     return newSolution
 
 '''
 @param currSolution: list (schedule) of lists (days/routes) of task objects
 @return: modified solution
 '''
-def crossExchange(currSolution, nHood):
-#     print "********** Entering crossExchange **********"
+def crossExchange(currSchedule, nHood):
+    print "********** Entering crossExchange **********"
+    print isinstance(currSchedule[0], Objects.Route)   
+        
+    # NOTE TO AVERY: MAKE SURE EXCHANGE
     
-    #NOTE TO AVERY: MAKE SURE EXCHANGE
-    
-    if len(currSolution) <= 1:
+    if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
-#         print "********** Exiting crossExchange **********"
-        return currSolution
+        print "********** Exiting crossExchange **********"
+        return currSchedule
     
     # choose two distinct random days
-    day1 = random.randint(0, len(currSolution))
-    day2 = random.randint(0, len(currSolution))
+    day1 = random.randint(0, len(currSchedule))
+    day2 = random.randint(0, len(currSchedule))
     while (day1 == day2):
-        day2 = random.randint(0,len(currSolution))
+        day2 = random.randint(0, len(currSchedule))
         
     # find the length of the routes:
-    len1 = len(currSolution[day1])
-    len2 = len(currSolution[day2])
+    len1 = len(currSchedule[day1])
+    len2 = len(currSchedule[day2])
     
     # for route1 (removed and inserted)
     route1Len = random.randint(1, min(len1, nHood))
@@ -189,14 +190,14 @@ def crossExchange(currSolution, nHood):
     
     n = 0
     # whole route for day one
-    origRoute1 = currSolution[day1]
-    #list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
+    origRoute1 = currSchedule[day1]
+    # list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
     possRouteStarts = []
-    #start index of the current route we are looking at 
+    # start index of the current route we are looking at 
     currRouteStart = 0
-    #start index of the longest route
+    # start index of the longest route
     longestRouteStart = 0
-    #length of longest route 
+    # length of longest route 
     longestRouteLen = 0
     
     # route1: choose random segment w/ customers who have a valid time window in day2
@@ -204,24 +205,24 @@ def crossExchange(currSolution, nHood):
     while n < len(origRoute1):
         
         # checking to see if the current route is longer than longest route, if it is update 
-        #longest route start and length
+        # longest route start and length
         if (n - currRouteStart) > len(longestRoute):
             longestRouteStart = currRouteStart
             longestRouteLen = n - currRouteStart
         
-        #if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
+        # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
         if(len(origRoute1[n].timeWindows[day2]) > 0):
             if n - currRouteStart == route1Len - 1:
                 possRoutes.append(currRouteStart)
                 currRouteStart += 1
         
-        #move on to the next route if previous conditional statement was no satisfied 
+        # move on to the next route if previous conditional statement was no satisfied 
         else:
             currRouteStart = n + 1
-        n+=1
+        n += 1
     
-    #if we found a viable route, choose a random one 
+    # if we found a viable route, choose a random one 
     if len(possRoutes) > 0:
         route1Start = possRoutes[random.randint(len(possRouteStarts))]
 
@@ -230,165 +231,180 @@ def crossExchange(currSolution, nHood):
         route1Start = longestRouteIndex
         route1Len = longestRouteLen
 
-    #setting route and  new day to be what they should be
-    route1 = currSolution[day1][route1Start : route1Start + route1Len]
-    newDay1 = currSolution[day1][:route1Start] + currSolution[day1][route1Start + route1Len:]
+    # setting route and  new day to be what they should be
+    route1 = currSchedule[day1][route1Start : route1Start + route1Len]
+    newDay1 = currSchedule[day1][:route1Start] + currSchedule[day1][route1Start + route1Len:]
     
     
-    #starting index of the sub-route we will be removing
+    # starting index of the sub-route we will be removing
     route2Start = random.randint(0, len2 - route2Len + 1)
-    route2 = currSolution[day2][route2Start:route2Start + route2Len]
-    newDay2 = currSolution[day2][:route2Start] + route1 + currSolution[day2][route2Start + route2Len:]
+    route2 = currSchedule[day2][route2Start:route2Start + route2Len]
+    newDay2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2Start + route2Len:]
     
     for task in route2:
         unplannedTasks.append(task)
     
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
-    currSolution[day1] = newDay1
-    currSolution[day2] = newDay2
+    currSchedule[day1] = newDay1
+    currSchedule[day2] = newDay2
     
-#     print "********** Exiting crossExchange **********"
-    return currSolution
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting crossExchange **********"
+    return currSchedule
 
 '''
 @return: modified solution
 '''
-def optionalExchange1(currSolution, nHood):
-#     print "********** Entering optExchange1**********"
-    
+def optionalExchange1(currSchedule, nHood):
+    # NOTE TO AVERY: this is where the problem is
+    print "********** Entering optExchange1**********"
+    print isinstance(currSchedule[0], Objects.Route)   
     # set p and q according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
     if nHood == 12:
-        numToRemove= 0
+        numToRemove = 0
         numToAdd = 2
 
     # pick a random day and starting time to exchange customers
-    day = random.randint(0, len(currSolution)-1)
+    day = random.randint(0, len(currSchedule) - 1)
     
-    pos = random.randint(0, len(currSolution[day]))
+    pos = random.randint(0, len(currSchedule[day]))
     
     if numToRemove > 0:
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
-        for task in currSolution[day][pos:pos + numToRemove]:
+        for task in currSchedule[day][pos:pos + numToRemove]:
             unplannedTasks.append(task)
-        newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
+        newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
         
     else:
-        newDay = currSolution[day][:]
+        newDay = currSchedule[day][:]
 
-    #selecting which unplanned tasks to add
+    # selecting which unplanned tasks to add
     addingTasks = []
     for t in range(numToAdd):
-        if len(unplannedTasks)>0:
+        if len(unplannedTasks) > 0:
             addingTasks.append(unplannedTasks.popleft())
           
-    #adding new tasks to day 
+    # adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
     
+    newRoute = Objects.Route()
+    
+    for task in newDay:
+        newRoute.append(task, None)
+    
      # replace the chosen days with the updated days   
-    currSolution[day] = newDay
+    currSchedule[day] = newRoute
 
-
-#     print "********** Exiting optExchange1 **********"
-    return currSolution
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting optExchange1 **********"
+    return currSchedule
 
 '''
 @return: modified solution
 '''
-def optionalExchange2(currSolution, nHood):
-#     print "********** Entering optExchange2 **********"
-    
+def optionalExchange2(currSchedule, nHood):
+    print "********** Entering optExchange2 **********"
+    print isinstance(currSchedule[0], Objects.Route)   
     # calculate number to remove (nHood-12)
     numToRemove = nHood - 12
     # pick a random day and position
     
     # pick a random day and starting time to exchange customers
-    day = random.randint(0, len(currSolution)-1)
-    pos = random.randint(0, len(currSolution[day]))
+    day = random.randint(0, len(currSchedule) - 1)
+    pos = random.randint(0, len(currSchedule[day]))
     
     # using the numToRemove and numToAdd values, add and remove however many customers you need to
-    for task in currSolution[day][pos:pos+ numToRemove]:
+    for task in currSchedule[day][pos:pos + numToRemove]:
         unplannedTasks.append(task)
 
-    newDay = currSolution[day][:pos] + currSolution[day][pos + numToRemove:]
+    newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
 
-    currSolution[day] = newDay
-    
-#     print "********** Exiting optExchange2 **********"
-    return currSolution
+    newRoute = Objects.Route()
+    for task in newDay:
+        newRoute.append(task, None)
+
+    currSchedule[day] = newRoute
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting optExchange2 **********"
+    return currSchedule
 
 
 '''
 @return: modified solution
 '''
-def iterativeImprovement(taskList, currSolution, nHood):
-#     print "********** Entering iterativeImprovement **********"
-    
-    #If nHood< 13: do 3-OPT
+def iterativeImprovement(taskList, currSchedule, nHood):
+    print "********** Entering iterativeImprovement **********"
+    print isinstance(currSchedule[0], Objects.Route)   
+    # If nHood< 13: do 3-OPT
     if nHood < 13:
-        #only currSolution because we believe edges are being removed and inserted within the solution
-        newSolution = threeOPT(currSolution)
+        # only currSchedule because we believe edges are being removed and inserted within the solution
+        newSolution = threeOPT(currSchedule)
 
-    #Otherwise: Best Insertion
+    # Otherwise: Best Insertion
     else:
-        newSolution = bestInsertion(taskList, currSolution)
-   
-#     print "********** Exiting iterativeImprovement **********"
+        newSolution = bestInsertion(taskList, currSchedule)
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting iterativeImprovement **********"
     return newSolution
 '''
 @return: solution that has been modified by 3-Opt
 '''
-def threeOPT(currSolution):
-#     print "********** Entering threeOPT **********"
+def threeOPT(currSchedule):
+    print "********** Entering threeOPT **********"
+    print isinstance(currSchedule[0], Objects.Route)       
     
-    #MUST ASSUME START AND END ARE CONNECTED?
-    duration = getDuration(currSolution)
+    # MUST ASSUME START AND END ARE CONNECTED?
+    
+    # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
+    # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
+#     duration = getRouteDuration(currSchedule)
     improvement = False
-    #CHECK DEPENDING ON HOW WE STORE SCHEDULES
+    # CHECK DEPENDING ON HOW WE STORE SCHEDULES
     
-    #CHANGE THIS
-    scheduleLength = len(currSolution)
-    #2
+    # CHANGE THIS
+    scheduleLength = len(currSchedule)
+    # 2
     
     if scheduleLength >= 3:
         
-        maxM = math.factorial(scheduleLength)/(6*math.factorial(scheduleLength-3))
+        maxM = math.factorial(scheduleLength) / (6 * math.factorial(scheduleLength - 3))
     else:
-        return currSolution
+        return currSchedule
     m = 0
     while improvement == False or m <= maxM:
-        #5
+        # 5
         for n in range(0, scheduleLength):
-            #8
+            # 8
             for k in range(0, scheduleLength - 3):
-                #9 limiting the number of nodes that can move to 3
-                for j in range(k+1, min(k + 4, scheduleLength-1)):
-                    #10
-                    distance1 = dist(currSolution[k], currSolution[j+1]) + dist(currSolution[1], currSolution[j])
-                    distance2 = dist(currSolution[1], currSolution[j+1]) + dist(currSolution[k], currSolution[j])
-                    #11
-                    distance3 = dist(currSolution[1], currSolution[scheduleLength]) + dist(currSolution[k], currSolution[k+1]) + dist(currSolution[j], currSolution[j+1])
-                    #10
+                # 9 limiting the number of nodes that can move to 3
+                for j in range(k + 1, min(k + 4, scheduleLength - 1)):
+                    # 10
+                    distance1 = dist(currSchedule[k], currSchedule[j + 1]) + dist(currSchedule[1], currSchedule[j])
+                    distance2 = dist(currSchedule[1], currSchedule[j + 1]) + dist(currSchedule[k], currSchedule[j])
+                    # 11
+                    distance3 = dist(currSchedule[1], currSchedule[scheduleLength]) + dist(currSchedule[k], currSchedule[k + 1]) + dist(currSchedule[j], currSchedule[j + 1])
+                    # 10
                     if  distance1 <= distance2:
                         d = distance1
-                        #11
-                        if d + dist(currSolution[k+1], currSolution[scheduleLength]) < distance3:
-                            #16
+                        # 11
+                        if d + dist(currSchedule[k + 1], currSchedule[scheduleLength]) < distance3:
+                            # 16
                             # make newSchedule = [j+2....schedulelength, k+1, 1...k,j+1] 
-                            #newDuration = check duration
+                            # newDuration = check duration
                             if newDuration < duration:
                                 newSolution = newSchedule
                                 improvement = True
                                 break
-                    #10
+                    # 10
                     else:
                         d = distance2
-                        #11
-                        if d + dist(currSolution[k+1], currSolution[scheduleLength]) < distance3:
-                            #18
+                        # 11
+                        if d + dist(currSchedule[k + 1], currSchedule[scheduleLength]) < distance3:
+                            # 18
                             # make newSchedule = [j+2....schedulelength, k+1, k...1,j+1]
-                            #newDuration = check duration
+                            # newDuration = check duration
                             if newDuration < duration:
                                 newSolution = newSchedule
                                 improvement = True
@@ -397,16 +413,18 @@ def threeOPT(currSolution):
                     break
             if(improvement):
                     break
-        m+=1
-#     print "********** Exiting threeOPT **********"
-    return currSolution
+        m += 1
+        
+    print isinstance(currSchedule[0], Objects.Route)   
+    print "********** Exiting threeOPT **********"
+    return currSchedule
 
 
 
 '''
 @return: solution that has been modified by 3-Opt
 '''
-def bestInsertion(taskList, currSolution):
+def bestInsertion(taskList, currSchedule):
 #     print "********** Entering bestInsertion **********"
     
     # Sequentially consider tasks from unplannedTasks
@@ -416,7 +434,7 @@ def bestInsertion(taskList, currSolution):
     # find the additional distance of adding that task in that location
     # if that is smaller than the smallest so far, update smallest
     
-    #otherwise, enqueue it and go to the next task
+    # otherwise, enqueue it and go to the next task
 
     tasksSinceLastInsertion = 0
     
@@ -428,42 +446,45 @@ def bestInsertion(taskList, currSolution):
         # keeps track of the day and position within the day at which to insert task
         insertLocation = (0, 0)
         
-        #bool that keeps track of whether a give task is valid 
+        # bool that keeps track of whether a give task is valid 
         isValid = False
         
         currTask = unplannedTasks.popleft()
 
-        #looping through each day in the current solution list 
-        for day in range(len(currSolution)):
+        # looping through each day in the current solution list 
+        for day in range(len(currSchedule)):
             
-            #if the duration of the task under consideration added to the current day is less than the time limit then accept it as
+            # if the duration of the task under consideration added to the current day is less than the time limit then accept it as
             # valid  
-            if len(currTask.timeWindows[day]) > 0 and getDuration(currSolution[day]) + currTask.duration < timeLimit:
+            
+            # NOTE TO AVERY: NO MORE SOLUTIONS
+            
+            if len(currTask.timeWindows[day]) > 0 and getRouteDuration(currSchedule[day]) + currTask.duration < timeLimit:
                 isValid = True
                 
-                #for each position within the day 
-                for pos in range(len(currSolution[day])-1):
+                # for each position within the day 
+                for pos in range(len(currSchedule[day]) - 1):
                     
-                    task1 = currSolution[day][pos]
-                    task2 = currSolution[day][pos + 1]
+                    task1 = currSchedule[day][pos]
+                    task2 = currSchedule[day][pos + 1]
                    
-                    #calculates what the distance would be if the task under consideration where to be added between task1 and task2
+                    # calculates what the distance would be if the task under consideration where to be added between task1 and task2
                     addedDist = helperFunctions.getDistanceBetweenTasks(task1, currTask) + \
                     helperFunctions.getDistanceBetweenTasks(currTask, task2) - \
                     helperFunctions.getDistanceBetweenTasks(task1, task2)
                     
-                    #if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
+                    # if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
                     if addedDist < shortestDistance:
                         shortestDistance = addedDist
                         insertLocation = (day, pos)
         
-        #adding the 'valid' task to the day at the specified position 
+        # adding the 'valid' task to the day at the specified position 
         if isValid:
             day = insertLocation[0]
             pos = insertLocation[1]
-            newSolution = currSolution[day][:pos]
+            newSolution = currSchedule[day][:pos]
             newSolution.append(currTask)
-            currSolution[day] = newSolution + currSolution[day][pos:]
+            currSchedule[day] = newSolution + currSchedule[day][pos:]
             tasksSinceLastInsertion = 0
         
         # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
@@ -474,7 +495,7 @@ def bestInsertion(taskList, currSolution):
     # after all that, add the task to the solution in the time with smallest added distance.
 
 #     print "********** Exiting threeOPT **********"
-    return currSolution
+    return currSchedule
 
 
 '''
@@ -487,40 +508,43 @@ def isBetterSchedule(sched1, sched2):
     
     return sum1 > sum2
 
+def createSchedule(solution):
+    currSchedule = Objects.Schedule()
+    for i in range(len(solution)):
+        day = solution[i]
+        route = Objects.Route()
+        for task in range(len(day)):
+            newTask = copy.deepcopy(day[task])
+            route.append(newTask, None)
+        currSchedule.append(route)
+    return currSchedule
+
 '''
 @return: solution if currSolution is feasible
 '''
-def isFeasible(taskList, currSolution):
-#     print "********** Entering isFeasible **********"
+def isFeasible(taskList, currSchedule):
+    print "********** Entering isFeasible **********"
     
     # pass in a list-solution
     # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
     # with no ending times in the routes yet
-    currSchedule = Objects.Schedule()
-    for i in range(len(currSolution)):
-        day = currSolution[i]
-        route = Objects.Route()
-        
-        # Add a copy of the first route to the route
-        # (there is no travel time to the first task)
-        newTask = day[0].deepCopy()
-        route.append(newTask, None)
+    for r in range(len(currSchedule)):
+        route = currSchedule[r]
         
         # for each task except the first, add travel time from prev task to curr task
         # to the duration of task, then subtract that same time from each time window
         # start, and from release time.
-        for task in range(1, len(day)):
-            newTask = day[task].deepCopy()
-            #include travel time in these duplicate tasks. (added to duration of task, and 
-            travelTime = helperFunctions.getDistanceBetweenTasks(newTask, day[task-1])
-            newTask.duration = newTask.duration + travelTime
-            newTask.releaseTime = newTask.releaseTime - travelTime
-            for j in range(len(newTask.timeWindows[i])):
-                oldTW = newTask.timeWindows[i][j]
-                newTW = (oldTW[0]-travelTime, oldTW[1])
-                newTask.timeWindows[i][j] = newTW
-            route.append(newTask, None)
-        currSchedule.append(route)
+        for t in range(1, len(route)):
+            task = route[t]
+            # include travel time in these duplicate tasks. (added to duration of task, and 
+            travelTime = helperFunctions.getDistanceBetweenTasks(task, route[t - 1])
+            task.duration = task.duration + travelTime
+            task.releaseTime = task.releaseTime - travelTime
+            for tw in range(len(task.timeWindows[r])):
+                oldTW = task.timeWindows[r][tw]
+                newTW = (oldTW[0] - travelTime, oldTW[1])
+                task.timeWindows[r][tw] = newTW
+    
     
     # pass that into tightenTWStarts and tightenTWEnds. 
     # those functions will modify those tasks' time windows and return the modified schedule
@@ -534,27 +558,30 @@ def isFeasible(taskList, currSolution):
     # Otherwise, squidge to find the best schedule for this solution
     feasSol = minRoute(taskList, currSchedule)
     
-#     print "********** Exiting isFeasible **********" 
+    print "********** Exiting isFeasible **********" 
     return feasSol
 
 '''
-@return: Graph with modified release times
+@return: modified schedule with tightened tw starts
 '''
 def tightenTWStarts(currSchedule):
+    print "********** Entering tightenTWStarts **********"
+    print isinstance(currSchedule[0], Objects.Route)   
     if currSchedule == None:
         return None
-    for dayIndex in range(len(currSchedule)):
+    for d in range(len(currSchedule)):
         custIndex = 0
-        day = currSchedule[dayIndex]
+        day = currSchedule[d]
+        print day
         while custIndex < len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 :
             task = day.taskList[custIndex]
-            tw = task.timeWindows[dayIndex]
-            twNext = day.taskList[custIndex+1].timeWindows[dayIndex]
+            tw = task.timeWindows[d]
+            twNext = day.taskList[custIndex + 1].timeWindows[d]
             
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
          #  and the start of the next task's first tw
             if task.duration > tw[0][1] - tw[0][0] or (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
-                #remove that task's first tw
+                # remove that task's first tw
                 tw = tw[1:]
                 if len(tw) == 0:
                     break
@@ -570,9 +597,9 @@ def tightenTWStarts(currSchedule):
                 # after the end of task i (with i scheduled as early as possible)
                 for window in twNext:
                     window = (max(tw[0][0] + task.duration, window[0]), window[1])
-            custIndex+= 1
-        if custIndex == len(day) -1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
-            #remove that task's first tw
+            custIndex += 1
+        if custIndex == len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+            # remove that task's first tw
             tw = tw[1:]
             
         custIndex += 1
@@ -583,7 +610,7 @@ def tightenTWStarts(currSchedule):
     return currSchedule
 
 '''
-@return: Graph with modified deadlines
+@return: modified schedule with tightened tw ends
 '''
 def tightenTWEnds(currSchedule):
     if currSchedule == None:
@@ -596,7 +623,7 @@ def tightenTWEnds(currSchedule):
         while custIndex > 0 and len(day.taskList[custIndex].timeWindows) > 0:
             task = day.taskList[custIndex]
             tw = task.timeWindows[dayIndex]
-            twPrev = day.taskList[custIndex-1].timeWindows[dayIndex]
+            twPrev = day.taskList[custIndex - 1].timeWindows[dayIndex]
             # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time window
             #  and the end of the previous task's last tw:
             if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
@@ -620,7 +647,7 @@ def tightenTWEnds(currSchedule):
             custIndex -= 1
         if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0:
             if task.duration > tw[0][1] - tw[0][0]:
-                #remove that task's first tw
+                # remove that task's first tw
                 tw = tw[:-1]
             
         custIndex -= 1
@@ -634,53 +661,144 @@ def tightenTWEnds(currSchedule):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
-    # tightenedSol = using the returned schedules from tighten functions, look at first task and first tw for that task and schedule it as early as possible
-        # repeat for all tasks in order
-    # currBestSol = calcDominantSolution(tasklist, tightenSol)
-    # find the latest waiting customer and store 
-    # while there is a waiting customer and while this is not the last time window for that customer
-        # newSol = switchTimeWindows(solution, latest waiting customer)
-        # newDomSol = calcDominantSolution(tasklist, newSol)
-        # if getDuration(newDomSol) < getDuration(currBestSol)
-            # currSol = domSol
-        # update latest waiting customer
-    #return currBestSol
+    bestSchedule = copy.deepcopy(currSchedule)
     
-    #DELETE THIS LINE ONCE THE CODE IS WRITTEN
-    bestSchedule = currSchedule
+    # Minimize each route
+    for d in range(len(currSchedule)):
+        day = currSchedule[d]
+        
+        # keep track of what tw index each task has been assigned
+        assignedTWs = [0] * len(day)
+        
+        
+        # set the ending times for each task in the route by scheduling
+        # all tasks as early as possible (start at the beginning of the
+        # first time window. This is feasible because of preprocessing
+        for t in range(len(day)):
+            task = day[t]
+            day.endingTimes[t] = task.duration + task.timeWindows[d][0][0]
+        
+        # Find the dominant version of this route (shortest possible route
+        # with this ending time.
+        bestRoute = dominantRoute(day, assignedTWs, d)
+        latestWaitingTask = getLatestWaitingTask(bestRoute)
+        
+        # While this there are still tasks with waiting time and the latest
+        # waiting task has time windows to switch to
+        while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]):
+            # move the latest waiting task to its next time window.
+            newRoute = switchTimeWindows(bestRoute, latestWaitingTask, d, assignedTWs)
+            # find the shortest route with that ending time
+            newRoute = dominantRoute(newRoute, assignedTWs, d)
+            
+            # if it's better than the best so far, update the best.
+            if(getRouteDuration(newRoute) < getRouteDuration(bestRoute)):
+                bestRoute = newRoute
+            latestWaitingTask = getLatestWaitingTask(newRoute)
+            
+        # update the schedule to have this route
+        bestSchedule[d] = bestRoute
+
+    # Set bestSchedule tasks to be the original tasks from the tasklist
+    # We do this to remove changes we made to time windows in the
+    # preprocessing steps
     for r in range(len(bestSchedule)):
         for t in range(len(bestSchedule[r])):
             bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
     
-        
-    #USE ORIGINAL TASKS FROM TASKLIST TO CONSTRUCT FINAL SCHEDULE
     return bestSchedule
 
 '''
 @return: the index for the last task with waiting time in the route
 '''
-def getLatestWaitingTask(currSolution):
-    return 0
+def getLatestWaitingTask(currRoute):
+    for task in range(len(currRoute) - 1, 0, -1):
+        if currRoute.endingTimes[task] - currRoute[task].duration > currRoute.endingTimes[task - 1]:
+            return task
+    return -1
 
 '''
 @return: the updated schedule after moving the latestWaitingTask to the next time window and updating the other tasks
 '''
-def switchTimeWindows(currSolution, latestWaitingTask):
-    # move the task latestWaitingTask - 1 to the next time window as early as possible
-    # moves all tasks before it as late as possible and all those after it as early as possible
+def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
+    # move the task latestWaitingTaskIndex - 1 to the next time window as early as possible
+    latestWaitingTask = currRoute[latestWaitingTaskIndex]
+    tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex] + 1]
+    latestWaitingTask.endingTime = latestWaitingTask.duration + tw[0]
+    assignedTWs[latestWaitingTaskIndex] += 1
     
-    return currSolution
+    nextTaskStart = tw[0]
+    prevTaskEnd = tw[0] + latestWaitingTask.duration
+    
+    # Move all tasks before latestWaitingTask as late as possible
+    for t in range(latestWaitingTaskIndex - 1, -1, -1):
+        task = currRoute[t]
+        routeTWs = task.timeWindows[day]
+        for tw in range(len(routeTWs)):
+            timeWindow = routeTWs[tw]
+            if timeWindow[0] + task.duration <= nextTaskStart:
+                assignedTWs[t] = tw
+                task.endingTime = min(nextTaskStart, timeWindow[1])
+            else:
+                nextTaskStart = task.endingTime - task.duration
+                break
+            
+    # Move all tasks after latestWaitingTask as early as possible
+    # AVERY CHECK THIS
+    for t in range(latestWaitingTaskIndex + 1, len(assignedTWs)):
+        task = currRoute[t]
+        routeTWs = task.timeWindows[day]
+        for tw in range(len(routeTWs) - 1, -1, -1):
+            timeWindow = routeTWs[tw]
+            if timeWindow[1] - task.duration >= prevTaskEnd:
+                assignedTWs[t] = tw
+                task.endingTime = max(prevTaskEnd, timeWindow[0]) + task.duration
+            else:
+                prevTaskEnd = task.endingTime
+                break
+                
+    # SET NEW ENDING TIMES
+    return currRoute
 
 '''
 @return: the dominant version of the schedule being passed in (squidging)
 '''
-def calcDominantSolution(taskList, currSolution):
-    # given the ending time of currSolution, move all tasks to the latest possible time without changing that ending time
-    return currSolution
-
-def getDuration(currSolution):
+def dominantRoute(currRoute, assignedTWs, dayIndex):
+    nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
+    for t in range(len(currRoute) - 2, -1, -1):
+        task = currRoute[t]
+        timeWindows = task.timeWindows[dayIndex]
+        for tw in range(assignedTWs[t], len(timeWindows)):
+            timeWindow = timeWindows[tw]
+            if timeWindow[0] + task.duration <= nextTaskStart:
+                currRoute.endingTimes[t] = min(timeWindow[1], nextTaskStart)
+                assignedTWs[t] = tw
+            else:
+                nextTaskStart = currRoute.endingTimes[t] - task.duration
+                break
+        
+    # given the ending time of currSolution, move all tasks to the latest possible
+    # time without changing that ending time
     
-    return 0
+    return currRoute
+
+'''
+@return: the length of time from the start of the first task to the end of the last
+'''
+def getRouteDuration(currRoute):
+    if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
+        return None
+    return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
+
+'''
+@return: the length of a schedule from the start of the first 
+    route to the end of the last
+'''
+def getScheduleDuration(currSchedule):
+    sum = 0
+    for route in currSchedule:
+        sum += getRouteDuration(route)
+    return sum
 
 '''
 @return: total distance of a solution

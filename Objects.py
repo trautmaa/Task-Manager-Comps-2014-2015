@@ -2,7 +2,6 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-
 '''
 A class to represent how many different locations there are for each task
 '''
@@ -60,22 +59,6 @@ class Task:
         
     def getProfit(self):
         return self.priority
-
-    def deepCopy(self):
-        other = Task(self.id)
-        other.x = self.x
-        other.y = self.y
-        other.releaseTime = self.releaseTime
-        other.duration = self.duration
-        other.deadline = self.deadline
-        other.priority = self.priority
-        other.required = self.required
-        other.timeWindows = [[]*len(self.timeWindows)]
-        for day in range(len(self.timeWindows)):
-            for tw in range(len(self.timeWindows[day])):
-                other.timeWindows[day].append(tuple(self.timeWindows[day][tw]))
-                
-        return other
 
     def __str__(self):
         stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + ", "\
