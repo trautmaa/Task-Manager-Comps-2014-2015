@@ -12,7 +12,6 @@ import random
 import copy
 from collections import deque
 from bruteForce import runBruteForceAlg
-from enaml.application import schedule
 
 global timeLimit
 timeLimit = 5000
@@ -56,6 +55,7 @@ def vns(taskList, currSchedule):
 #     print currSchedule
     
     global unplannedTasks
+    
     unplannedTasks = deque(taskList[:])
    
     for day in currSchedule:
@@ -498,32 +498,15 @@ def bestInsertion(taskList, currSchedule):
     return currSchedule
 
 
-'''
-This works with Schedule objects
-@return: True if sol1 has more profit than sol2
-'''
-def isBetterSchedule(sched1, sched2):
-    sum1 = sched1.getProfit()
-    sum2 = sched2.getProfit()
-    
-    return sum1 > sum2
 
-def createSchedule(solution):
-    currSchedule = Objects.Schedule()
-    for i in range(len(solution)):
-        day = solution[i]
-        route = Objects.Route()
-        for task in range(len(day)):
-            newTask = copy.deepcopy(day[task])
-            route.append(newTask, None)
-        currSchedule.append(route)
-    return currSchedule
 
 '''
 @return: solution if currSolution is feasible
 '''
 def isFeasible(taskList, currSchedule):
     print "********** Entering isFeasible **********"
+    
+    # AVERY duplicate tasks
     
     # pass in a list-solution
     # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
@@ -536,7 +519,8 @@ def isFeasible(taskList, currSchedule):
         # start, and from release time.
         for t in range(1, len(route)):
             task = route[t]
-            # include travel time in these duplicate tasks. (added to duration of task, and 
+            # include travel time in these duplicate tasks. (added to duration of task,
+            # subtract from release time and time window starts)
             travelTime = helperFunctions.getDistanceBetweenTasks(task, route[t - 1])
             task.duration = task.duration + travelTime
             task.releaseTime = task.releaseTime - travelTime
@@ -560,6 +544,7 @@ def isFeasible(taskList, currSchedule):
     
     print "********** Exiting isFeasible **********" 
     return feasSol
+                
 
 '''
 @return: modified schedule with tightened tw starts
@@ -670,7 +655,6 @@ def minRoute(taskList, currSchedule):
         # keep track of what tw index each task has been assigned
         assignedTWs = [0] * len(day)
         
-        
         # set the ending times for each task in the route by scheduling
         # all tasks as early as possible (start at the beginning of the
         # first time window. This is feasible because of preprocessing
@@ -714,26 +698,37 @@ def minRoute(taskList, currSchedule):
 def getLatestWaitingTask(currRoute):
     for task in range(len(currRoute) - 1, 0, -1):
         if currRoute.endingTimes[task] - currRoute[task].duration > currRoute.endingTimes[task - 1]:
-            return task
+            return task - 1
+            #AVERY check: should this be task or task - 1?
     return -1
 
 '''
 @return: the updated schedule after moving the latestWaitingTask to the next time window and updating the other tasks
 '''
 def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
-    # move the task latestWaitingTaskIndex - 1 to the next time window as early as possible
+    #store the task we are working with
     latestWaitingTask = currRoute[latestWaitingTaskIndex]
+    
+    # store the new time window it is moving to
     tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex] + 1]
+    
+    #moving the latestWaitingTask to its next time window as early as possible within the new time window
     latestWaitingTask.endingTime = latestWaitingTask.duration + tw[0]
+    
+    # update the assigned time window for the task we are working with
     assignedTWs[latestWaitingTaskIndex] += 1
     
+    #storing the surrounding tasks starts and ends
     nextTaskStart = tw[0]
     prevTaskEnd = tw[0] + latestWaitingTask.duration
     
-    # Move all tasks before latestWaitingTask as late as possible
+    # Move all tasks before latestWaitingTask as late as possible 
+    # from latest waiting task backwards
     for t in range(latestWaitingTaskIndex - 1, -1, -1):
         task = currRoute[t]
         routeTWs = task.timeWindows[day]
+        # for each time window in that route find the latest possible time window
+        # that fits this task before the end of that time window and the start of the next task
         for tw in range(len(routeTWs)):
             timeWindow = routeTWs[tw]
             if timeWindow[0] + task.duration <= nextTaskStart:
@@ -748,6 +743,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     for t in range(latestWaitingTaskIndex + 1, len(assignedTWs)):
         task = currRoute[t]
         routeTWs = task.timeWindows[day]
+        # AVERY: DOES THIS GO BACKWARDS correctly?
         for tw in range(len(routeTWs) - 1, -1, -1):
             timeWindow = routeTWs[tw]
             if timeWindow[1] - task.duration >= prevTaskEnd:
@@ -757,17 +753,25 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
                 prevTaskEnd = task.endingTime
                 break
                 
-    # SET NEW ENDING TIMES
     return currRoute
 
 '''
+Given the ending time of currSolution, move all tasks to the latest possible
+time without changing that ending time
+
 @return: the dominant version of the schedule being passed in (squidging)
 '''
 def dominantRoute(currRoute, assignedTWs, dayIndex):
+    # put everything as late as possible within the assigned time window
     nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
+    
+    #goes through the current route backwards ignoring the last task
     for t in range(len(currRoute) - 2, -1, -1):
         task = currRoute[t]
         timeWindows = task.timeWindows[dayIndex]
+        
+        #go through each time window for each task find latest time it could be 
+        #scheduled given that the last task has not moved 
         for tw in range(assignedTWs[t], len(timeWindows)):
             timeWindow = timeWindows[tw]
             if timeWindow[0] + task.duration <= nextTaskStart:
@@ -776,16 +780,41 @@ def dominantRoute(currRoute, assignedTWs, dayIndex):
             else:
                 nextTaskStart = currRoute.endingTimes[t] - task.duration
                 break
-        
-    # given the ending time of currSolution, move all tasks to the latest possible
-    # time without changing that ending time
     
     return currRoute
+
+'''
+This works with Schedule objects
+@return: True if sol1 has more profit than sol2
+'''
+def isBetterSchedule(sched1, sched2):
+    sum1 = sched1.getProfit()
+    sum2 = sched2.getProfit()
+    
+    return sum1 > sum2
+'''
+@return: schedule object containing all of the routes and tasks from the original solution
+'''
+def createSchedule(solution):
+    currSchedule = Objects.Schedule()
+    #goes through each day in the solution 
+    for d in range(len(solution)):
+        day = solution[d]
+        route = Objects.Route()
+        #creates a copy of each task in that day and adds it to the new route
+        for task in range(len(day)):
+            newTask = copy.deepcopy(day[task])
+            route.append(newTask, None)
+        # the new route is added to the new schedule
+        currSchedule.append(route)
+    return currSchedule
 
 '''
 @return: the length of time from the start of the first task to the end of the last
 '''
 def getRouteDuration(currRoute):
+    # FIX THIS call isFeasible?
+    # AVERY: put this in Object.Route instead
     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
         return None
     return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
@@ -808,7 +837,7 @@ def calcTotalDistance(currSolution):
 
 
 def printUnplanned():
-    print "unplanned tasks: (",
+    print "unplanned tsks: (",
     for task in unplannedTasks:
         print str(task) + ", "
     print ")"
