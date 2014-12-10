@@ -145,6 +145,7 @@ def vns(taskList, currSchedule):
 def shaking(currSchedule, nHood):
     print "********** Entering shaking **********"
     print isinstance(currSchedule[0], Objects.Route)   
+    currSchedule = copy.deepcopy(currSchedule)
     
     # Based on the neighborhood perform a different operation
     if nHood < 8:
@@ -169,7 +170,7 @@ def crossExchange(currSchedule, nHood):
     print isinstance(currSchedule[0], Objects.Route)   
         
     # NOTE TO AVERY: MAKE SURE EXCHANGE
-    
+
     if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
         print "********** Exiting crossExchange **********"
@@ -356,7 +357,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 def threeOPT(taskList, currSchedule):
     print "********** Entering threeOPT **********"
     print isinstance(currSchedule[0], Objects.Route)       
-    printSolution(currSchedule)
+#     printSolution(currSchedule)
     return currSchedule
     
     # MUST ASSUME START AND END ARE CONNECTED?
@@ -549,10 +550,11 @@ def bestInsertion(taskList, currSchedule):
         
         # adding the 'valid' task to the day at the specified position 
         if isValid:
+            newSolution = Objects.Route()
             day = insertLocation[0]
             pos = insertLocation[1]
-            newSolution = currSchedule[day][:pos]
-            newSolution.append(currTask)
+            newSolution.taskList = currSchedule[day][:pos]
+            newSolution.append(currTask, None)
             currSchedule[day] = newSolution + currSchedule[day][pos:]
             tasksSinceLastInsertion = 0
         
@@ -562,8 +564,8 @@ def bestInsertion(taskList, currSchedule):
             unplannedTasks.append(currTask)
     
     # after all that, add the task to the solution in the time with smallest added distance.
-
-#     print "********** Exiting threeOPT **********"
+    print isinstance(currSchedule[0], Objects.Route)
+    print "********** Exiting bestInsertion **********"
     return currSchedule
 
 
@@ -610,6 +612,7 @@ def isFeasible(taskList, currSchedule):
         print "********** Exiting isFeasible **********"
         return None
     
+    
     # Otherwise, squidge to find the best schedule for this solution
     feasSol = minRoute(taskList, currSchedule)
     
@@ -622,6 +625,7 @@ def isFeasible(taskList, currSchedule):
 '''
 def tightenTWStarts(currSchedule):
     print "********** Entering tightenTWStarts **********"
+    #AVERY THIS DOESN'T WORK RIGHT: TW STARTS NOT GETTING SET
     print isinstance(currSchedule[0], Objects.Route)   
     if currSchedule == None:
         return None
@@ -652,10 +656,9 @@ def tightenTWStarts(currSchedule):
             elif task.duration + tw[0][0] > twNext[0][0]:
                 # reset the beginnings of all time windows to be as early as possible
                 # after the end of task i (with i scheduled as early as possible)
-                for window in twNext:
-                    window = (max(tw[0][0] + task.duration, window[0]), window[1])
+                for w in range(len(twNext)):
+                    twNext[w] = (max(tw[0][0] + task.duration, twNext[w][0]), twNext[w][1])
             custIndex += 1
-        #WAIT WHAT DOES THIS DO?
         #if this is the last customer and they still have time windows left,
         if custIndex == len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
                 # remove that task's first tw
@@ -685,25 +688,25 @@ def tightenTWEnds(currSchedule):
             task = day.taskList[custIndex]
             tw = task.timeWindows[dayIndex]
             twPrev = day.taskList[custIndex - 1].timeWindows[dayIndex]
-            # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time window
+            # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time w
             #  and the end of the previous task's last tw:
             if task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
-                # remove the last time window
+                # remove the last time w
                 tw = tw[:-1]
                 if len(tw) == 0:
                     break
             # else if duration of task i at the end of its last tw starts before the end of the previous task's last tw
             elif tw[-1][1] - task.duration < twPrev[-1][1]:
-                # set the end of that time window to be the maximum of the the starting time of task i's last time window
-                # and the end of task i-1's last time window
+                # set the end of that time w to be the maximum of the the starting time of task i's last time w
+                # and the end of task i-1's last time w
                 tw[-1] = (tw[-1][0], max(twPrev[-1][1], tw[-1][0] + task.duration))
              
             # else if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
             elif tw[-1][1] - task.duration > twPrev[-1][1]:
                 # reset the endings of all time windows to be as late as possible
                 # before the beginning of task i (with i scheduled as late as possible)
-                for window in twPrev:
-                    window = (window[0], min(tw[-1][1] - task.duration, window[1]))
+                for w in range(len(twPrev)):
+                    twPrev[w] = (twPrev[w][0], min(tw[-1][1] - task.duration, twPrev[w][1]))
 
             custIndex -= 1
         if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0:
@@ -723,6 +726,7 @@ def tightenTWEnds(currSchedule):
 '''
 def minRoute(taskList, currSchedule):
     print "********** Entering minRoute **********"
+    #AVERY ENDING times are almost all the same. still wrong
     bestSchedule = copy.deepcopy(currSchedule)
     
     # Minimize each route
@@ -738,7 +742,6 @@ def minRoute(taskList, currSchedule):
         for t in range(len(day)):
             task = day[t]
             day.endingTimes[t] = task.duration + task.timeWindows[d][0][0]
-        
         # Find the dominant version of this route (shortest possible route
         # with this ending time.
         bestRoute = dominantRoute(day, assignedTWs, d)
@@ -746,7 +749,7 @@ def minRoute(taskList, currSchedule):
         
         # While this there are still tasks with waiting time and the latest
         # waiting task has time windows to switch to
-        while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]):
+        while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
             # move the latest waiting task to its next time window.
             newRoute = switchTimeWindows(bestRoute, latestWaitingTask, d, assignedTWs)
             # find the shortest route with that ending time
@@ -756,9 +759,9 @@ def minRoute(taskList, currSchedule):
             if(getRouteDuration(newRoute) < getRouteDuration(bestRoute)):
                 bestRoute = newRoute
             latestWaitingTask = getLatestWaitingTask(newRoute)
-            
         # update the schedule to have this route
         bestSchedule[d] = bestRoute
+    
 
     # Set bestSchedule tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
@@ -787,9 +790,13 @@ def getLatestWaitingTask(currRoute):
 @return: the updated schedule after moving the latestWaitingTask to the next time window and updating the other tasks
 '''
 def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
+    print "********** Entering switchTimeWindows **********"
+    
     #store the task we are working with
     latestWaitingTask = currRoute[latestWaitingTaskIndex]
-    
+    print len(latestWaitingTask.timeWindows), day
+    print len(assignedTWs), latestWaitingTaskIndex
+    print len(latestWaitingTask.timeWindows[day]), assignedTWs[latestWaitingTaskIndex] + 1
     # store the new time window it is moving to
     tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex] + 1]
     
