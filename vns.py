@@ -33,6 +33,9 @@ def solve(csvFile):
     
     print 'greedy solution'
     printSolution(greedySol)
+    
+    print 'vns solution'
+    print currSchedule
 #     print 'brute force solution'
 #     printSolution(brute)
     
@@ -40,7 +43,7 @@ def solve(csvFile):
     print "greedy journey"
     helperFunctions.printJourney(greedySol)
     print "vns journey"
-    helperFunctions.printJourney(modTasks)
+    helperFunctions.printJourney(currSchedule)
 
     return currSchedule
 
@@ -256,7 +259,6 @@ def crossExchange(currSchedule, nHood):
 @return: modified solution
 '''
 def optionalExchange1(currSchedule, nHood):
-    # NOTE TO AVERY: this is where the problem is
     print "********** Entering optExchange1**********"
     print isinstance(currSchedule[0], Objects.Route)   
     # set p and q according to nHood Index
@@ -340,7 +342,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
     # If nHood< 13: do 3-OPT
     if nHood < 13:
         # only currSchedule because we believe edges are being removed and inserted within the solution
-        newSolution = threeOPT(currSchedule)
+        newSolution = threeOPT(taskList, currSchedule)
 
     # Otherwise: Best Insertion
     else:
@@ -351,15 +353,17 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 '''
 @return: solution that has been modified by 3-Opt
 '''
-def threeOPT(currSchedule):
+def threeOPT(taskList, currSchedule):
     print "********** Entering threeOPT **********"
     print isinstance(currSchedule[0], Objects.Route)       
+    
+    return currSchedule
     
     # MUST ASSUME START AND END ARE CONNECTED?
     
     # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
     # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
-#     duration = getRouteDuration(currSchedule)
+    duration = getScheduleDuration(taskList, currSchedule)
     improvement = False
     # CHECK DEPENDING ON HOW WE STORE SCHEDULES
     
@@ -425,8 +429,8 @@ def threeOPT(currSchedule):
 @return: solution that has been modified by 3-Opt
 '''
 def bestInsertion(taskList, currSchedule):
-#     print "********** Entering bestInsertion **********"
-    
+    print "********** Entering bestInsertion **********"
+    print isinstance(currSchedule[0], Objects.Route)
     # Sequentially consider tasks from unplannedTasks
     # For each day, if that task:
         # has a time window in that day
@@ -454,12 +458,10 @@ def bestInsertion(taskList, currSchedule):
         # looping through each day in the current solution list 
         for day in range(len(currSchedule)):
             
-            # if the duration of the task under consideration added to the current day is less than the time limit then accept it as
-            # valid  
-            
-            # NOTE TO AVERY: NO MORE SOLUTIONS
-            
-            if len(currTask.timeWindows[day]) > 0 and getRouteDuration(currSchedule[day]) + currTask.duration < timeLimit:
+            # if the duration of the task under consideration added to the current day 
+            # is less than the time limit then accept it as valid
+            if len(currTask.timeWindows[day]) > 0 and \
+            getRouteDuration(currSchedule[day]) + currTask.duration < timeLimit:
                 isValid = True
                 
                 # for each position within the day 
@@ -506,10 +508,10 @@ def bestInsertion(taskList, currSchedule):
 def isFeasible(taskList, currSchedule):
     print "********** Entering isFeasible **********"
     
-    # AVERY duplicate tasks
+    # deepcopy currSchedule. We will be changing timewindows
+    currSchedule = copy.deepcopy(currSchedule)
     
-    # pass in a list-solution
-    # create a schedule object with DUPLICATE TASK OBJECTS for that list-solution
+    
     # with no ending times in the routes yet
     for r in range(len(currSchedule)):
         route = currSchedule[r]
@@ -537,6 +539,8 @@ def isFeasible(taskList, currSchedule):
     
     # If those terminate early and return None, the schedule is infeasible. Return None
     if currSchedule == None:
+        print "InFeasible Route"
+        print "********** Exiting isFeasible **********"
         return None
     
     # Otherwise, squidge to find the best schedule for this solution
@@ -557,7 +561,8 @@ def tightenTWStarts(currSchedule):
     for d in range(len(currSchedule)):
         custIndex = 0
         day = currSchedule[d]
-        print day
+        task = day.taskList[custIndex]
+        tw = task.timeWindows[d]
         while custIndex < len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 :
             task = day.taskList[custIndex]
             tw = task.timeWindows[d]
@@ -583,28 +588,32 @@ def tightenTWStarts(currSchedule):
                 for window in twNext:
                     window = (max(tw[0][0] + task.duration, window[0]), window[1])
             custIndex += 1
+        #WAIT WHAT DOES THIS DO?
+        #if this is the last customer and they still have time windows left,
         if custIndex == len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
-            # remove that task's first tw
-            tw = tw[1:]
+                # remove that task's first tw
+                tw = tw[1:]
             
         custIndex += 1
         
         if custIndex < len(day.taskList):
             return None
-
+    print "********** Exiting tightenTWStarts **********"
     return currSchedule
 
 '''
 @return: modified schedule with tightened tw ends
 '''
 def tightenTWEnds(currSchedule):
+    print "********** Entering tightenTWEnds **********"
     if currSchedule == None:
         return None
     
     for dayIndex in range(len(currSchedule)):
         custIndex = len(currSchedule[dayIndex].taskList) - 1
         day = currSchedule[dayIndex]
-
+        task = day.taskList[custIndex]
+        tw = task.timeWindows[dayIndex]
         while custIndex > 0 and len(day.taskList[custIndex].timeWindows) > 0:
             task = day.taskList[custIndex]
             tw = task.timeWindows[dayIndex]
@@ -639,13 +648,14 @@ def tightenTWEnds(currSchedule):
         
         if custIndex > 0:
             return None
-        
+    print "********** Entering tightenTWEnds **********"
     return currSchedule
 
 '''
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
+    print "********** Entering minRoute **********"
     bestSchedule = copy.deepcopy(currSchedule)
     
     # Minimize each route
@@ -690,7 +700,11 @@ def minRoute(taskList, currSchedule):
         for t in range(len(bestSchedule[r])):
             bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
     
+    print "********** Exiting minRoute **********"
     return bestSchedule
+
+
+
 
 '''
 @return: the index for the last task with waiting time in the route
@@ -809,22 +823,32 @@ def createSchedule(solution):
         currSchedule.append(route)
     return currSchedule
 
+
+
 '''
 @return: the length of time from the start of the first task to the end of the last
 '''
-def getRouteDuration(currRoute):
-    # FIX THIS call isFeasible?
+def getRouteDuration(currRoute):    
     # AVERY: put this in Object.Route instead
+    # doesn't work if it's infeasible. If it is infeasible, I'm returning infinity
+    if len(currRoute) == 0:
+        return 0
     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
-        return None
+        return float("inf")
     return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
 
 '''
 @return: the length of a schedule from the start of the first 
     route to the end of the last
 '''
-def getScheduleDuration(currSchedule):
+def getScheduleDuration(taskList, currSchedule):
     sum = 0
+    
+    #AVERY: this doesn't work because some things that use this don't require
+    # the route to be feasible.
+    currSchedule = isFeasible(taskList, currSchedule)
+    
+    
     for route in currSchedule:
         sum += getRouteDuration(route)
     return sum
