@@ -367,7 +367,7 @@ def threeOPT(taskList, currSchedule):
     duration = 1
     
     #ABBY CHANGE THIS FOR DEBUGGING
-    improvement = True
+    improvement = False
     
     # CHANGE THIS
     # pick a random day to optimize
@@ -385,9 +385,9 @@ def threeOPT(taskList, currSchedule):
     else:
         return currSchedule
     #ABBY CHANGE THIS FOR DEBUGGING
-    m = 100000000
+    m = 0
     while improvement == False or m < maxM:
-        
+
         # 5
         for n in range(0, routeLength -1):
             
@@ -395,8 +395,10 @@ def threeOPT(taskList, currSchedule):
             for k in range(0, routeLength - 2):
         
                 # 9 limiting the number of nodes that can move to 3
-                for j in range(k + 1, min(k + 4, routeLength - 2)):
-                    
+                topRange = min(k+4, routeLength - 2)
+                
+                for j in range(k + 1, topRange, 1):
+                    #print(j)
                     # 10
                     distance1 = helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j])
                     distance2 = helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j])
@@ -407,11 +409,13 @@ def threeOPT(taskList, currSchedule):
 #                     print("distance2 is " + str(distance2))
                     if  distance1 <= distance2:
                         d = distance1
-                        #print("Entered if")
+                        print("Entered if")
+#                         print("distance3 is " + str(distance3))
+#                         print(d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]))
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 16
-                            #print("entered second if")
+                            print("entered second if")
                             # make newSchedule = [j+2....routeLength, k+1, 1...k,j+1] 
                             newRoute = Objects.Route()
                             
@@ -424,20 +428,24 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            
+                            print("here?")
                             #printSolution(newSchedule)
                             
                             # newDuration = check duration
-                            newDuration = 10
+                            newDuration = 0
                             if newDuration < duration:
                                 print("got hereererere 1")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
+                        #??????????????????
+                        else:
+                            print("entered else after if")
+                            return currSchedule
                     # 10
                     else:
                         d = distance2
-                        #print("Entered else")
+                        print("Entered else")
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 18
@@ -455,24 +463,30 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            
+                            print("here2?")
                             #printSolution(newSchedule)
                             
                             # newDuration = check duration
-                            newDuration = 10
+                            newDuration = 0
                             if newDuration < duration:
                                 print("got hereererere 2")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
+                        else:
+                            print("entered else after else")
+                            return currSchedule
                 if(improvement):
                     break
             if(improvement):
                     break
         m += 1
         
-    print isinstance(currSchedule[0], Objects.Route)  
-     
+    print isinstance(currSchedule[0], Objects.Route)
+    print("currSchedule")
+    printSolution(currSchedule)  
+    print("newSchedule")
+    printSolution(newSolution) 
     print "********** Exiting threeOPT **********"
     return currSchedule
 
