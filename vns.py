@@ -356,60 +356,112 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 def threeOPT(taskList, currSchedule):
     print "********** Entering threeOPT **********"
     print isinstance(currSchedule[0], Objects.Route)       
-    
+    printSolution(currSchedule)
     return currSchedule
     
     # MUST ASSUME START AND END ARE CONNECTED?
     
     # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
     # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
-    duration = getScheduleDuration(taskList, currSchedule)
-    improvement = False
-    # CHECK DEPENDING ON HOW WE STORE SCHEDULES
+#     duration = getRouteDuration(currSchedule)
+    duration = 1
+    
+    #ABBY CHANGE THIS FOR DEBUGGING
+    improvement = True
     
     # CHANGE THIS
-    scheduleLength = len(currSchedule)
+    # pick a random day to optimize
+    day = random.randint(0, len(currSchedule) - 1)
+    currRoute = currSchedule[day]
+    routeLength = len(currRoute)
+    print("routLength is " + str(routeLength))
     # 2
     
-    if scheduleLength >= 3:
+    
+    if routeLength > 3:
         
-        maxM = math.factorial(scheduleLength) / (6 * math.factorial(scheduleLength - 3))
+        maxM = math.factorial(routeLength) / (6 * math.factorial(routeLength - 3))
+        print(maxM)
     else:
         return currSchedule
-    m = 0
-    while improvement == False or m <= maxM:
+    #ABBY CHANGE THIS FOR DEBUGGING
+    m = 100000000
+    while improvement == False or m < maxM:
+        
         # 5
-        for n in range(0, scheduleLength):
+        for n in range(0, routeLength -1):
+            
             # 8
-            for k in range(0, scheduleLength - 3):
+            for k in range(0, routeLength - 2):
+        
                 # 9 limiting the number of nodes that can move to 3
-                for j in range(k + 1, min(k + 4, scheduleLength - 1)):
+                for j in range(k + 1, min(k + 4, routeLength - 2)):
+                    
                     # 10
-                    distance1 = dist(currSchedule[k], currSchedule[j + 1]) + dist(currSchedule[1], currSchedule[j])
-                    distance2 = dist(currSchedule[1], currSchedule[j + 1]) + dist(currSchedule[k], currSchedule[j])
+                    distance1 = helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j])
+                    distance2 = helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j])
                     # 11
-                    distance3 = dist(currSchedule[1], currSchedule[scheduleLength]) + dist(currSchedule[k], currSchedule[k + 1]) + dist(currSchedule[j], currSchedule[j + 1])
+                    distance3 = helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[routeLength-1]) + helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[k + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[j], currRoute[j + 1])
                     # 10
+#                     print("distance1 is " + str(distance1))
+#                     print("distance2 is " + str(distance2))
                     if  distance1 <= distance2:
                         d = distance1
+                        #print("Entered if")
                         # 11
-                        if d + dist(currSchedule[k + 1], currSchedule[scheduleLength]) < distance3:
+                        if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 16
-                            # make newSchedule = [j+2....schedulelength, k+1, 1...k,j+1] 
+                            #print("entered second if")
+                            # make newSchedule = [j+2....routeLength, k+1, 1...k,j+1] 
+                            newRoute = Objects.Route()
+                            
+                            #CHECK THESE INDICES
+                            for i in range(j+1, routeLength -1):
+                                newRoute.append(currRoute[i], None)
+                            newRoute.append(currRoute[k], None)
+                            for l in range(0, k-1):
+                                newRoute.append(currRoute[l], None)
+                            newRoute.append(currRoute[j], None)
+                            newSchedule = currSchedule
+                            newSchedule[day] = newRoute
+                            
+                            #printSolution(newSchedule)
+                            
                             # newDuration = check duration
+                            newDuration = 10
                             if newDuration < duration:
+                                print("got hereererere 1")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
                     # 10
                     else:
                         d = distance2
+                        #print("Entered else")
                         # 11
-                        if d + dist(currSchedule[k + 1], currSchedule[scheduleLength]) < distance3:
+                        if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 18
-                            # make newSchedule = [j+2....schedulelength, k+1, k...1,j+1]
+                            
+                            # make newSchedule = [j+2....routeLength, k+1, k...1,j+1]
+                           
+                            newRoute = Objects.Route()
+                            
+                            #CHECK THESE INDICES
+                            for i in range(j+1, routeLength -1):
+                                newRoute.append(currRoute[i], None)
+                            newRoute.append(currRoute[k], None)
+                            for l in range(k-1, 0, -1):
+                                newRoute.append(currRoute[l], None)
+                            newRoute.append(currRoute[j], None)
+                            newSchedule = currSchedule
+                            newSchedule[day] = newRoute
+                            
+                            #printSolution(newSchedule)
+                            
                             # newDuration = check duration
+                            newDuration = 10
                             if newDuration < duration:
+                                print("got hereererere 2")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
@@ -419,7 +471,8 @@ def threeOPT(taskList, currSchedule):
                     break
         m += 1
         
-    print isinstance(currSchedule[0], Objects.Route)   
+    print isinstance(currSchedule[0], Objects.Route)  
+     
     print "********** Exiting threeOPT **********"
     return currSchedule
 
