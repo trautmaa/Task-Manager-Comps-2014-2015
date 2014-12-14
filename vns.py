@@ -357,7 +357,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 def threeOPT(taskList, currSchedule):
     print "********** Entering threeOPT **********"
     print isinstance(currSchedule[0], Objects.Route)       
-#     printSolution(currSchedule)
+    printSolution(currSchedule)
     return currSchedule
     
     # MUST ASSUME START AND END ARE CONNECTED?
@@ -387,7 +387,8 @@ def threeOPT(taskList, currSchedule):
         return currSchedule
     #ABBY CHANGE THIS FOR DEBUGGING
     m = 0
-    while improvement == False or m < maxM:
+    #MAKE THIS AND and not OR??????????
+    while improvement == False and m < maxM:
 
         # 5
         for n in range(0, routeLength -1):
@@ -421,7 +422,7 @@ def threeOPT(taskList, currSchedule):
                             newRoute = Objects.Route()
                             
                             #CHECK THESE INDICES
-                            for i in range(j+1, routeLength -1):
+                            for i in range(j+1, routeLength):
                                 newRoute.append(currRoute[i], None)
                             newRoute.append(currRoute[k], None)
                             for l in range(0, k-1):
@@ -442,6 +443,7 @@ def threeOPT(taskList, currSchedule):
                         #??????????????????
                         else:
                             print("entered else after if")
+                            printSolution(currSchedule)
                             return currSchedule
                     # 10
                     else:
@@ -456,7 +458,7 @@ def threeOPT(taskList, currSchedule):
                             newRoute = Objects.Route()
                             
                             #CHECK THESE INDICES
-                            for i in range(j+1, routeLength -1):
+                            for i in range(j+1, routeLength):
                                 newRoute.append(currRoute[i], None)
                             newRoute.append(currRoute[k], None)
                             for l in range(k-1, 0, -1):
@@ -476,6 +478,7 @@ def threeOPT(taskList, currSchedule):
                                 break
                         else:
                             print("entered else after else")
+                            printSolution(currSchedule)
                             return currSchedule
                 if(improvement):
                     break
@@ -489,7 +492,7 @@ def threeOPT(taskList, currSchedule):
     print("newSchedule")
     printSolution(newSolution) 
     print "********** Exiting threeOPT **********"
-    return currSchedule
+    return newSchedule
 
 
 
