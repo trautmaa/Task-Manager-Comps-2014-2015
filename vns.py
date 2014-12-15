@@ -66,7 +66,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 10
+    stoppingCondition = 5
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -161,7 +161,6 @@ def shaking(currSchedule, nHood):
         newSolution = optionalExchange1(currSchedule, nHood)
         
     else:
-        return currSchedule
         newSolution = optionalExchange2(currSchedule, nHood)
         
 #     print "********** Exiting shaking **********"
@@ -312,7 +311,7 @@ def optionalExchange1(currSchedule, nHood):
 '''
 def optionalExchange2(currSchedule, nHood):
 #     print "********** Entering optExchange2 **********"
-#     print isinstance(currSchedule[0], Objects.Route)   
+
     # calculate number to remove (nHood-12)
     numToRemove = nHood - 12
     # pick a random day and position
@@ -332,7 +331,6 @@ def optionalExchange2(currSchedule, nHood):
         newRoute.append(task, None)
 
     currSchedule[day] = newRoute
-#     print isinstance(currSchedule[0], Objects.Route)   
 #     print "********** Exiting optExchange2 **********"
     return currSchedule
 
@@ -390,7 +388,8 @@ def threeOPT(taskList, currSchedule):
         return currSchedule
     #ABBY CHANGE THIS FOR DEBUGGING
     m = 0
-    while improvement == False or m < maxM:
+    #MAKE THIS AND and not OR??????????
+    while improvement == False and m < maxM:
 
         # 5
         for n in range(0, routeLength -1):
@@ -424,7 +423,7 @@ def threeOPT(taskList, currSchedule):
                             newRoute = Objects.Route()
                             
                             #CHECK THESE INDICES
-                            for i in range(j+1, routeLength -1):
+                            for i in range(j+1, routeLength):
                                 newRoute.append(currRoute[i], None)
                             newRoute.append(currRoute[k], None)
                             for l in range(0, k-1):
@@ -445,6 +444,7 @@ def threeOPT(taskList, currSchedule):
                         #??????????????????
                         else:
                             print("entered else after if")
+                            printSolution(currSchedule)
                             return currSchedule
                     # 10
                     else:
@@ -459,7 +459,7 @@ def threeOPT(taskList, currSchedule):
                             newRoute = Objects.Route()
                             
                             #CHECK THESE INDICES
-                            for i in range(j+1, routeLength -1):
+                            for i in range(j+1, routeLength):
                                 newRoute.append(currRoute[i], None)
                             newRoute.append(currRoute[k], None)
                             for l in range(k-1, 0, -1):
@@ -479,6 +479,7 @@ def threeOPT(taskList, currSchedule):
                                 break
                         else:
                             print("entered else after else")
+                            printSolution(currSchedule)
                             return currSchedule
                 if(improvement):
                     break
@@ -492,7 +493,7 @@ def threeOPT(taskList, currSchedule):
     print("newSchedule")
     printSolution(newSolution) 
     print "********** Exiting threeOPT **********"
-    return currSchedule
+    return newSchedule
 
 
 
@@ -501,7 +502,7 @@ def threeOPT(taskList, currSchedule):
 '''
 def bestInsertion(taskList, currSchedule):
 #     print "********** Entering bestInsertion **********"
-#     print isinstance(currSchedule[0], Objects.Route)
+
     # Sequentially consider tasks from unplannedTasks
     # For each day, if that task:
         # has a time window in that day
@@ -567,7 +568,7 @@ def bestInsertion(taskList, currSchedule):
             unplannedTasks.append(currTask)
     
     # after all that, add the task to the solution in the time with smallest added distance.
-#     print isinstance(currSchedule[0], Objects.Route)
+
 #     print "********** Exiting bestInsertion **********"
     return currSchedule
 
