@@ -51,6 +51,7 @@ class Task:
     def setRequired(self, required):
         self.required = required
         
+    
     #This is a list of days. Each day has a list of time windows
     #    they will come in as a string: "[[(twStart1, twEnd1),(twStart2, twEnd2)], [day2..], etc.]
     #    do a regex to read it in. List of lists (days) of tuples (tw starts and ends)
@@ -59,6 +60,7 @@ class Task:
         
     def getProfit(self):
         return self.priority
+
 
     def __str__(self):
         stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + ", "\
@@ -110,6 +112,9 @@ class Route:
         self.taskList = self.taskList[:startIndex] + self.taskList[endIndex:]
         self.endingTimes = self.endingTimes[:startIndex] + self.endingTimes[endIndex:]
     
+    def resetEndingTimes(self):
+        self.endingTimes = [None] * len(self.taskList)
+    
     def __getitem__(self, index):
         return self.taskList[index]
     
@@ -145,6 +150,10 @@ class Schedule:
                 if task != None:
                     profit += task.getProfit()
         return profit
+    
+    def resetEndingTimes(self):
+        for route in self.routeList:
+            route.resetEndingTimes()
     
     def __getitem__(self, index):
         return self.routeList[index]
