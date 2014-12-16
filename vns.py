@@ -2,6 +2,17 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
+
+# Notes from Avery:
+# -getScheduleDuration and getRouteDuration:
+#    - run isFeasible. if it is feasible, get the duration of the squidged route
+#    - otherwise, it is not feasible and it returns infinity (we cannot calculate
+#        actual route duration. We could instead calculate all task duration + travel time
+#        but I feel like that would be wrong. Let's talk.
+
+
+
+
 import greedyByOrder
 import createTasksFromCsv
 import helperFunctions
@@ -24,6 +35,7 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
+    
 #     brute = runBruteForceAlg(csvFile)
     
     modTasks = greedySol[:]
@@ -36,10 +48,13 @@ def solve(csvFile):
     
     print 'vns solution'
     print currSchedule
+    
 #     print 'brute force solution'
 #     printSolution(brute)
-    
+     
+#     print "brute journey"
 #     helperFunctions.printJourney(brute)
+
     print "greedy journey"
     helperFunctions.printJourney(greedySol)
     print "vns journey"
@@ -190,54 +205,11 @@ def crossExchange(currSchedule, nHood):
     len1 = len(currSchedule[day1])
     len2 = len(currSchedule[day2])
     
-    # for route1 (removed and inserted)
+    # for route1 (removed and inserted into day2)
     route1Len = random.randint(1, min(len1, nHood))
-    # for route2 (replaced by route1)
+    # for route2 (removed and inserted into day1)
     route2Len = random.randint(0, min(len2, nHood))
     
-    
-    n = 0
-    # whole route for day one
-    origRoute1 = currSchedule[day1]
-    # list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
-    possRouteStarts = []
-    # start index of the current route we are looking at 
-    currRouteStart = 0
-    # start index of the longest route
-    longestRouteStart = 0
-    # length of longest route 
-    longestRouteLen = 0
-    
-    # route1: choose random segment w/ customers who have a valid time window in day2
-    # if there is no such route, choose the longest route.
-    while n < len(origRoute1):
-        
-        # checking to see if the current route is longer than longest route, if it is update 
-        # longest route start and length
-        if (n - currRouteStart) > len(longestRoute):
-            longestRouteStart = currRouteStart
-            longestRouteLen = n - currRouteStart
-        
-        # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
-        # long enough, if so add it to possible list of routes
-        if(len(origRoute1[n].timeWindows[day2]) > 0):
-            if n - currRouteStart == route1Len - 1:
-                possRoutes.append(currRouteStart)
-                currRouteStart += 1
-        
-        # move on to the next route if previous conditional statement was no satisfied 
-        else:
-            currRouteStart = n + 1
-        n += 1
-    
-    # if we found a viable route, choose a random one 
-    if len(possRoutes) > 0:
-        route1Start = possRoutes[random.randint(len(possRouteStarts))]
-
-    # otherwise choose longest 
-    else:
-        route1Start = longestRouteIndex
-        route1Len = longestRouteLen
 
     # setting route and  new day to be what they should be
     route1 = currSchedule[day1][route1Start : route1Start + route1Len]
@@ -259,6 +231,58 @@ def crossExchange(currSchedule, nHood):
 #     print "********** Exiting crossExchange **********"
     return currSchedule
 
+'''
+Select random segment of tasks within a given day and route
+such that those tasks all have time windows in a new day
+@return start and end index tuple of route segment
+'''
+def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
+    n = 0
+
+    # whole route for day one
+    origRoute = currSchedule[origDay]
+    # list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
+    possRouteStarts = []
+    # start index of the current route we are looking at 
+    currRouteStart = 0
+    # start index of the longest route
+    longestRouteStart = 0
+    # length of longest route 
+    longestRouteLen = 0
+    
+    # route1: choose random segment w/ customers who have a valid time window in newDay
+    # if there is no such route, choose the longest route.
+    while n < len(origRoute):
+        
+        # checking to see if the current route is longer than longest route, if it is update 
+        # longest route start and length
+        if (n - currRouteStart) > longestRouteLen:
+            longestRouteStart = currRouteStart
+            longestRouteLen = n - currRouteStart
+        
+        # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
+        # long enough, if so add it to possible list of routes
+        if(len(origRoute1[n].timeWindows[newDay]) > 0):
+            if n - currRouteStart == route1Len - 1:
+                possRoutes.append(currRouteStart)
+                currRouteStart += 1
+        
+        # move on to the next route if previous conditional statement was no satisfied 
+        else:
+            currRouteStart = n + 1
+        n += 1
+    
+    # if we found a viable route, choose a random one 
+    if len(possRoutes) > 0:
+        route1Start = possRoutes[random.randint(len(possRouteStarts))]
+    # otherwise choose longest 
+    else:
+        route1Start = longestRouteIndex
+        route1Len = longestRouteLen
+    
+    return (route1Start, route1Start + route1Len)
+    
+    
 '''
 @return: modified schedule
 '''
@@ -930,10 +954,14 @@ def getRouteDuration(currRoute):
 def getScheduleDuration(taskList, currSchedule):
     sum = 0
     
-    #AVERY: this doesn't work because some things that use this don't require
-    # the route to be feasible.
-    currSchedule = isFeasible(taskList, currSchedule)
+    feasSched = copy.deepcopy(currSchedule)
     
+    feasSched = isFeasible(taskList, feasSched)
+    
+    if feasSched != None:
+        for route in feasSched:
+            sum += getRouteDuration(route)
+        return sum
     
     for route in currSchedule:
         sum += getRouteDuration(route)
