@@ -4,8 +4,9 @@
 
 import itertools
 
-from createTasksFromCsv import *
-from helperFunctions import *
+import createTasksFromCsv
+import helperFunctions
+
 
 '''
 A function that given a csvFile and the function used to determine which
@@ -14,7 +15,7 @@ one job at a time using a greedy rule that accounts for the current
 location and time.
 '''
 def runGreedyByPresentChoice(csvFile, orderFunction):
-    taskList = getTaskList(csvFile)
+    taskList = createTasksFromCsv.getTaskList(csvFile)
     schedule = selectSchedule(taskList, orderFunction)
     return schedule
 
@@ -23,8 +24,9 @@ A function that prints the result of runGreedyByPresentChoice
 in a more detailed way.
 '''
 def printGreedyByPresentChoice(csvFile, orderFunction):
-    schedule = runGreedyByPresentChoice(csvFile, orderFunction)
-    printSchedule(schedule)
+    taskList, taskOrdering = runGreedyByPresentChoice(csvFile, orderFunction)
+    schedule = helperFunctions.createSchedule(taskOrdering, taskList)
+    print schedule
     print
 
 '''
@@ -32,17 +34,22 @@ Refer to runGreedyByPresentChoice.
 Given a method and a task list, returns a greedily selected schedule.
 '''
 def selectSchedule(taskList, orderFunction):
+    taskOrdering = []
+    originalTaskList = [item for item in taskList]
     schedule, presentLocation, presentTime = [], (0, 0), 0 # presentLocation is arbitrary.
     task = getNextTask(
         presentTime, presentLocation, taskList, orderFunction)
+    taskOrdering.append(originalTaskList.index(task))
     while (task != None):
         schedule.append(task)
-        presentTime = getEndingTime(presentLocation, presentTime, task) 
-        presentLocation = getCoords(task)
+        presentTime = helperFunctions.getEndingTime(presentLocation, presentTime, task) 
+        presentLocation = helperFunctions.getCoords(task)
         del taskList[taskList.index(task)]
         task = getNextTask(
-            presentTime, presentLocation, taskList, orderFunction)            
-    return schedule
+            presentTime, presentLocation, taskList, orderFunction)
+        if task != None:
+            taskOrdering.append(originalTaskList.index(task))
+    return originalTaskList, taskOrdering
 
 '''
 A function that given a present time and location along with a tasks list, and
@@ -51,7 +58,7 @@ a method that will return the next task that can be started or finished dependin
 def getNextTask(startingTime, startingLocation, remainingTasksList, orderFunction):
     finishableTasks = []
     for task in remainingTasksList:
-        finishable, endingTime = isFinishableTask(
+        finishable, endingTime = helperFunctions.isFinishableTask(
             task, startingLocation, startingTime)
         if finishable:
             finishableTasks.append(task)
@@ -64,8 +71,8 @@ def getNextTask(startingTime, startingLocation, remainingTasksList, orderFunctio
 
 def main():
     print
-    printGreedyByPresentChoice("test.csv", orderByStartingTime)
-    printGreedyByPresentChoice("test.csv", orderByEndingTime)
+    printGreedyByPresentChoice("test.csv", helperFunctions.orderByStartingTime)
+    printGreedyByPresentChoice("test.csv", helperFunctions.orderByEndingTime)
     
 
 
