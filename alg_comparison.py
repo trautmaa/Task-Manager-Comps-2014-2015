@@ -73,6 +73,7 @@ def comparison_loop():
 			print
 			print "Integer program produced a non-optimal solution, halting comparison for debugging."
 			print
+			sys.exit()
 
 def main():
 	comparison_loop()

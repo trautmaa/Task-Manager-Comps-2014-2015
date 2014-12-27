@@ -180,8 +180,21 @@ def integer_program_solve(task_list):
     
     prob += lpSum(xih_variables) == 1 # Ending job constraint
 
+    # scary suboptimal 1 test stuff:
+    # prob += yi_variables[3] == 1
+    # prob += yi_variables[6] == 1
+    # prob += yi_variables[9] == 1
+    # prob += yi_variables[5] == 1
+    # prob += yi_variables[0] == 1
+    # prob += yi_variables[8] == 1
+    # prob += yi_variables[1] == 1
+    # prob += xhi_variables[3] == 1
+    # prob += xih_variables[1] == 1
+
+
+
     prob.writeLP("Scheduling.lp")
-    prob.solve()
+    prob.solve(GUROBI())
     # for yvar in yi_variables:
     #     print yvar, yvar.varValue
     # for avar in ai_variables:
@@ -214,7 +227,9 @@ and print the solution it produces.
 '''
 def main():
     solved_task_list = run_integer_program("test.csv")
+    print
     print_schedule(solved_task_list)
+    print
 
 
 if __name__ == '__main__':

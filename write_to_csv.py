@@ -9,17 +9,17 @@ task_features = ['x_coord', 'y_coord', 'release_time', 'duration', 'deadline']
 '''
 Generates a task as a list so that it may be written to a csv file.
 Each parameter is the maximum possible value for that feature. The task
-that is returned is: [x_coord, y_coord, release_time, duration, deadline]
-(where duration is deadline - release_time). It is required that deadline
-is later or the same as the release time.
+that is returned is: [x_coord, y_coord, release_time, duration, deadline].
+It is required that deadline
+is later or the same as the release time plus the duration of the task.
 '''
-def generate_task(x_constraint, y_constraint, release_time, max_duration, deadline):
-    assert (deadline >= release_time)
+def generate_task(x_constraint, y_constraint, max_release_time, max_duration, max_deadline):
+    assert (max_deadline >= max_release_time + max_duration)
     task = []
-    for feature in [x_constraint, y_constraint, release_time]:
+    for feature in [x_constraint, y_constraint, max_release_time]:
         task.append(randint(0, feature))
     task.append(randint(0, max_duration)) # task duration
-    task.append(randint(release_time + task[3], deadline)) # task deadline
+    task.append(randint(max_release_time + task[3], max_deadline)) # task deadline
     return task
 
 '''
@@ -37,7 +37,7 @@ def write_n_tasks(n, csv_file):
     return csv_file
 
 def main():
-    write_n_tasks(10, "test.csv")
+    write_n_tasks(15, "test.csv")
 
 
 if __name__ == '__main__':
