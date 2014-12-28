@@ -389,8 +389,8 @@ def threeOPT(taskList, currSchedule):
     
     # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
     # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
-#     duration = getRouteDuration(currSchedule)
-    duration = 1
+    duration = getScheduleDuration(taskList, currSchedule)
+    #duration = 1
     
     #ABBY CHANGE THIS FOR DEBUGGING
     improvement = False
@@ -458,8 +458,8 @@ def threeOPT(taskList, currSchedule):
                             print("here?")
                             #printSolution(newSchedule)
                             
-                            # newDuration = check duration
-                            newDuration = 0
+                            newDuration = getScheduleDuration(taskList, newRoute)
+                            #newDuration = 0
                             if newDuration < duration:
                                 print("got hereererere 1")
                                 newSolution = newSchedule
@@ -494,8 +494,8 @@ def threeOPT(taskList, currSchedule):
                             print("here2?")
                             #printSolution(newSchedule)
                             
-                            # newDuration = check duration
-                            newDuration = 0
+                            newDuration = getScheduleDuration(taskList, newRoute)
+                            #newDuration = 0
                             if newDuration < duration:
                                 print("got hereererere 2")
                                 newSolution = newSchedule
