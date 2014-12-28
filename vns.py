@@ -26,7 +26,7 @@ def solve(csvFile):
     helperFunctions.preprocessTimeWindows(taskList)
     greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
     
-#     brute = runBruteForceAlg(csvFile)
+    brute = runBruteForceAlg(csvFile)
     
     modTasks = greedySol[:]
     currSchedule = createSchedule(modTasks)
@@ -39,14 +39,15 @@ def solve(csvFile):
     print 'vns solution'
     print currSchedule
     
-#     print 'brute force solution'
-#     printSolution(brute)
+    print 'brute force solution'
+    printSolution(brute)
      
-#     print "brute journey"
-#     helperFunctions.printScheduleJourney(brute)
+    print "brute journey"
+    helperFunctions.printScheduleJourney(brute)
 
     print "greedy journey"
     helperFunctions.printScheduleJourney(greedySol)
+    
     print "vns journey"
     helperFunctions.printScheduleJourney(currSchedule)
 
@@ -71,7 +72,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 5
+    stoppingCondition = 60
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -750,7 +751,6 @@ def minRoute(taskList, currSchedule):
 # AVERY CHANGE what duration this calls
 
 #     print "********** Entering minRoute **********"
-    #AVERY ENDING times are almost all the same. still wrong
     bestSchedule = copy.deepcopy(currSchedule)
     
 #     print bestSchedule
@@ -776,7 +776,6 @@ def minRoute(taskList, currSchedule):
         # with this ending time.
         bestRoute = dominantRoute(day, assignedTWs, d)
         latestWaitingTask = getLatestWaitingTask(bestRoute)
-        helperFunctions.printRouteJourney(bestRoute)
         # While this there are still tasks with waiting time and the latest
         # waiting task has time windows to switch to
         while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
@@ -786,7 +785,7 @@ def minRoute(taskList, currSchedule):
             newRoute = dominantRoute(newRoute, assignedTWs, d)
             
             # if it's better than the best so far, update the best.
-            if(getRouteDuration(newRoute) < getRouteDuration(bestRoute)):
+            if(getMinRouteDuration(newRoute) < getMinRouteDuration(bestRoute)):
                 bestRoute = newRoute
             latestWaitingTask = getLatestWaitingTask(newRoute)
         # update the schedule to have this route
@@ -799,12 +798,8 @@ def minRoute(taskList, currSchedule):
     for r in range(len(bestSchedule)):
         for t in range(len(bestSchedule[r])):
             bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
-#     print bestSchedule
 #     print "********** Exiting minRoute **********"
-#     print
 
-    #AVERY it is wrong here
-#     helperFunctions.printScheduleJourney(bestSchedule)
     return bestSchedule
 
 
@@ -816,7 +811,6 @@ def getLatestWaitingTask(currRoute):
     for task in range(len(currRoute) - 1, 0, -1):
         if currRoute.endingTimes[task] - currRoute[task].duration > currRoute.endingTimes[task - 1]:
             return task - 1
-            #AVERY check: should this be task or task - 1?
     return -1
 
 '''
@@ -870,7 +864,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
             else:
                 prevTaskEnd = task.endingTime
                 break
-                
+#     print "********** Exiting switchTimeWindows **********"
     return currRoute
 
 '''
@@ -880,14 +874,12 @@ time without changing that ending time
 @return: the dominant version of the schedule being passed in (squidging)
 '''
 def dominantRoute(currRoute, assignedTWs, dayIndex):
-    #AVERY I believe the problem is here
-    
-    print assignedTWs
-    
+#     print "********** Entering dominantRoute **********"
+
     # put everything as late as possible within the assigned time window
     nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
     
-#     print nextTaskStart
+    
     
     #goes through the current route backwards ignoring the last task
     for t in range(len(currRoute) - 2, -1, -1):
@@ -902,9 +894,10 @@ def dominantRoute(currRoute, assignedTWs, dayIndex):
                 currRoute.endingTimes[t] = min(timeWindow[1], nextTaskStart)
                 assignedTWs[t] = tw
             else:
-                nextTaskStart = currRoute.endingTimes[t] - task.duration
                 break
+        nextTaskStart = currRoute.endingTimes[t] - task.duration
     
+#     print "********** Exiting dominantRoute **********"
     return currRoute
 
 '''
