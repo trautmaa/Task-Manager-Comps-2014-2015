@@ -167,12 +167,7 @@ if __name__ == "__main__":
     taskList = createTasksFromCsv.getTaskList("test.csv")
     preprocessTimeWindows(taskList)
                 
-            
-            
-def printJourney(sched):
-    for r in range(len(sched)):
-        route = sched[r]
-        print "day", r
+def printRouteJourney(route):
         for t in range(len(route) - 1):
             task = route[t]
             nextTask = route[t+1]
@@ -183,3 +178,10 @@ def printJourney(sched):
         task = route[t]
         print "doing task", task.id, route.endingTimes[t] - task.duration, "to", route.endingTimes[t]
         print "\n"
+            
+def printScheduleJourney(sched):
+    for r in range(len(sched)):
+        route = sched[r]
+        print "day", r
+        printRouteJourney(route)
+        

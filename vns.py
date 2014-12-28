@@ -3,16 +3,6 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 
-# Notes from Avery:
-# -getScheduleDuration and getRouteDuration:
-#    - run isFeasible. if it is feasible, get the duration of the squidged route
-#    - otherwise, it is not feasible and it returns infinity (we cannot calculate
-#        actual route duration. We could instead calculate all task duration + travel time
-#        but I feel like that would be wrong. Let's talk.
-
-
-
-
 import greedyByOrder
 import createTasksFromCsv
 import helperFunctions
@@ -53,12 +43,12 @@ def solve(csvFile):
 #     printSolution(brute)
      
 #     print "brute journey"
-#     helperFunctions.printJourney(brute)
+#     helperFunctions.printScheduleJourney(brute)
 
     print "greedy journey"
-    helperFunctions.printJourney(greedySol)
+    helperFunctions.printScheduleJourney(greedySol)
     print "vns journey"
-    helperFunctions.printJourney(currSchedule)
+    helperFunctions.printScheduleJourney(currSchedule)
 
     return currSchedule
 
@@ -643,7 +633,9 @@ def isFeasible(taskList, currSchedule):
     
     # Otherwise, squidge to find the best schedule for this solution
     feasSol = minRoute(taskList, currSchedule)
+    #AVERY it is wrong here
     
+#     helperFunctions.printScheduleJourney(feasSol)
 #     print "********** Exiting isFeasible **********" 
     return feasSol
                 
@@ -754,6 +746,9 @@ def tightenTWEnds(currSchedule):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
+    
+# AVERY CHANGE what duration this calls
+
 #     print "********** Entering minRoute **********"
     #AVERY ENDING times are almost all the same. still wrong
     bestSchedule = copy.deepcopy(currSchedule)
@@ -781,7 +776,7 @@ def minRoute(taskList, currSchedule):
         # with this ending time.
         bestRoute = dominantRoute(day, assignedTWs, d)
         latestWaitingTask = getLatestWaitingTask(bestRoute)
-        
+        helperFunctions.printRouteJourney(bestRoute)
         # While this there are still tasks with waiting time and the latest
         # waiting task has time windows to switch to
         while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
@@ -807,6 +802,9 @@ def minRoute(taskList, currSchedule):
 #     print bestSchedule
 #     print "********** Exiting minRoute **********"
 #     print
+
+    #AVERY it is wrong here
+#     helperFunctions.printScheduleJourney(bestSchedule)
     return bestSchedule
 
 
@@ -884,6 +882,8 @@ time without changing that ending time
 def dominantRoute(currRoute, assignedTWs, dayIndex):
     #AVERY I believe the problem is here
     
+    print assignedTWs
+    
     # put everything as late as possible within the assigned time window
     nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
     
@@ -935,17 +935,23 @@ def createSchedule(solution):
 
 
 
-'''
-@return: the length of time from the start of the first task to the end of the last
-'''
-def getRouteDuration(currRoute):    
-    # AVERY: put this in Object.Route instead
-    # doesn't work if it's infeasible. If it is infeasible, I'm returning infinity
-    if len(currRoute) == 0:
-        return 0
-    if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
-        return float("inf")
-    return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
+def getRouteDuration(currRoute):
+    # FIX THIS call isFeasible?
+    # TODO: put this in Object.Route instead 
+#     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
+#         return None
+    
+    routeDuration = 0
+    # for each task in the route, calculate the duration by traveling time and the duration of the task
+    # add the total duration calculation to the overall routeDuration 
+    for t in range(len(currRoute)):
+        task = currRoute[t]   
+        travelTime = helperFunctions.getDistanceBetweenTasks(task, route[t - 1])
+        task.duration = task.duration + travelTime
+        routeDuration += task.duration
+    
+    return routeDuration
+#     return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
 
 '''
 @return: the length of a schedule from the start of the first 
@@ -971,7 +977,23 @@ def getScheduleDuration(taskList, currSchedule):
 @return: total distance of a solution
 '''
 def calcTotalDistance(currSolution):
-    return 0
+    
+    totalDistance = 0
+    for r in range(len(currSolution)):
+        route = currSolution[r]
+        routeTravelTime = 0
+        for t in range(len(route)):
+            routeTravelTime += helperFunctions.getDistanceBetweenTasks(task,route[t - 1])
+        totalDistance += routeTravelTime
+        
+    print "Total Distance is: ", totalDistance
+    return totalDistance
+    
+#take the last tasks ending time - first tasks ending time + first tasks duration 
+def getMinRouteDuration(currRoute): 
+    
+    totalDuration = currRoute.endTimes[-1]- currRoute.endTimes[0] + currRoute.taskList[0].duration
+    return totalDuration    
 
 
 def printUnplanned():
@@ -1008,6 +1030,8 @@ def main():
     
 if __name__ == "__main__":
     main()
+    
+
     
 
 
