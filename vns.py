@@ -374,12 +374,13 @@ def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
 #     print isinstance(currSchedule[0], Objects.Route)       
 #     printSolution(currSchedule)
-    return currSchedule
+    #return currSchedule
     
-    # MUST ASSUME START AND END ARE CONNECTED?
     
     # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
     # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
+    
+    #get random day
     duration = getScheduleDuration(taskList, currSchedule)
     #duration = 1
     
@@ -391,14 +392,14 @@ def threeOPT(taskList, currSchedule):
     day = random.randint(0, len(currSchedule) - 1)
     currRoute = currSchedule[day]
     routeLength = len(currRoute)
-    print("routLength is " + str(routeLength))
+    #print("routLength is " + str(routeLength))
     # 2
     
     
     if routeLength > 3:
         
         maxM = math.factorial(routeLength) / (6 * math.factorial(routeLength - 3))
-        print(maxM)
+        #print(maxM)
     else:
         return currSchedule
     #ABBY CHANGE THIS FOR DEBUGGING
@@ -427,13 +428,13 @@ def threeOPT(taskList, currSchedule):
 #                     print("distance2 is " + str(distance2))
                     if  distance1 <= distance2:
                         d = distance1
-                        print("Entered if")
+                        #print("Entered if")
 #                         print("distance3 is " + str(distance3))
 #                         print(d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]))
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 16
-                            print("entered second if")
+                            #print("entered second if")
                             # make newSchedule = [j+2....routeLength, k+1, 1...k,j+1] 
                             newRoute = Objects.Route()
                             
@@ -446,25 +447,25 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            print("here?")
+                            #print("here?")
                             #printSolution(newSchedule)
                             
-                            newDuration = getScheduleDuration(taskList, newRoute)
+                            newDuration = getRouteDuration(newRoute)
                             #newDuration = 0
                             if newDuration < duration:
-                                print("got hereererere 1")
+                                #print("got hereererere 1")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
                         #??????????????????
                         else:
-                            print("entered else after if")
-                            printSolution(currSchedule)
+                            #print("entered else after if")
+                            #printSolution(currSchedule)
                             return currSchedule
                     # 10
                     else:
                         d = distance2
-                        print("Entered else")
+                        #print("Entered else")
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 18
@@ -482,19 +483,19 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            print("here2?")
+                            #print("here2?")
                             #printSolution(newSchedule)
                             
-                            newDuration = getScheduleDuration(taskList, newRoute)
+                            newDuration = getRouteDuration(newRoute)
                             #newDuration = 0
                             if newDuration < duration:
-                                print("got hereererere 2")
+                                #print("got hereererere 2")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
                         else:
-                            print("entered else after else")
-                            printSolution(currSchedule)
+                            #print("entered else after else")
+                            #printSolution(currSchedule)
                             return currSchedule
                 if(improvement):
                     break
@@ -502,12 +503,12 @@ def threeOPT(taskList, currSchedule):
                     break
         m += 1
         
-    print isinstance(currSchedule[0], Objects.Route)
-    print("currSchedule")
-    printSolution(currSchedule)  
-    print("newSchedule")
-    printSolution(newSolution) 
-    print "********** Exiting threeOPT **********"
+   # print isinstance(currSchedule[0], Objects.Route)
+#     print("currSchedule")
+#     printSolution(currSchedule)  
+#     print("newSchedule")
+#     printSolution(newSolution) 
+    #print "********** Exiting threeOPT **********"
     return newSchedule
 
 
@@ -939,7 +940,7 @@ def getRouteDuration(currRoute):
     # add the total duration calculation to the overall routeDuration 
     for t in range(len(currRoute)):
         task = currRoute[t]   
-        travelTime = helperFunctions.getDistanceBetweenTasks(task, route[t - 1])
+        travelTime = helperFunctions.getDistanceBetweenTasks(task, currRoute[t - 1])
         task.duration = task.duration + travelTime
         routeDuration += task.duration
     
