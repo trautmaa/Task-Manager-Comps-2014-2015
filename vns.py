@@ -138,7 +138,7 @@ def vns(taskList, currSchedule):
                         nHood = 1
                     # Criteria for nHoods 1-8:
                     # If the new solution is not more than .5% longer (distance), accept
-                    elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSolution):
+                    elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSchedule):
                         currSchedule = feasibleSchedule
                 else:
                     numIterations += 1 
@@ -203,6 +203,7 @@ def crossExchange(currSchedule, nHood):
     
 
     # setting route and  new day to be what they should be
+    route1Start = random.randint(0, len2 - route2Len + 1)
     route1 = currSchedule[day1][route1Start : route1Start + route1Len]
     newDay1 = currSchedule[day1][:route1Start] + currSchedule[day1][route1Start + route1Len:]
     
@@ -227,52 +228,52 @@ Select random segment of tasks within a given day and route
 such that those tasks all have time windows in a new day
 @return start and end index tuple of route segment
 '''
-def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
-    n = 0
-
-    # whole route for day one
-    origRoute = currSchedule[origDay]
-    # list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
-    possRouteStarts = []
-    # start index of the current route we are looking at 
-    currRouteStart = 0
-    # start index of the longest route
-    longestRouteStart = 0
-    # length of longest route 
-    longestRouteLen = 0
-    
-    # route1: choose random segment w/ customers who have a valid time window in newDay
-    # if there is no such route, choose the longest route.
-    while n < len(origRoute):
-        
-        # checking to see if the current route is longer than longest route, if it is update 
-        # longest route start and length
-        if (n - currRouteStart) > longestRouteLen:
-            longestRouteStart = currRouteStart
-            longestRouteLen = n - currRouteStart
-        
-        # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
-        # long enough, if so add it to possible list of routes
-        if(len(origRoute1[n].timeWindows[newDay]) > 0):
-            if n - currRouteStart == route1Len - 1:
-                possRoutes.append(currRouteStart)
-                currRouteStart += 1
-        
-        # move on to the next route if previous conditional statement was no satisfied 
-        else:
-            currRouteStart = n + 1
-        n += 1
-    
-    # if we found a viable route, choose a random one 
-    if len(possRoutes) > 0:
-        route1Start = possRoutes[random.randint(len(possRouteStarts))]
-    # otherwise choose longest 
-    else:
-        route1Start = longestRouteIndex
-        route1Len = longestRouteLen
-    
-    return (route1Start, route1Start + route1Len)
-    
+# def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
+#     n = 0
+# 
+#     # whole route for day one
+#     origRoute = currSchedule[origDay]
+#     # list of possible start indices for routes in day 1 of valid length s.t each task has a time window in day 2 
+#     possRouteStarts = []
+#     # start index of the current route we are looking at 
+#     currRouteStart = 0
+#     # start index of the longest route
+#     longestRouteStart = 0
+#     # length of longest route 
+#     longestRouteLen = 0
+#     
+#     # route1: choose random segment w/ customers who have a valid time window in newDay
+#     # if there is no such route, choose the longest route.
+#     while n < len(origRoute):
+#         
+#         # checking to see if the current route is longer than longest route, if it is update 
+#         # longest route start and length
+#         if (n - currRouteStart) > longestRouteLen:
+#             longestRouteStart = currRouteStart
+#             longestRouteLen = n - currRouteStart
+#         
+#         # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
+#         # long enough, if so add it to possible list of routes
+#         if(len(origRoute[n].timeWindows[newDay]) > 0):
+#             if n - currRouteStart == route1Len - 1:
+#                 possRouteStarts.append(currRouteStart)
+#                 currRouteStart += 1
+#         
+#         # move on to the next route if previous conditional statement was no satisfied 
+#         else:
+#             currRouteStart = n + 1
+#         n += 1
+#     
+#     # if we found a viable route, choose a random one 
+#     if len(possRouteStarts) > 0:
+#         route1Start = possRouteStarts[random.randint(len(possRouteStarts))]
+#     # otherwise choose longest 
+#     else:
+#         route1Start = longestRouteIndex
+#         route1Len = longestRouteLen
+#     
+#     return (route1Start, route1Start + route1Len)
+#     
     
 '''
 @return: modified schedule
@@ -977,6 +978,7 @@ def calcTotalDistance(currSolution):
         route = currSolution[r]
         routeTravelTime = 0
         for t in range(len(route)):
+            task = route[t]
             routeTravelTime += helperFunctions.getDistanceBetweenTasks(task,route[t - 1])
         totalDistance += routeTravelTime
         
