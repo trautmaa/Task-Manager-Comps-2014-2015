@@ -1,7 +1,9 @@
 # Comps 2014
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
+
 import csv
+
 from random import randint
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
@@ -38,7 +40,7 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     for feature in [xConstraint, yConstraint, releaseTime]:
         task.append(randint(0, feature)) 
     task.append(randint(0, maxDuration))
-    task.append(randint(task[2]+task[3], deadline))
+    task.append(randint(task[2] + task[3], deadline))
     setPriorityOfTask(task, priority)
     setRequiredOfTask(task, required)
     setTimeWindowsOfTask(task, maxNumTimeWindows)

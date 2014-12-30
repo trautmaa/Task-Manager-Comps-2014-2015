@@ -6,9 +6,7 @@ import itertools
 
 import createTasksFromCsv
 import helperFunctions
-
-#No longer true! time windows and stuff now
-taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline']
+import Objects
 
 
 '''
@@ -17,10 +15,12 @@ will create a schedule for each ordering and output one of the schedules with
 the most tasks scheduled.
 '''
 def findBestSchedule(taskList, permutations):
-    bestSchedule = []
+    bestSchedule = Objects.Schedule()
     for perm in permutations:
         newSchedule = helperFunctions.createSchedule(perm, taskList)
-        if len(newSchedule) > len(bestSchedule):
+        bestScheduleSize = sum(len(route) for route in bestSchedule.routeList)
+        newScheduleSize = sum(len(route) for route in newSchedule.routeList)
+        if newScheduleSize > bestScheduleSize:
             bestSchedule = newSchedule
     return bestSchedule
 

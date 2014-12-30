@@ -2,9 +2,10 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-from math import ceil
-from Objects import *
 import createTasksFromCsv
+
+from math import ceil
+from Objects import Category, Task, Route, Schedule
 
 '''
 A function given two task objects will return the euclidean distance
@@ -163,9 +164,6 @@ def preprocessTimeWindows(taskList):
                     day[tw] = (day[tw][0], task.deadline)
                 tw += 1
                 
-if __name__ == "__main__":
-    taskList = createTasksFromCsv.getTaskList("test.csv")
-    preprocessTimeWindows(taskList)
                 
 def printRouteJourney(route):
         for t in range(len(route) - 1):
@@ -184,4 +182,11 @@ def printScheduleJourney(sched):
         route = sched[r]
         print "day", r
         printRouteJourney(route)
+
+def main():
+    taskList = createTasksFromCsv.getTaskList("test.csv")
+    preprocessTimeWindows(taskList)   
+
+if __name__ == "__main__":
+    main()
         
