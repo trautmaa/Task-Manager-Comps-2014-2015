@@ -3,16 +3,6 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 
-# Notes from Avery:
-# -getScheduleDuration and getRouteDuration:
-#    - run isFeasible. if it is feasible, get the duration of the squidged route
-#    - otherwise, it is not feasible and it returns infinity (we cannot calculate
-#        actual route duration. We could instead calculate all task duration + travel time
-#        but I feel like that would be wrong. Let's talk.
-
-
-
-
 import greedyByOrder
 import createTasksFromCsv
 import helperFunctions
@@ -36,7 +26,7 @@ def solve(csvFile):
     helperFunctions.preprocessTimeWindows(taskList)
     greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
     
-#     brute = runBruteForceAlg(csvFile)
+    brute = runBruteForceAlg(csvFile)
     
     modTasks = greedySol[:]
     currSchedule = createSchedule(modTasks)
@@ -49,16 +39,17 @@ def solve(csvFile):
     print 'vns solution'
     print currSchedule
     
-#     print 'brute force solution'
-#     printSolution(brute)
+    print 'brute force solution'
+    printSolution(brute)
      
-#     print "brute journey"
-#     helperFunctions.printJourney(brute)
+    print "brute journey"
+    helperFunctions.printScheduleJourney(brute)
 
     print "greedy journey"
-    helperFunctions.printJourney(greedySol)
+    helperFunctions.printScheduleJourney(greedySol)
+    
     print "vns journey"
-    helperFunctions.printJourney(currSchedule)
+    helperFunctions.printScheduleJourney(currSchedule)
 
     return currSchedule
 
@@ -81,7 +72,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 5
+    stoppingCondition = 60
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -383,14 +374,15 @@ def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
 #     print isinstance(currSchedule[0], Objects.Route)       
 #     printSolution(currSchedule)
-    return currSchedule
+    #return currSchedule
     
-    # MUST ASSUME START AND END ARE CONNECTED?
     
     # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
     # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
-#     duration = getRouteDuration(currSchedule)
-    duration = 1
+    
+    #get random day
+    duration = getScheduleDuration(taskList, currSchedule)
+    #duration = 1
     
     #ABBY CHANGE THIS FOR DEBUGGING
     improvement = False
@@ -400,14 +392,14 @@ def threeOPT(taskList, currSchedule):
     day = random.randint(0, len(currSchedule) - 1)
     currRoute = currSchedule[day]
     routeLength = len(currRoute)
-    print("routLength is " + str(routeLength))
+    #print("routLength is " + str(routeLength))
     # 2
     
     
     if routeLength > 3:
         
         maxM = math.factorial(routeLength) / (6 * math.factorial(routeLength - 3))
-        print(maxM)
+        #print(maxM)
     else:
         return currSchedule
     #ABBY CHANGE THIS FOR DEBUGGING
@@ -436,13 +428,13 @@ def threeOPT(taskList, currSchedule):
 #                     print("distance2 is " + str(distance2))
                     if  distance1 <= distance2:
                         d = distance1
-                        print("Entered if")
+                        #print("Entered if")
 #                         print("distance3 is " + str(distance3))
 #                         print(d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]))
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 16
-                            print("entered second if")
+                            #print("entered second if")
                             # make newSchedule = [j+2....routeLength, k+1, 1...k,j+1] 
                             newRoute = Objects.Route()
                             
@@ -455,25 +447,25 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            print("here?")
+                            #print("here?")
                             #printSolution(newSchedule)
                             
-                            # newDuration = check duration
-                            newDuration = 0
+                            newDuration = getRouteDuration(newRoute)
+                            #newDuration = 0
                             if newDuration < duration:
-                                print("got hereererere 1")
+                                #print("got hereererere 1")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
                         #??????????????????
                         else:
-                            print("entered else after if")
-                            printSolution(currSchedule)
+                            #print("entered else after if")
+                            #printSolution(currSchedule)
                             return currSchedule
                     # 10
                     else:
                         d = distance2
-                        print("Entered else")
+                        #print("Entered else")
                         # 11
                         if d + helperFunctions.getDistanceBetweenTasks(currRoute[k + 1], currRoute[routeLength-1]) < distance3:
                             # 18
@@ -491,19 +483,19 @@ def threeOPT(taskList, currSchedule):
                             newRoute.append(currRoute[j], None)
                             newSchedule = currSchedule
                             newSchedule[day] = newRoute
-                            print("here2?")
+                            #print("here2?")
                             #printSolution(newSchedule)
                             
-                            # newDuration = check duration
-                            newDuration = 0
+                            newDuration = getRouteDuration(newRoute)
+                            #newDuration = 0
                             if newDuration < duration:
-                                print("got hereererere 2")
+                                #print("got hereererere 2")
                                 newSolution = newSchedule
                                 improvement = True
                                 break
                         else:
-                            print("entered else after else")
-                            printSolution(currSchedule)
+                            #print("entered else after else")
+                            #printSolution(currSchedule)
                             return currSchedule
                 if(improvement):
                     break
@@ -511,12 +503,12 @@ def threeOPT(taskList, currSchedule):
                     break
         m += 1
         
-    print isinstance(currSchedule[0], Objects.Route)
-    print("currSchedule")
-    printSolution(currSchedule)  
-    print("newSchedule")
-    printSolution(newSolution) 
-    print "********** Exiting threeOPT **********"
+   # print isinstance(currSchedule[0], Objects.Route)
+#     print("currSchedule")
+#     printSolution(currSchedule)  
+#     print("newSchedule")
+#     printSolution(newSolution) 
+    #print "********** Exiting threeOPT **********"
     return newSchedule
 
 
@@ -643,7 +635,9 @@ def isFeasible(taskList, currSchedule):
     
     # Otherwise, squidge to find the best schedule for this solution
     feasSol = minRoute(taskList, currSchedule)
+    #AVERY it is wrong here
     
+#     helperFunctions.printScheduleJourney(feasSol)
 #     print "********** Exiting isFeasible **********" 
     return feasSol
                 
@@ -754,8 +748,10 @@ def tightenTWEnds(currSchedule):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
+    
+# AVERY CHANGE what duration this calls
+
 #     print "********** Entering minRoute **********"
-    #AVERY ENDING times are almost all the same. still wrong
     bestSchedule = copy.deepcopy(currSchedule)
     
 #     print bestSchedule
@@ -781,7 +777,6 @@ def minRoute(taskList, currSchedule):
         # with this ending time.
         bestRoute = dominantRoute(day, assignedTWs, d)
         latestWaitingTask = getLatestWaitingTask(bestRoute)
-        
         # While this there are still tasks with waiting time and the latest
         # waiting task has time windows to switch to
         while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
@@ -791,7 +786,7 @@ def minRoute(taskList, currSchedule):
             newRoute = dominantRoute(newRoute, assignedTWs, d)
             
             # if it's better than the best so far, update the best.
-            if(getRouteDuration(newRoute) < getRouteDuration(bestRoute)):
+            if(getMinRouteDuration(newRoute) < getMinRouteDuration(bestRoute)):
                 bestRoute = newRoute
             latestWaitingTask = getLatestWaitingTask(newRoute)
         # update the schedule to have this route
@@ -804,9 +799,8 @@ def minRoute(taskList, currSchedule):
     for r in range(len(bestSchedule)):
         for t in range(len(bestSchedule[r])):
             bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
-#     print bestSchedule
 #     print "********** Exiting minRoute **********"
-#     print
+
     return bestSchedule
 
 
@@ -818,7 +812,6 @@ def getLatestWaitingTask(currRoute):
     for task in range(len(currRoute) - 1, 0, -1):
         if currRoute.endingTimes[task] - currRoute[task].duration > currRoute.endingTimes[task - 1]:
             return task - 1
-            #AVERY check: should this be task or task - 1?
     return -1
 
 '''
@@ -872,7 +865,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
             else:
                 prevTaskEnd = task.endingTime
                 break
-                
+#     print "********** Exiting switchTimeWindows **********"
     return currRoute
 
 '''
@@ -882,12 +875,12 @@ time without changing that ending time
 @return: the dominant version of the schedule being passed in (squidging)
 '''
 def dominantRoute(currRoute, assignedTWs, dayIndex):
-    #AVERY I believe the problem is here
-    
+#     print "********** Entering dominantRoute **********"
+
     # put everything as late as possible within the assigned time window
     nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
     
-#     print nextTaskStart
+    
     
     #goes through the current route backwards ignoring the last task
     for t in range(len(currRoute) - 2, -1, -1):
@@ -902,9 +895,10 @@ def dominantRoute(currRoute, assignedTWs, dayIndex):
                 currRoute.endingTimes[t] = min(timeWindow[1], nextTaskStart)
                 assignedTWs[t] = tw
             else:
-                nextTaskStart = currRoute.endingTimes[t] - task.duration
                 break
+        nextTaskStart = currRoute.endingTimes[t] - task.duration
     
+#     print "********** Exiting dominantRoute **********"
     return currRoute
 
 '''
@@ -935,17 +929,23 @@ def createSchedule(solution):
 
 
 
-'''
-@return: the length of time from the start of the first task to the end of the last
-'''
-def getRouteDuration(currRoute):    
-    # AVERY: put this in Object.Route instead
-    # doesn't work if it's infeasible. If it is infeasible, I'm returning infinity
-    if len(currRoute) == 0:
-        return 0
-    if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
-        return float("inf")
-    return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
+def getRouteDuration(currRoute):
+    # FIX THIS call isFeasible?
+    # TODO: put this in Object.Route instead 
+#     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
+#         return None
+    
+    routeDuration = 0
+    # for each task in the route, calculate the duration by traveling time and the duration of the task
+    # add the total duration calculation to the overall routeDuration 
+    for t in range(len(currRoute)):
+        task = currRoute[t]   
+        travelTime = helperFunctions.getDistanceBetweenTasks(task, currRoute[t - 1])
+        task.duration = task.duration + travelTime
+        routeDuration += task.duration
+    
+    return routeDuration
+#     return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
 
 '''
 @return: the length of a schedule from the start of the first 
@@ -971,7 +971,23 @@ def getScheduleDuration(taskList, currSchedule):
 @return: total distance of a solution
 '''
 def calcTotalDistance(currSolution):
-    return 0
+    
+    totalDistance = 0
+    for r in range(len(currSolution)):
+        route = currSolution[r]
+        routeTravelTime = 0
+        for t in range(len(route)):
+            routeTravelTime += helperFunctions.getDistanceBetweenTasks(task,route[t - 1])
+        totalDistance += routeTravelTime
+        
+    print "Total Distance is: ", totalDistance
+    return totalDistance
+    
+#take the last tasks ending time - first tasks ending time + first tasks duration 
+def getMinRouteDuration(currRoute): 
+    
+    totalDuration = currRoute.endTimes[-1]- currRoute.endTimes[0] + currRoute.taskList[0].duration
+    return totalDuration    
 
 
 def printUnplanned():
@@ -1008,6 +1024,8 @@ def main():
     
 if __name__ == "__main__":
     main()
+    
+
     
 
 
