@@ -24,7 +24,7 @@ def solve(csvFile):
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByDeadline)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByDeadline)
     
     brute = runBruteForceAlg(csvFile)
     
@@ -42,14 +42,14 @@ def solve(csvFile):
     print 'brute force solution'
     printSolution(brute)
      
-    print "brute journey"
-    helperFunctions.printScheduleJourney(brute)
-
-    print "greedy journey"
-    helperFunctions.printScheduleJourney(greedySol)
-    
-    print "vns journey"
-    helperFunctions.printScheduleJourney(currSchedule)
+#     print "brute journey"
+# #     helperFunctions.printScheduleJourney(brute)
+# 
+#     print "greedy journey"
+# #     helperFunctions.printScheduleJourney(greedySol)
+#     
+#     print "vns journey"
+# #     helperFunctions.printScheduleJourney(currSchedule)
 
     return currSchedule
 
@@ -92,6 +92,7 @@ def vns(taskList, currSchedule):
         # If we have gone through all neighborhood structures, start again
         nHood = 1
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
+            print "Neighborhood", nHood 
             
             currSchedule = copy.deepcopy(currSchedule)
             currSchedule.resetEndingTimes()
@@ -105,11 +106,14 @@ def vns(taskList, currSchedule):
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
+            
+            print "**************GOING FROM VNS to isFeasible***************"
             feasibleSchedule = isFeasible(taskList, iterSolution)
             if feasibleSchedule == None:
                 feasible = False
             else:
                 feasible = True
+            print "Feasibility Status: ", feasible
             
             # if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
@@ -117,6 +121,7 @@ def vns(taskList, currSchedule):
             if feasible:
                 # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
+                    print "Found better schedule"
                     currSchedule = feasibleSchedule
                     nHood = 1
                 # Otherwise, increment nHood
@@ -145,6 +150,7 @@ def vns(taskList, currSchedule):
             else:
                 numIterations += 1
                 unplannedTasks = prevUnplanned
+                nHood += 1
                 
 #     print "********** Exiting VNS **********"
     return bestSchedule
@@ -180,6 +186,7 @@ def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
         
     # NOTE TO AVERY: MAKE SURE EXCHANGE
+    
 
     if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
@@ -529,7 +536,6 @@ def bestInsertion(taskList, currSchedule):
     # otherwise, enqueue it and go to the next task
 
     tasksSinceLastInsertion = 0
-    
     # while we have not explored all of the unplanned tasks
     while tasksSinceLastInsertion < len(unplannedTasks):
         
@@ -542,14 +548,15 @@ def bestInsertion(taskList, currSchedule):
         isValid = False
         
         currTask = unplannedTasks.popleft()
-
         # looping through each day in the current solution list 
         for day in range(len(currSchedule)):
             
             # if the duration of the task under consideration added to the current day 
             # is less than the time limit then accept it as valid
+            print "0", currSchedule
             if len(currTask.timeWindows[day]) > 0 and \
             getRouteDuration(currSchedule[day]) + currTask.duration < timeLimit:
+                print "1", currSchedule
                 isValid = True
                 
                 # for each position within the day 
@@ -558,7 +565,7 @@ def bestInsertion(taskList, currSchedule):
                     task1 = currSchedule[day][pos]
                     task2 = currSchedule[day][pos + 1]
                    
-                    # calculates what the distance would be if the task under consideration where to be added between task1 and task2
+                    # calculates what the distance would be if the task under consideration were to be added between task1 and task2
                     addedDist = helperFunctions.getDistanceBetweenTasks(task1, currTask) + \
                     helperFunctions.getDistanceBetweenTasks(currTask, task2) - \
                     helperFunctions.getDistanceBetweenTasks(task1, task2)
@@ -567,15 +574,19 @@ def bestInsertion(taskList, currSchedule):
                     if addedDist < shortestDistance:
                         shortestDistance = addedDist
                         insertLocation = (day, pos)
-        
+    
+        print "2", currSchedule
         # adding the 'valid' task to the day at the specified position 
         if isValid:
-            newSolution = Objects.Route()
+            newRoute = Objects.Route()
             day = insertLocation[0]
             pos = insertLocation[1]
-            newSolution.taskList = currSchedule[day][:pos]
-            newSolution.append(currTask, None)
-            currSchedule[day] = newSolution + currSchedule[day][pos:]
+            newRoute.taskList = currSchedule[day][:pos]
+            newRoute.endingTimes = [None] * len(newRoute.taskList)
+            newRoute.append(currTask, None)
+            for t in currSchedule[day][pos:]:
+                newRoute.append(t, None)
+            currSchedule[day] = newRoute
             tasksSinceLastInsertion = 0
         
         # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
@@ -584,7 +595,6 @@ def bestInsertion(taskList, currSchedule):
             unplannedTasks.append(currTask)
     
     # after all that, add the task to the solution in the time with smallest added distance.
-
 #     print "********** Exiting bestInsertion **********"
     return currSchedule
 
@@ -600,6 +610,7 @@ def isFeasible(taskList, currSchedule):
     # deepcopy currSchedule. We will be changing timewindows
     currSchedule = copy.deepcopy(currSchedule)
     
+    print "it is a Route in isFeasible?", isinstance(currSchedule[0], Objects.Route)
     
     # with no ending times in the routes yet
     for r in range(len(currSchedule)):
@@ -628,7 +639,7 @@ def isFeasible(taskList, currSchedule):
     
     # If those terminate early and return None, the schedule is infeasible. Return None
     if currSchedule == None:
-#         print "InFeasible Route"
+        print "InFeasible Route"
 #         print "********** Exiting isFeasible **********"
         return None
     
@@ -637,7 +648,6 @@ def isFeasible(taskList, currSchedule):
     feasSol = minRoute(taskList, currSchedule)
     #AVERY it is wrong here
     
-#     helperFunctions.printScheduleJourney(feasSol)
 #     print "********** Exiting isFeasible **********" 
     return feasSol
                 
@@ -647,8 +657,7 @@ def isFeasible(taskList, currSchedule):
 '''
 def tightenTWStarts(currSchedule):
 #     print "********** Entering tightenTWStarts **********"
-    #AVERY THIS DOESN'T WORK RIGHT: TW STARTS NOT GETTING SET
-#     print isinstance(currSchedule[0], Objects.Route)   
+    
     if currSchedule == None:
         return None
     for d in range(len(currSchedule)):
@@ -688,7 +697,7 @@ def tightenTWStarts(currSchedule):
             
         custIndex += 1
         
-        if custIndex < len(day.taskList):
+        if custIndex < len(day.taskList)-1:
             return None
 #     print "********** Exiting tightenTWStarts **********"
     return currSchedule
@@ -735,8 +744,8 @@ def tightenTWEnds(currSchedule):
             if task.duration > tw[0][1] - tw[0][0]:
                 # remove that task's first tw
                 tw = tw[:-1]
-            
-        custIndex -= 1
+                if len(day.taskList[custIndex].timeWindows) == 0:
+                    return None
         
         if custIndex > 0:
             return None
@@ -907,8 +916,9 @@ This works with Schedule objects
 '''
 def isBetterSchedule(sched1, sched2):
     sum1 = sched1.getProfit()
+    print "Sum for feasibleSchedule: ", sum1
     sum2 = sched2.getProfit()
-    
+    print "Sum for otherScheule: ", sum2
     return sum1 > sum2
 '''
 @return: schedule object containing all of the routes and tasks from the original solution
@@ -930,7 +940,6 @@ def createSchedule(solution):
 
 
 def getRouteDuration(currRoute):
-    # FIX THIS call isFeasible?
     # TODO: put this in Object.Route instead 
 #     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
 #         return None
@@ -952,6 +961,7 @@ def getRouteDuration(currRoute):
     route to the end of the last
 '''
 def getScheduleDuration(taskList, currSchedule):
+    print "************* Entering getScheduleDuration **************"
     sum = 0
     
     feasSched = copy.deepcopy(currSchedule)
@@ -961,10 +971,12 @@ def getScheduleDuration(taskList, currSchedule):
     if feasSched != None:
         for route in feasSched:
             sum += getRouteDuration(route)
+        "************* Exiting getScheduleDuration **************"
         return sum
     
     for route in currSchedule:
         sum += getRouteDuration(route)
+    "************* Exiting getScheduleDuration **************"
     return sum
 
 '''
@@ -1020,7 +1032,7 @@ def scheduleIDs(sched):
 
 def main():
     print "********** Main **********"
-    print solve("test.csv")
+    print solve("test2.csv")
     
 if __name__ == "__main__":
     main()
