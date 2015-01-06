@@ -126,7 +126,7 @@ def getStartingTimeOfNextTask(finishingTime, presentLocation, nextLocation, rele
 
 
 '''
-A function that will `out the schedule in a semi-readable fashion.
+A function that will output a task list in a semi-readable fashion.
 Help from http://stackoverflow.com/questions/5084743/how-to-print-pretty-string-output-in-python
 '''
 def printSchedule(schedule):
@@ -167,13 +167,13 @@ def preprocessTimeWindows(taskList):
 def printRouteJourney(route):
      for t in range(len(route) - 1):
          task = route[t]
-         nextTask = route[t+1]
+         nextTask = route[t + 1]
          print "doing task", task.id, ": ", route.endingTimes[t] - task.duration, "to", route.endingTimes[t], "task duration: ", task.duration
          dist = getDistanceBetweenTasks(task, nextTask)
          print "traveling from", task.x, task.y, "at", route.endingTimes[t], "to", nextTask.x, nextTask.y, "at", route.endingTimes[t] + dist
      t = len(route) - 1
      task = route[t]
-     print "doing task", task.id, route.endingTimes[t] - task.duration, "to", route.endingTimes[t]
+     print "doing task", task.id, ": ", route.endingTimes[t] - task.duration, "to", route.endingTimes[t]
      print "\n"
               
 def printScheduleJourney(sched):

@@ -29,7 +29,7 @@ def makeXijVariables(numTasks):
     for i in range(numTasks):
         for j in range(numTasks):
             if i != j:
-                xijVariables[i][j] = pulp.LpVariable(("x" + str(i) + str(j)), 0, 1, pulp.LpBinary)
+                xijVariables[i][j] = pulp.LpVariable(("x" + str(i) + "," + str(j)), 0, 1, pulp.LpBinary)
     return xijVariables
 
 
@@ -183,9 +183,13 @@ def integerProgramSolve(taskList):
     
     prob += pulp.lpSum(xihVariables) == 1 # Ending job constraint
 
-
-    prob.writeLP("Scheduling.lp")
-    prob.solve(pulp.GUROBI())
+    # Gurobi model variables can be set using keyword arguments
+    # (https://docs.python.org/2/tutorial/controlflow.html#keyword-arguments)
+    # refer to http://www.gurobi.com/documentation/6.0/reference-manual/refman
+    # for specific parameter documentation
+    # e.g.: solver = pulp.solvers.GUROBI(OutputFlag = 0, Threads = 4, TimeLimit = 120)
+    solver = pulp.solvers.GUROBI()
+    prob.solve(solver)
     assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, aiVariables, taskList)
 
@@ -196,16 +200,16 @@ for use in comparing different algorithms.
 def runIntegerProgram(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     schedule = integerProgramSolve(taskList)
-    return schedule.routeList[0].taskList
+    return schedule
 
 '''    
 A main function that will read in the list of tasks from a csv, construct the integer program,
 and print the solution it produces.
 '''
 def main():
-    solvedTaskList = runIntegerProgram("test.csv")
+    solvedSchedule = runIntegerProgram("test.csv")
     print
-    helperFunctions.printSchedule(solvedTaskList)
+    helperFunctions.printScheduleJourney(solvedSchedule)
     print
 
 
