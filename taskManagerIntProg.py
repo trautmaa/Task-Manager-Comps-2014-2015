@@ -11,9 +11,12 @@ Abby Lewis, Will Schifeling, Alex Trautman
 This program uses Python's PuLP - a linear programming libray - to model and solve an integer program that describes our base problem.
 '''
 
-from create_tasks_from_csv import *
-from pulp import *
-from helper_functions import *
+import pulp
+
+import createTasksFromCsv
+import helperFunctions
+
+from Objects import Route, Task, Schedule
 
 
 '''
@@ -21,13 +24,13 @@ A function that returns a two-dimensional list where the jth entry in the
 ith sublist represents the variable (boolean) for if we go from task i to
 task j.  Note that if i == j, that entry is None.
 '''
-def make_xij_variables(num_tasks):
-    xij_variables = [[None for i in range(num_tasks)] for j in range(num_tasks)]
-    for i in range(num_tasks):
-        for j in range(num_tasks):
+def makeXijVariables(numTasks):
+    xijVariables = [[None for i in range(numTasks)] for j in range(numTasks)]
+    for i in range(numTasks):
+        for j in range(numTasks):
             if i != j:
-                xij_variables[i][j] = LpVariable(("x" + str(i) + str(j)), 0, 1, LpBinary)
-    return xij_variables
+                xijVariables[i][j] = pulp.LpVariable(("x" + str(i) + str(j)), 0, 1, pulp.LpBinary)
+    return xijVariables
 
 
 '''
@@ -35,14 +38,14 @@ A function that returns a two-dimensional list where the jth entry in the
 ith sublist represents the distance from task i to
 task j.  Note that if i == j, that entry is None.
 '''
-def make_dij_constants(task_list):
-    num_tasks = len(task_list)
-    dij_constants = [[None for i in range(num_tasks)] for j in range(num_tasks)]
-    for i in range(num_tasks):
-        for j in range(num_tasks):
+def makeDijConstants(taskList):
+    numTasks = len(taskList)
+    dijConstants = [[None for i in range(numTasks)] for j in range(numTasks)]
+    for i in range(numTasks):
+        for j in range(numTasks):
             if i != j:
-                dij_constants[i][j] = get_distance_between_tasks(task_list[i], task_list[j])
-    return dij_constants
+                dijConstants[i][j] = helperFunctions.getDistanceBetweenTasks(taskList[i], taskList[j])
+    return dijConstants
 
 
 '''
@@ -50,16 +53,16 @@ A function that adds constraints to the problem.  This constraint is
 for all jobs i, the sum of the variables xij = the sum of the variables xji
                 the sum of the variables xij = yi
 '''
-def add_connectivity_constraints(prob, xij_variables, xhi_variables, xih_variables, num_tasks, yi_variables):
-    for i in range(num_tasks):
-        xji_list = []
-        xij_list = []
-        for j in range(num_tasks):
+def addConnectivityConstraints(prob, xijVariables, xhiVariables, xihVariables, numTasks, yiVariables):
+    for i in range(numTasks):
+        xjiList = []
+        xijList = []
+        for j in range(numTasks):
             if i != j:
-                xji_list += xij_variables[j][i]
-                xij_list += xij_variables[i][j]
-        prob += lpSum(xji_list) + xhi_variables[i] == lpSum(xij_list) + xih_variables[i] # for job i sum xij +xhi = sum xji + xih
-        prob += lpSum(xij_list) + xih_variables[i] == yi_variables[i] # for job i sum xij = yi
+                xjiList += xijVariables[j][i]
+                xijList += xijVariables[i][j]
+        prob += pulp.lpSum(xjiList) + xhiVariables[i] == pulp.lpSum(xijList) + xihVariables[i] # for job i sum xij +xhi = sum xji + xih
+        prob += pulp.lpSum(xijList) + xihVariables[i] == yiVariables[i] # for job i sum xij = yi
        
     
 '''
@@ -67,11 +70,11 @@ A function that adds constraints to the problem.  This constraint is
 for all jobs i, the task can't be finished before its release time and its service time
                 the task will finish before its deadline if it is an included task
 '''
-def add_completion_time_constraints(prob, release_constants, service_time_constants, 
-                                    ai_variables, deadline_constants, latest_deadline, yi_variables, num_tasks):
-    for i in range(num_tasks):
-        prob += release_constants[i] + service_time_constants[i] <= ai_variables[i] # ri + si <= ai
-        prob += ai_variables[i] <= deadline_constants[i] + latest_deadline * (1 - yi_variables[i]) # ai <= B(1 - yi)
+def addCompletionTimeConstraints(prob, releaseConstants, serviceTimeConstants, 
+                                    aiVariables, deadlineConstants, latestDeadline, yiVariables, numTasks):
+    for i in range(numTasks):
+        prob += releaseConstants[i] + serviceTimeConstants[i] <= aiVariables[i] # ri + si <= ai
+        prob += aiVariables[i] <= deadlineConstants[i] + latestDeadline * (1 - yiVariables[i]) # ai <= B(1 - yi)
 
 
 '''
@@ -80,13 +83,13 @@ for all pairs of distinct jobs, if job j comes after job i: then job j can't fin
                                 before the finish time of job i + the distance between them
                                 + the service time of job j
 '''        
-def add_travel_and_service_time_constraints(prob, ai_variables, dij_constants, service_time_constants,
-                                            latest_deadline, xij_variables, num_tasks):
-    for i in range(num_tasks):
-        for j in range(num_tasks):
+def addTravelAndServiceTimeConstraints(prob, aiVariables, dijConstants, serviceTimeConstants,
+                                            latestDeadline, xijVariables, numTasks):
+    for i in range(numTasks):
+        for j in range(numTasks):
             if i != j:
-                prob += ai_variables[i] + dij_constants[i][j] + service_time_constants[j] \
-                <= ai_variables[j] + latest_deadline *(1 - xij_variables[i][j])
+                prob += aiVariables[i] + dijConstants[i][j] + serviceTimeConstants[j] \
+                <= aiVariables[j] + latestDeadline *(1 - xijVariables[i][j])
 
 
 '''
@@ -95,45 +98,45 @@ the integer program. These constraints are that only 1 task can come immediately
 after the start, and that if job i comes immediately after the start, it cannot
 finish before its service time + the travel time from the start.
 '''
-def add_starting_location_constraints(prob, dhi_constants, service_time_constants, ai_variables,
-                                        latest_deadline, xhi_variables, num_tasks):
-    prob += lpSum(xhi_variables) == 1
-    for i in range(num_tasks):
-        prob += dhi_constants[i] + service_time_constants[i] \
-        <= ai_variables[i] + latest_deadline * (1 - xhi_variables[i])
+def addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
+                                        latestDeadline, xhiVariables, numTasks):
+    prob += pulp.lpSum(xhiVariables) == 1
+    for i in range(numTasks):
+        prob += dhiConstants[i] + serviceTimeConstants[i] \
+        <= aiVariables[i] + latestDeadline * (1 - xhiVariables[i])
 
 
 '''
 A function that takes a list of tasks and iterates over them,
 returning the latest deadline out of all tasks.
 '''
-def get_latest_deadline(task_list):
-    latest_deadline = 0
-    for task in task_list:
-        if task.deadline > latest_deadline:
-            latest_deadline = task.deadline
-    return latest_deadline
+def getLatestDeadline(taskList):
+    latestDeadline = 0
+    for task in taskList:
+        if task.deadline > latestDeadline:
+            latestDeadline = task.deadline
+    return latestDeadline
 
 
 '''
 A function that takes a solved integer program and converts it into a makeSchedule
 object.
 '''
-def make_schedule(yi_variables, ai_variables, task_list):
-    solved_task_tuples = []
-    for index, task_var in enumerate(yi_variables):
-        if (task_var.varValue == 1):
-            solved_task_tuples.append((task_list[index], ai_variables[index].varValue))
-    sorted_task_tuples = sorted(solved_task_tuples, key = lambda tuple:tuple[1])
-    solved_task_list = []
-    solved_task_completion_times = []
-    for taskTuple in sorted_task_tuples:
-        solved_task_list.append(taskTuple[0])
-        solved_task_completion_times.append(taskTuple[1])
+def makeSchedule(yiVariables, aiVariables, taskList):
+    solvedTaskTuples = []
+    for index, taskVar in enumerate(yiVariables):
+        if (taskVar.varValue == 1):
+            solvedTaskTuples.append((taskList[index], aiVariables[index].varValue))
+    sortedTaskTuples = sorted(solvedTaskTuples, key = lambda tuple:tuple[1])
+    solvedTaskList = []
+    solvedTaskCompletionTimes = []
+    for taskTuple in sortedTaskTuples:
+        solvedTaskList.append(taskTuple[0])
+        solvedTaskCompletionTimes.append(taskTuple[1])
     route = Route()
-    route.set_task_list(solved_task_list, solved_task_completion_times)
+    route.setTaskList(solvedTaskList, solvedTaskCompletionTimes)
     schedule = Schedule()
-    schedule.add_to_list(route)
+    schedule.append(route)
     return schedule
 
 
@@ -141,94 +144,68 @@ def make_schedule(yi_variables, ai_variables, task_list):
 Function that, given a list of tasks, constructs and solves an integer program,
 returning the resulting schedule.
 '''
-def integer_program_solve(task_list):
-    num_tasks = len(task_list)
-    latest_deadline = get_latest_deadline(task_list)
-    starting_location = (0, 0) # probably update this eventually
+def integerProgramSolve(taskList):
+    numTasks = len(taskList)
+    latestDeadline = getLatestDeadline(taskList)
+    startingLocation = (0, 0) # probably update this eventually
 
-    yi_variables = [LpVariable(("y" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)] # included or not
-    ai_variables = [LpVariable(("a" + str(i)), 0, latest_deadline) for i in range(num_tasks)] # completion time
-    xij_variables = make_xij_variables(num_tasks)
-    xhi_variables = [LpVariable(("xH" + str(i)), 0, 1, LpBinary) for i in range(num_tasks)]
-    xih_variables = [LpVariable(("x" + str(i) + "H"), 0, 1, LpBinary) for i in range(num_tasks)]
-    dij_constants = make_dij_constants(task_list)
-    dhi_constants = [get_distance_between_coords(starting_location, get_coords(task)) for task in task_list]
-    deadline_constants = [task.deadline for task in task_list]
-    release_constants = [task.release_time for task in task_list]
-    service_time_constants = [task.duration for task in task_list]
+    yiVariables = [pulp.LpVariable(("y" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)] # included or not
+    aiVariables = [pulp.LpVariable(("a" + str(i)), 0, latestDeadline) for i in range(numTasks)] # completion time
+    xijVariables = makeXijVariables(numTasks)
+    xhiVariables = [pulp.LpVariable(("xH" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)]
+    xihVariables = [pulp.LpVariable(("x" + str(i) + "H"), 0, 1, pulp.LpBinary) for i in range(numTasks)]
+    dijConstants = makeDijConstants(taskList)
+    dhiConstants = [helperFunctions.getDistanceBetweenCoords(startingLocation, helperFunctions.getCoords(task)) for task in taskList]
+    deadlineConstants = [task.deadline for task in taskList]
+    releaseConstants = [task.releaseTime for task in taskList]
+    serviceTimeConstants = [task.duration for task in taskList]
 
     # Initialize problem 
-    prob = LpProblem("Scheduling", LpMaximize)
+    prob = pulp.LpProblem("Scheduling", pulp.LpMaximize)
     # OBJECTIVE FUNCTION
-    prob += lpSum(yi_variables) 
+    prob += pulp.lpSum(yiVariables) 
 
 
     # Add all constraints
-    add_connectivity_constraints(prob, xij_variables, xhi_variables, xih_variables, num_tasks, yi_variables)
+    addConnectivityConstraints(prob, xijVariables, xhiVariables, xihVariables, numTasks, yiVariables)
     
-    add_completion_time_constraints(prob, release_constants, service_time_constants, 
-                                    ai_variables, deadline_constants, latest_deadline, yi_variables,
-                                    num_tasks)
+    addCompletionTimeConstraints(prob, releaseConstants, serviceTimeConstants, 
+                                    aiVariables, deadlineConstants, latestDeadline, yiVariables,
+                                    numTasks)
 
-    add_travel_and_service_time_constraints(prob, ai_variables, dij_constants, 
-                                            service_time_constants, latest_deadline, xij_variables,
-                                            num_tasks)
+    addTravelAndServiceTimeConstraints(prob, aiVariables, dijConstants, 
+                                            serviceTimeConstants, latestDeadline, xijVariables,
+                                            numTasks)
 
-    add_starting_location_constraints(prob, dhi_constants, service_time_constants, ai_variables,
-                                        latest_deadline, xhi_variables,
-                                        num_tasks)
+    addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
+                                        latestDeadline, xhiVariables,
+                                        numTasks)
     
-    prob += lpSum(xih_variables) == 1 # Ending job constraint
-
-    # scary suboptimal 1 test stuff:
-    # prob += yi_variables[3] == 1
-    # prob += yi_variables[6] == 1
-    # prob += yi_variables[9] == 1
-    # prob += yi_variables[5] == 1
-    # prob += yi_variables[0] == 1
-    # prob += yi_variables[8] == 1
-    # prob += yi_variables[1] == 1
-    # prob += xhi_variables[3] == 1
-    # prob += xih_variables[1] == 1
-
+    prob += pulp.lpSum(xihVariables) == 1 # Ending job constraint
 
 
     prob.writeLP("Scheduling.lp")
-    prob.solve(GUROBI())
-    # for yvar in yi_variables:
-    #     print yvar, yvar.varValue
-    # for avar in ai_variables:
-    #     print avar, avar.varValue
-    # for xvar in xhi_variables:
-    #     print xvar, xvar.varValue
-    # for xvar in xih_variables:
-    #     print xvar, xvar.varValue
-    # for index in xij_variables:
-    #     for var in index:
-    #         try:
-    #             print var, var.varValue
-    #         except AttributeError:
-    #             print var 
+    prob.solve(pulp.GUROBI())
     assert(prob.status == 1) # Problem was solved
-    return make_schedule(yi_variables, ai_variables, task_list)
+    return makeSchedule(yiVariables, aiVariables, taskList)
 
 '''
 A helper function that does everything but print the solution,
 for use in comparing different algorithms.
 '''
-def run_integer_program(csv_file):
-    task_list = get_task_list(csv_file)
-    schedule = integer_program_solve(task_list)
-    return schedule.route_list[0].task_list
+def runIntegerProgram(csvFile):
+    taskList = createTasksFromCsv.getTaskList(csvFile)
+    schedule = integerProgramSolve(taskList)
+    return schedule.routeList[0].taskList
 
 '''    
 A main function that will read in the list of tasks from a csv, construct the integer program,
 and print the solution it produces.
 '''
 def main():
-    solved_task_list = run_integer_program("test.csv")
+    solvedTaskList = runIntegerProgram("test.csv")
     print
-    print_schedule(solved_task_list)
+    helperFunctions.printSchedule(solvedTaskList)
     print
 
 

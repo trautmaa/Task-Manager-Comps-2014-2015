@@ -46,8 +46,7 @@ def createSchedule(taskOrdering, taskList):
     route = Route()
     for i in taskOrdering:
         task = taskList[i] # taskOrdering is a permutation
-        includable, endingTime = isFinishableTask(
-            task, currentLocation, currentTime)
+        includable, endingTime = isFinishableTask(task, currentLocation, currentTime)
         if includable:
             currentLocation = getCoords(task)
             route.append(task, endingTime)
@@ -140,9 +139,9 @@ def printSchedule(schedule):
             currentTime, lastLocation, getCoords(task), task.releaseTime)
         finishingTime = startingTime + task.duration
         if i == 0:
-            print template.format(str(startingTime)[0:6], str(finishingTime)[0:6], str(task.name)[0:20], str(getCoords(task)), str(task.releaseTime)[0:4], str(task.deadline)[0:4], str(getDistanceBetweenCoords(lastLocation, getCoords(task)))[0:4])
+            print template.format(str(startingTime)[0:6], str(finishingTime)[0:6], str(task.id)[0:20], str(getCoords(task)), str(task.releaseTime)[0:4], str(task.deadline)[0:4], str(getDistanceBetweenCoords(lastLocation, getCoords(task)))[0:4])
         elif i != (len(schedule) - 1):
-            print template.format(str(startingTime)[0:6], str(finishingTime)[0:6], str(task.name)[0:20], str(getCoords(task)), str(task.releaseTime)[0:4], str(task.deadline)[0:4], str(getDistanceBetweenTasks(task, schedule[i -1]))[0:4])
+            print template.format(str(startingTime)[0:6], str(finishingTime)[0:6], str(task.id)[0:20], str(getCoords(task)), str(task.releaseTime)[0:4], str(task.deadline)[0:4], str(getDistanceBetweenTasks(task, schedule[i -1]))[0:4])
         currentTime = finishingTime
         lastLocation = getCoords(task)
 
