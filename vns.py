@@ -24,12 +24,11 @@ def solve(csvFile):
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByDeadline)
-    
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByStupid)
+    printSolution(greedySol)
 #     brute = runBruteForceAlg(csvFile)
     
-    modTasks = greedySol[:]
-    currSchedule = createSchedule(modTasks)
+    currSchedule = createSchedule(copy.deepcopy(greedySol))
     # Modify the greedy algorithm
     currSchedule = vns(taskList, currSchedule)
     
@@ -81,6 +80,9 @@ def vns(taskList, currSchedule):
     numIterations = 0
     
     currSchedule = isFeasible(taskList, currSchedule)
+    if currSchedule == None:
+        print "Your incumbent solution is infeasible, try again"
+        exit(1)
     bestSchedule = currSchedule
     
     initTime = time.time()
@@ -92,6 +94,7 @@ def vns(taskList, currSchedule):
         # If we have gone through all neighborhood structures, start again
         nHood = 1
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
+            print nHood
             currSchedule = copy.deepcopy(currSchedule)
             currSchedule.resetEndingTimes()
             prevUnplanned = copy.deepcopy(unplannedTasks)
@@ -106,17 +109,16 @@ def vns(taskList, currSchedule):
             # If it is, and it is a better solution, update bestSolution
             
             feasibleSchedule = isFeasible(taskList, iterSolution)
-            if feasibleSchedule == None:
-                feasible = False
-            else:
-                feasible = True
             
             # if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
             
-            if feasible:
+            if (feasibleSchedule != None):
+                print "Found a feasible new solution"
                 # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
+                    print "EVERYTHING IS AEWESOME"
+                    
                     currSchedule = feasibleSchedule
                     nHood = 1
                 # Otherwise, increment nHood
@@ -125,6 +127,7 @@ def vns(taskList, currSchedule):
                 
                 # If our solution is better than the best solution so far, update.
                 if isBetterSchedule(feasibleSchedule, bestSchedule):
+                    print "EVERYTHING IS AEWESOME2"
                     bestSchedule = feasibleSchedule
                     numIterations = 0
                     
@@ -146,7 +149,6 @@ def vns(taskList, currSchedule):
                 numIterations += 1
                 unplannedTasks = prevUnplanned
                 nHood += 1
-                
 #     print "********** Exiting VNS **********"
 
     return bestSchedule
@@ -375,60 +377,38 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 '''
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
-#     print isinstance(currSchedule[0], Objects.Route)       
-#     printSolution(currSchedule)
-    #return currSchedule
+    return currSchedule
     
-    
-    # THIS IS NO LONGER GOING TO WORK BECAUSE IT IS SPECIFICALLY FOR ROUTES
-    # WE ONLY KNOW ABOUT ROUTE DURATION ONCE WE'VE RUN ISFEASIBLE
-    
-    #get random day
     duration = getScheduleDuration(taskList, currSchedule)
-    #duration = 1
-    
-    #ABBY CHANGE THIS FOR DEBUGGING
     improvement = False
     
-    # CHANGE THIS
+    
     # pick a random day to optimize
-    day = random.randint(0, len(currSchedule) - 1)
+    day = random.randint(0, len(currSchedule))
     currRoute = currSchedule[day]
     routeLength = len(currRoute)
-    #print("routLength is " + str(routeLength))
+
     # 2
-    
-    
     if routeLength > 3:
-        
         maxM = math.factorial(routeLength) / (6 * math.factorial(routeLength - 3))
-        #print(maxM)
     else:
         return currSchedule
-    #ABBY CHANGE THIS FOR DEBUGGING
+    
     m = 0
-    #MAKE THIS AND and not OR??????????
     while improvement == False and m < maxM:
-
         # 5
         for n in range(0, routeLength -1):
-            
             # 8
             for k in range(0, routeLength - 2):
-        
                 # 9 limiting the number of nodes that can move to 3
                 topRange = min(k+4, routeLength - 2)
-                
                 for j in range(k + 1, topRange, 1):
-                    #print(j)
                     # 10
                     distance1 = helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j])
                     distance2 = helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[j + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[j])
                     # 11
                     distance3 = helperFunctions.getDistanceBetweenTasks(currRoute[0], currRoute[routeLength-1]) + helperFunctions.getDistanceBetweenTasks(currRoute[k], currRoute[k + 1]) + helperFunctions.getDistanceBetweenTasks(currRoute[j], currRoute[j + 1])
                     # 10
-#                     print("distance1 is " + str(distance1))
-#                     print("distance2 is " + str(distance2))
                     if  distance1 <= distance2:
                         d = distance1
                         #print("Entered if")
@@ -632,9 +612,10 @@ def isFeasible(taskList, currSchedule):
     # If those terminate early and return None, the schedule is infeasible. Return None
     if newSchedule == None:
 #         print "********** Exiting isFeasible **********"
+        print "THEORETICALLY INFEASIBLE\n", currSchedule
         return None
     
-    
+   
     # Otherwise, squidge to find the best schedule for this solution
     feasSol = minRoute(taskList, newSchedule)
     #AVERY it is wrong here
@@ -656,7 +637,7 @@ def tightenTWStarts(currSchedule):
         day = currSchedule[d]
         task = day.taskList[custIndex]
         tw = task.timeWindows[d]
-        while custIndex < len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 :
+        while custIndex < len(day) - 1 and len(day.taskList[custIndex].timeWindows[d]) > 0 :
             task = day.taskList[custIndex]
             tw = task.timeWindows[d]
             twNext = day.taskList[custIndex + 1].timeWindows[d]
@@ -682,12 +663,12 @@ def tightenTWStarts(currSchedule):
                     twNext[w] = (max(tw[0][0] + task.duration, twNext[w][0]), twNext[w][1])
             custIndex += 1
         #if this is the last customer and they still have time windows left,
-        if custIndex == len(day) - 1 and len(day.taskList[custIndex].timeWindows) > 0 and task.duration > tw[0][1] - tw[0][0]:
+        if custIndex == len(day) - 1 and len(day.taskList[custIndex].timeWindows[d]) > 0 and task.duration > tw[0][1] - tw[0][0]:
                 # remove that task's first tw
                 tw = tw[1:]
                     
         
-        if custIndex < len(day.taskList)-1 or anyEmptyTWLists(day):
+        if custIndex < len(day.taskList)-1 or anyEmptyTWLists(day, d):
             return None
 #     print "********** Exiting tightenTWStarts **********"
     return currSchedule
@@ -700,15 +681,15 @@ def tightenTWEnds(currSchedule):
     if currSchedule == None:
         return None
     
-    for dayIndex in range(len(currSchedule)):
-        custIndex = len(currSchedule[dayIndex].taskList) - 1
-        day = currSchedule[dayIndex]
+    for d in range(len(currSchedule)):
+        custIndex = len(currSchedule[d].taskList) - 1
+        day = currSchedule[d]
         task = day.taskList[custIndex]
-        tw = task.timeWindows[dayIndex]
-        while custIndex > 0 and len(day.taskList[custIndex].timeWindows) > 0:
+        tw = task.timeWindows[d]
+        while custIndex > 0 and len(day.taskList[custIndex].timeWindows[d]) > 0:
             task = day.taskList[custIndex]
-            tw = task.timeWindows[dayIndex]
-            twPrev = day.taskList[custIndex - 1].timeWindows[dayIndex]
+            tw = task.timeWindows[d]
+            twPrev = day.taskList[custIndex - 1].timeWindows[d]
             # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time w
             #  and the end of the previous task's last tw:
             if len(tw)>0 and len(twPrev)>0 and task.duration > tw[-1][1] - tw[-1][0] or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
@@ -730,23 +711,23 @@ def tightenTWEnds(currSchedule):
                     twPrev[w] = (twPrev[w][0], min(tw[-1][1] - task.duration, twPrev[w][1]))
 
             custIndex -= 1
-        if custIndex == 0 and len(day.taskList[custIndex].timeWindows) > 0:
+        if custIndex == 0 and len(day.taskList[custIndex].timeWindows[d]) > 0:
             if task.duration > tw[0][1] - tw[0][0]:
                 # remove that task's first tw
                 tw = tw[:-1]
         
-        print anyEmptyTWLists(day)
-        
-        if custIndex > 0 or anyEmptyTWLists(day):
+
+        if custIndex > 0 or anyEmptyTWLists(day, d):
+
             return None
     
 #     print "********** Exiting tightenTWEnds **********"
     return currSchedule
 
-def anyEmptyTWLists(route):
-    for t in range(len(route)):
+def anyEmptyTWLists(route, routeIndex):
+    for t in range(len(route)):  
         task = route[t]
-        if len(task.timeWindows) < 1:
+        if len(task.timeWindows[routeIndex]) < 1:
             return True
     return False
 
@@ -774,8 +755,9 @@ def minRoute(taskList, currSchedule):
         # first time window. This is feasible because of preprocessing
         for t in range(len(day)):
             task = day[t]
-            print task.timeWindows
+            
             day.endingTimes[t] = task.duration + task.timeWindows[d][0][0]
+            
 #             print "new ending time:"
 #             print task
 #             print day.endingTimes[t]
@@ -916,6 +898,8 @@ This works with Schedule objects
 def isBetterSchedule(sched1, sched2):
     sum1 = sched1.getProfit()
     sum2 = sched2.getProfit()
+    print "sum1", sum1
+    print "sum2", sum2
     return sum1 > sum2
 '''
 @return: schedule object containing all of the routes and tasks from the original solution

@@ -68,6 +68,12 @@ def createSolution(taskOrdering, taskList):
             solution.append(task)
     return [solution]
 
+def orderByStupid(taskList):
+    taskList = sorted(taskList, key=lambda task: task.deadline)
+    taskList.reverse()
+    return taskList
+      
+  
     
 '''
 A function that given a bunch of tasks will order them by their
