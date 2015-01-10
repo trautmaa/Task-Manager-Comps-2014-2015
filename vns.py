@@ -24,7 +24,7 @@ def solve(csvFile):
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByStupid)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByDeadline)
     printSolution(greedySol)
 #     brute = runBruteForceAlg(csvFile)
     
@@ -63,6 +63,7 @@ def vns(taskList, currSchedule):
 #     print currSchedule
     
     global unplannedTasks
+    global prevUnplanned
     
     unplannedTasks = deque(taskList[:])
    
@@ -71,7 +72,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 20
+    stoppingCondition = 30
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -93,13 +94,8 @@ def vns(taskList, currSchedule):
     while time.time() - initTime < stoppingCondition:
         # If we have gone through all neighborhood structures, start again
         nHood = 1
-        print "starting while1"
-        isUnplannedWrong(currSchedule)
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
-            print "starting while2"
-            isUnplannedWrong(currSchedule)
-            
-            print nHood
+
             currSchedule = copy.deepcopy(currSchedule)
             currSchedule.resetEndingTimes()
             prevUnplanned = copy.deepcopy(unplannedTasks)
@@ -108,29 +104,20 @@ def vns(taskList, currSchedule):
             
             shakeSolution = shaking(currSchedule, nHood)
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
-            print "exiting iterativeImprovement to vns"
-            isUnplannedWrong(iterSolution)
 
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
             
-            print "entering isFeasible from vns"
             feasibleSchedule = isFeasible(taskList, iterSolution)
-            print "exited isFeasible from vns"
-            isUnplannedWrong(feasibleSchedule)
             
             # if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
             
             if (feasibleSchedule != None):
-                print "Found a feasible new solution"
 
                 # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
-                    print "EVERYTHING IS AEWESOME"
-                    print "IN ISBETTER1"
-                    isUnplannedWrong(currSchedule)
                     currSchedule = feasibleSchedule
                     nHood = 1
                 # Otherwise, increment nHood
@@ -139,30 +126,24 @@ def vns(taskList, currSchedule):
                 
                 # If our solution is better than the best solution so far, update.
                 if isBetterSchedule(feasibleSchedule, bestSchedule):
-                    print "EVERYTHING IS AEWESOME2"
                     bestSchedule = feasibleSchedule
-                    print "IN ISBETTER2"
-                    isUnplannedWrong(currSchedule)
                     numIterations = 0
                     
                 # If we have gone 8000 iterations with no improvement to bestSolution
                 # If criteria for selection are true, select a new currSchedule
                 elif numIterations > 8000:
-                    print "IN 8000 thing"
-                    isUnplannedWrong(currSchedule)
                     numIterations = 0
                     
                     if nHood > 8:
                         currSchedule = feasibleSchedule
                         nHood = 1
-                        print "IN 8000 1"
-                        isUnplannedWrong(currSchedule)
+                        unplannedTasks = prevUnplanned
+                        
                     # Criteria for nHoods 1-8:
                     # If the new solution is not more than .5% longer (distance), accept
                     elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSchedule):
                         currSchedule = feasibleSchedule
-                        print "IN 8000 2"
-                        isUnplannedWrong(currSchedule)
+                        unplannedTasks = prevUnplanned
                 else:
                     numIterations += 1 
                     unplannedTasks = prevUnplanned
@@ -170,11 +151,8 @@ def vns(taskList, currSchedule):
                 numIterations += 1
                 unplannedTasks = prevUnplanned
                 nHood += 1
-                print "INcrement3"
-                isUnplannedWrong(currSchedule)
                 
 #     print "********** Exiting VNS **********"
-
     return bestSchedule
 
 
@@ -182,11 +160,7 @@ def vns(taskList, currSchedule):
 @return: modified solution
 '''
 def shaking(currSchedule, nHood):
-    print "********** Entering shaking **********"
-    print currSchedule
-    printUnplanned()
-    isUnplannedWrong(currSchedule)
-    
+#     print "********** Entering shaking **********"
        
     currSchedule = copy.deepcopy(currSchedule)
     
@@ -200,10 +174,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
-    print "\n", newSchedule
-    printUnplanned()
-    isUnplannedWrong(newSchedule)
-    print "********** Exiting shaking **********"
+#     print "********** Exiting shaking **********"
     return newSchedule
 
 '''
@@ -213,9 +184,6 @@ def shaking(currSchedule, nHood):
 def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
         
-    # NOTE TO AVERY: MAKE SURE EXCHANGE
-    
-
     if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
 #         print "********** Exiting crossExchange **********"
@@ -310,14 +278,15 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     
     
 '''
+Selects a random day, removes some tasks, and adds some other unplanned tasks to that day
+
 @return: modified schedule
 '''
 def optionalExchange1(currSchedule, nHood):
-    print "********** Entering optExchange1**********"
-    print currSchedule
-    printUnplanned()
-
-
+#     print "********** Entering optExchange1**********"
+#     print currSchedule
+#     printUnplanned()
+    
     # set p and q according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
@@ -343,7 +312,9 @@ def optionalExchange1(currSchedule, nHood):
     addingTasks = []
     for t in range(numToAdd):
         if len(unplannedTasks) > 0:
-            addingTasks.append(unplannedTasks.popleft())
+            popped = unplannedTasks.popleft()
+            addingTasks.append(popped)
+            updatePrevUnplanned(popped)
           
     # adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
@@ -357,18 +328,18 @@ def optionalExchange1(currSchedule, nHood):
     currSchedule[day] = newRoute
     
 #     print
-    printUnplanned()
-    print currSchedule
-    print "********** Exiting optExchange1 **********"
+#     print currSchedule
+#     printUnplanned()
+#     print "********** Exiting optExchange1 **********"
     return currSchedule
 
 '''
+
 @return: modified solution
 '''
 def optionalExchange2(currSchedule, nHood):
-    print "********** Entering optExchange2 **********"
-    print currSchedule
-    printUnplanned()
+#     print "********** Entering optExchange2 **********"
+
     # calculate number to remove (nHood-12)
     numToRemove = nHood - 12
     # pick a random day and position
@@ -388,9 +359,7 @@ def optionalExchange2(currSchedule, nHood):
         newRoute.append(task, None)
 
     currSchedule[day] = newRoute
-    printUnplanned()
-    print currSchedule
-    print "********** Exiting optExchange2 **********"
+#     print "********** Exiting optExchange2 **********"
     return currSchedule
 
 
@@ -398,12 +367,8 @@ def optionalExchange2(currSchedule, nHood):
 @return: modified solution
 '''
 def iterativeImprovement(taskList, currSchedule, nHood):
-    print "********** Entering iterativeImprovement **********"
-    print currSchedule
-    printUnplanned()
-    isUnplannedWrong(currSchedule)
-    
-#     print isinstance(currSchedule[0], Objects.Route)   
+#     print "********** Entering iterativeImprovement **********"
+
     # If nHood< 13: do 3-OPT
     if nHood < 13:
         # only currSchedule because we believe edges are being removed and inserted within the solution
@@ -412,18 +377,14 @@ def iterativeImprovement(taskList, currSchedule, nHood):
     # Otherwise: Best Insertion
     else:
         newSchedule = bestInsertion(taskList, currSchedule)
-#     print isinstance(currSchedule[0], Objects.Route
-    print newSchedule
-    printUnplanned()
-    isUnplannedWrong(currSchedule)
-    print "********** Exiting iterativeImprovement **********"
+
+#     print "********** Exiting iterativeImprovement **********"
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
-#     print currSchedule
     
     currSchedule = copy.deepcopy(currSchedule)
     # pick a random day to optimize
@@ -440,18 +401,16 @@ def threeOPT(taskList, currSchedule):
     for k in range(len(currRoute) - 2):
         topRange = min(k+4, currLength - 2)
         for j in range(k+1, topRange):
-#             currFeasibility = isFeasible(taskList, currRoute)
-            currFeasibility = 0
+            route, currFeasibility = isRouteFeasible(currRoute, day)
             newRoute = switchChains(k, j, currRoute)
             newLength = len(newRoute)
-#             newFeasibility = isFeasible(taskList, newRoute)
-            newFeasibility = 0
+            route, newFeasibility = isRouteFeasible(currRoute, day)
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
                     currSchedule[day] = newRoute
 #                     print "********** Exiting threeOPT ***************"       
                     return currSchedule
-#     print
+
 #     print currSchedule
 #     print "********** Exiting threeOPT ***************"       
     return currSchedule
@@ -469,9 +428,7 @@ def switchChains(k, j, currRoute):
 @return: solution that has been modified by 3-Opt
 '''
 def bestInsertion(taskList, currSchedule):
-    print "********** Entering bestInsertion **********"
-    printUnplanned()
-    print currSchedule
+#     print "********** Entering bestInsertion **********"
 
     # Sequentially consider tasks from unplannedTasks
     # For each day, if that task:
@@ -495,6 +452,8 @@ def bestInsertion(taskList, currSchedule):
         isValid = False
         
         currTask = unplannedTasks.popleft()
+        updatePrevUnplanned(currTask)
+
         # looping through each day in the current solution list 
         for day in range(len(currSchedule)):
             
@@ -539,15 +498,11 @@ def bestInsertion(taskList, currSchedule):
             unplannedTasks.append(currTask)
     
     # after all that, add the task to the solution in the time with smallest added distance.
-    print
-    printUnplanned()
-    print currSchedule
-    print "********** Exiting bestInsertion **********"
+#     print "********** Exiting bestInsertion **********"
     return currSchedule
 
 def isFeasible(taskList, currSchedule):
 #     print "********** Entering isFeasible **********"
-#     print currSchedule
     currSchedule = copy.deepcopy(currSchedule)
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):
@@ -556,8 +511,6 @@ def isFeasible(taskList, currSchedule):
             return None
         else:
             newSchedule[r] = newRoute
-#             print "NEW ROUTE IS"
-#             print newRoute
 #     print "********** Exiting isFeasible **********"
     newSchedule = minRoute(taskList, newSchedule)
 #     print newSchedule
@@ -587,12 +540,9 @@ def isRouteFeasible(currRoute, routeIndex):
     oldRoute = copy.deepcopy(currRoute)
     
     currRoute = tightenTWStarts(currRoute, routeIndex)
-    print currRoute
     currRoute = tightenTWEnds(currRoute, routeIndex)
-    print currRoute
     
     if currRoute != None:
-#         print currRoute
 #         print "********** Exiting isRouteFeasible1 **********"
         return currRoute, 0
     
@@ -606,33 +556,24 @@ def isRouteFeasible(currRoute, routeIndex):
     # if available but it doesn't fit, put the task as early as possible within tw,
     # add any duration spent outside of tw to infeas
     
-    # AVERY ABBY MARAKI THIS IS WHERE THE ERROR IS HAPPENING If minroute's like NOne!
     for t in range(len(currRoute)):
-        print
         task = currRoute[t]
-        print "id, infeas", task.id, infeas
         timeWindows = task.timeWindows[routeIndex]
         selectedTW = None
-        print "lastTaskEnd", lastTaskEnd
         for i in range(len(timeWindows)):
             tw = timeWindows[i]
             if tw[1] > lastTaskEnd:
                 selectedTW = tw
                 break
-            print
         if selectedTW == None:
-            print "no tw selected, adding", task.duration
             infeas += task.duration
             lastTaskEnd = lastTaskEnd + task.duration
         else:
             if max(lastTaskEnd, selectedTW[0]) + task.duration > selectedTW[1]:
-                print i, "tw selected, adding", max(lastTaskEnd, selectedTW[0]) + task.duration - selectedTW[1]
                 infeas +=  max(lastTaskEnd, selectedTW[0]) + task.duration - selectedTW[1]
-            else:
-                print "tw selected, task fits. Not adding"
             lastTaskEnd = max(lastTaskEnd, selectedTW[0]) + task.duration
-    print "\n", currRoute, infeas
-    print "********** Exiting isRouteFeasible2 **********"
+
+#     print "********** Exiting isRouteFeasible2 **********"
     return None, infeas
     
                 
@@ -641,9 +582,9 @@ def isRouteFeasible(currRoute, routeIndex):
 @return: modified schedule with tightened tw starts
 '''
 def tightenTWStarts(currRoute, routeIndex):
-    print "********** Entering tightenTWStarts **********"
+#     print "********** Entering tightenTWStarts **********"
     if currRoute == None:
-        print "********** Exiting tightenTWStarts 1 **********"
+#         print "********** Exiting tightenTWStarts 1 **********"
         return None
     taskIndex = 0
     task = currRoute.taskList[taskIndex]
@@ -658,7 +599,6 @@ def tightenTWStarts(currRoute, routeIndex):
         if len(tw) > 0 and len(twNext) > 0 and task.duration > tw[0][1] - tw[0][0] or\
          (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0]):
             # remove that task's first tw
-            print taskIndex, "task REMOVED TW", tw[0]
             tw = tw[1:]
             if len(tw) == 0:
                 break
@@ -666,41 +606,32 @@ def tightenTWStarts(currRoute, routeIndex):
         elif len(tw) > 0 and len(twNext) > 0 and task.duration + tw[0][0] < twNext[0][0]:
             # set the beginning of that time window to be the minimum of the the ending time of task i's first time window
             # and the start of task i+1's first time window
-            print taskIndex, "task changing TW", tw[0],
             tw[0] = (math.floor(min(twNext[0][0], tw[0][1]) - task.duration), tw[0][1])
-            print "to", tw[0]
 
     # else if the duration of task i set at the beginning of its first tw overlaps any tws for the next customer
         elif len(tw) > 0 and len(twNext) > 0 and task.duration + tw[0][0] > twNext[0][0]:
             # reset the beginnings of all time windows to be as early as possible
             # after the end of task i (with i scheduled as early as possible)
             for w in range(len(twNext)):
-                print taskIndex, "task changing tw", twNext[w],
                 twNext[w] = (math.floor(max(tw[0][0] + task.duration, twNext[w][0])), twNext[w][1])
-                print "to", twNext[w]
         taskIndex += 1
     # if this is the last customer and they still have time windows left,
     if taskIndex == len(currRoute) - 1 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0 and task.duration > tw[0][1] - tw[0][0]:
-            print task.duration, tw[0][1] - tw[0][0]
-            print taskIndex,
             # remove that task's first tw
-            print "removing first task's tw"
             tw = tw[1:]
                 
-    
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
-        print taskIndex, len(currRoute.taskList)
         return None
-    print "********** Exiting tightenTWStarts 2 **********"
+#     print "********** Exiting tightenTWStarts 2 **********"
     return currRoute
 
 '''
 @return: modified schedule with tightened tw ends
 '''
 def tightenTWEnds(currRoute, routeIndex):
-    print "********** Entering tightenTWEnds **********"
+#     print "********** Entering tightenTWEnds **********"
     if currRoute == None:
-        print "********** Exiting tightenTWEnds1 **********"
+#         print "********** Exiting tightenTWEnds1 **********"
         return None
     
     taskIndex = len(currRoute.taskList) - 1
@@ -715,7 +646,6 @@ def tightenTWEnds(currRoute, routeIndex):
         if len(tw)>0 and len(twPrev)>0 and task.duration > tw[-1][1] - tw[-1][0]\
         or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
             # remove the last time w
-            print taskIndex, "task REMOVED TW", tw[0]
             tw = tw[:-1]
             if len(tw) == 0:
                 break
@@ -723,9 +653,7 @@ def tightenTWEnds(currRoute, routeIndex):
         elif len(tw)>0 and len(twPrev)>0 and tw[-1][1] - task.duration < twPrev[-1][1]:
             # set the end of that time w to be the maximum of the the starting time of task i's last time w
             # and the end of task i-1's last time w
-            print taskIndex, "task changing TW", tw[0],
             tw[-1] = (tw[-1][0], math.ceil(max(twPrev[-1][1], tw[-1][0] + task.duration)))
-            print "to", tw[0]
          
         # else if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
         elif len(tw)>0 and len(twPrev)>0 and tw[-1][1] - task.duration > twPrev[-1][1]:
@@ -738,23 +666,19 @@ def tightenTWEnds(currRoute, routeIndex):
     if taskIndex == 0 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0:
         if task.duration > tw[0][1] - tw[0][0]:
             # remove that task's first tw
-            print taskIndex, "task changing tw", twNext[w],
             tw = tw[:-1]
-            print "to", twNext[w]
     
 
     if taskIndex > 0 or anyEmptyTWLists(currRoute, routeIndex):
-        print taskIndex, len(currRoute.taskList)
         return None
     
-    print "********** Exiting tightenTWEnds2 **********"
+#     print "********** Exiting tightenTWEnds2 **********"
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
     for t in range(len(route)):  
         task = route[t]
         if len(task.timeWindows[routeIndex]) < 1:
-            print "task", t, "had no tws left"
             return True
     return False
 
@@ -1006,6 +930,11 @@ def getMinRouteDuration(currRoute):
     totalDuration = currRoute.endTimes[-1]- currRoute.endTimes[0] + currRoute.taskList[0].duration
     return totalDuration    
 
+def updatePrevUnplanned(task):
+    if task in prevUnplanned:
+        prevUnplanned.remove(task)
+        prevUnplanned.append(task)
+
 
 def printUnplanned():
     print "unplanned tsks: (",
@@ -1047,7 +976,7 @@ def isUnplannedWrong(currSchedule):
 
 def main():
     print "********** Main **********"
-    print solve("test2.csv")
+    print solve("test3.csv")
     
 if __name__ == "__main__":
     main()
