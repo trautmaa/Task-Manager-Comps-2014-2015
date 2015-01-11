@@ -3,7 +3,6 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import itertools
-
 import createTasksFromCsv
 import helperFunctions
 

@@ -45,14 +45,6 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     setRequiredOfTask(task, required)
     setTimeWindowsOfTask(task, maxNumTimeWindows)
     
-    
-#    for feature in [xConstraint, yConstraint, releaseTime]:
-#        task.append(randint(0, feature))
-#    task.append(randint(0, maxDuration)) # task duration
-#    task.append(randint(releaseTime + task[3], deadline)) # task deadline
-#    random = randint(0, len(taskNames) - 1)
-#    task.append(taskNames[random]) # task name
-#    taskNames.remove(taskNames[random])
 
     return task
 

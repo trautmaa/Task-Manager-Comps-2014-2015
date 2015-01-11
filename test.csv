@@ -7,3 +7,4 @@ xCoord,yCoord,releaseTime,duration,deadline,priority,required,timeWindows
 50,10,197,64,295,1,0,"[[(0, 1000)]]"
 13,4,159,42,379,1,0,"[[(0, 1000)]]"
 46,50,138,88,226,1,0,"[[(0, 1000)]]"
+

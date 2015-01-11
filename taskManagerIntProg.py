@@ -48,7 +48,17 @@ def makeDijConstants(taskList):
     return dijConstants
 
 
+        
 '''
+We need to add:
+    Rule (4) ktSum of yitk = y1
+    Changing Connectivity...
+    Rule (9) making sure ai fits in its time windows  --> (aitk + si) * yitk <= ait <= bitk(endingOfThatTimeWindow) + B(1-yitk)
+    Rule (7)??? kSum of yitk = sum xijt where i != j
+'''
+
+'''
+THIS MUST BE CHANGED TO DO DAYS!!!!!!!
 A function that adds constraints to the problem.  This constraint is
 for all jobs i, the sum of the variables xij = the sum of the variables xji
                 the sum of the variables xij = yi
@@ -75,6 +85,7 @@ def addCompletionTimeConstraints(prob, releaseConstants, serviceTimeConstants,
     for i in range(numTasks):
         prob += releaseConstants[i] + serviceTimeConstants[i] <= aiVariables[i] # ri + si <= ai
         prob += aiVariables[i] <= deadlineConstants[i] + latestDeadline * (1 - yiVariables[i]) # ai <= B(1 - yi)
+
 
 
 '''
