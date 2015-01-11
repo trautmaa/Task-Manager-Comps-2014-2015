@@ -26,7 +26,7 @@ def solve(csvFile):
     helperFunctions.preprocessTimeWindows(taskList)
     greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByDeadline)
     
-    brute = runBruteForceAlg(csvFile)
+    # brute = runBruteForceAlg(csvFile)
     
     modTasks = greedySol[:]
     currSchedule = createSchedule(modTasks)
@@ -39,8 +39,10 @@ def solve(csvFile):
     print 'vns solution'
     print currSchedule
     
+    '''
     print 'brute force solution'
     printSolution(brute)
+    '''
      
 #     print "brute journey"
 # #     helperFunctions.printScheduleJourney(brute)
@@ -1032,7 +1034,7 @@ def scheduleIDs(sched):
 
 def main():
     print "********** Main **********"
-    print solve("test2.csv")
+    print solve("test.csv")
     
 if __name__ == "__main__":
     main()

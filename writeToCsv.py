@@ -67,11 +67,11 @@ def writeNTasks(n, csvFile):
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
-            writer.writerow(generateTask(60, 60, 0, 120, 1000, 1, 0, 1))
+            writer.writerow(generateTask(60, 60, 200, 100, 500, 1, 0, 1))
     return csvFile
 
 def main():
-    writeNTasks(10, "test.csv")
+    writeNTasks(8, "test.csv")
 
 
 if __name__ == '__main__':
