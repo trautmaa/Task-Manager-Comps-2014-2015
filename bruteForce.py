@@ -65,7 +65,7 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("test2.csv")
+    printBruteForce("test4.csv")
 
 
 if __name__ == '__main__':
