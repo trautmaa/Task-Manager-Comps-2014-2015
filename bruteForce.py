@@ -7,6 +7,8 @@ import itertools
 import createTasksFromCsv
 import helperFunctions
 import Objects
+from vns import isFeasible
+from vns import isBetterSchedule
 
 
 '''
@@ -18,10 +20,13 @@ def findBestSchedule(taskList, permutations):
     bestSchedule = Objects.Schedule()
     for perm in permutations:
         newSchedule = helperFunctions.createSchedule(perm, taskList)
-        bestScheduleSize = sum(len(route) for route in bestSchedule.routeList)
-        newScheduleSize = sum(len(route) for route in newSchedule.routeList)
-        if newScheduleSize > bestScheduleSize:
-            bestSchedule = newSchedule
+        #bestScheduleSize = sum(len(route) for route in bestSchedule.routeList)
+        #newScheduleSize = sum(len(route) for route in newSchedule.routeList)
+        #bestScheduleSize = getScheduleDuration(taskList, bestSchedule)        
+        feasSchedule = isFeasible(taskList, newSchedule)
+        if feasSchedule != None:
+        	if isBetterSchedule(feasSchedule, bestSchedule):
+        		bestSchedule = feasSchedule
     return bestSchedule
 
 
@@ -31,7 +36,9 @@ It just takes a number of how many elements you want in your solution.
 '''
 def getAllPermutations(lengthOfPerms):
     permutations = [i for i in range(lengthOfPerms)]
-    permutations = list(itertools.permutations(permutations, lengthOfPerms))
+    #permutations = list(itertools.permutations(permutations, lengthOfPerms))
+    permutations = itertools.permutations(permutations, lengthOfPerms)
+
     return permutations
 
 
@@ -45,6 +52,8 @@ def runBruteForceAlg(csvFile):
     bestSchedule = findBestSchedule(objectList, taskOrderings)
     return bestSchedule
 
+
+
 '''
 Prints the output of runBruteForceAlg in a more
 detailed format.
@@ -56,7 +65,7 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("test.csv")
+    printBruteForce("test2.csv")
 
 
 if __name__ == '__main__':
