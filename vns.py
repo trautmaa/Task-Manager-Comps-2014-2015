@@ -24,7 +24,7 @@ def solve(csvFile):
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile, helperFunctions.orderByDeadline)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile)
     printSolution(greedySol)
 #     brute = runBruteForceAlg(csvFile)
     
@@ -580,8 +580,7 @@ def isRouteFeasible(currRoute, routeIndex):
             lastTaskEnd = max(lastTaskEnd, selectedTW[0]) + task.duration
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    return None, infeas
-    
+    return None, infeas  
                 
 
 '''
@@ -982,11 +981,8 @@ def isUnplannedWrong(currSchedule):
 
 def main():
     print "********** Main **********"
-<<<<<<< HEAD
-    print solve("test.csv")
-=======
-    print solve("test3.csv")
->>>>>>> 18ee8e9b1b17702b7c6e851f7fc1ef6fcedd4d6a
+    print solve("test2.csv")
+
     
 if __name__ == "__main__":
     main()

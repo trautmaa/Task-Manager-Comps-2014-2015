@@ -21,22 +21,21 @@ def setTimeWindowsOfTask(task, numDays):
     deadline = task[4]
     for day in range(numDays):
         dayWindows = []
-        if ((day+1) * 100 - duration-1) >= releaseTime \
-        and deadline >= (day * 100 + duration):
-            maxNumTimeWindows = min(99, ((day+1) * 100 - releaseTime), deadline)/duration
+        if (((day + 1) * 100) - duration - 1) >= releaseTime and deadline >= (day * 100 + duration):
+            maxNumTimeWindows = min(99, ((day + 1) * 100 - releaseTime), deadline) / duration
             endingWindowTime = 0
             for window in range(maxNumTimeWindows):
-                if endingWindowTime + duration >= min(deadline, (day+1) * 100):
+                if endingWindowTime + duration >= min(deadline, (day + 1) * 100):
                     break
                 else:
-                    print endingWindowTime, releaseTime, day *100, deadline
-                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day *100), min(deadline, (day+1) * 100 - 1) - duration)
-                    endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1 ) * 100 - 1))
+                    print endingWindowTime, releaseTime, day * 100, deadline
+                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * 100), min(deadline, (day + 1) * 100 - 1) - duration)
+                    endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * 100 - 1))
                     dayTimeWindow = (startingWindowTime, endingWindowTime)
                     assert(startingWindowTime >= releaseTime)
                     assert(endingWindowTime <= deadline)
                     assert((endingWindowTime - startingWindowTime) >= duration)
-                    assert(endingWindowTime/100 == startingWindowTime/100)
+                    assert(endingWindowTime / 100 == startingWindowTime / 100)
                     dayWindows.append(dayTimeWindow)
             
         

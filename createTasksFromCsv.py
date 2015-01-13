@@ -4,6 +4,7 @@
 
 import csv
 import re
+
 import Objects
 
 '''
@@ -41,32 +42,32 @@ them to objects and adds them to the taskList.
 def makeObjects(attributeList):
     taskList = []
     for i in range(len(attributeList)):
-        newobject = Objects.Task(i)
-        taskList.append(newobject)
+        newObject = Objects.Task(i)
+        taskList.append(newObject)
         # taskList[i][j] is xcoord, ycoord, release time, duration, deadline, priority, required
         for j in range(len(attributeList[i])): 
-            if (j == 0): #x coordinate value
+            if (j == 0): # x coordinate value
                 taskList[i].setX(attributeList[i][0])
             
-            if (j == 1): #y coordinate value
+            if (j == 1): # y coordinate value
                 taskList[i].setY(attributeList[i][1])
                 
-            if (j == 2): #release time
+            if (j == 2): # release time
                 taskList[i].setReleaseTime(attributeList[i][2])
                 
-            if (j == 3): #duration
+            if (j == 3): # duration
                 taskList[i].setDuration(attributeList[i][3])
                 
-            if (j == 4): #deadline
+            if (j == 4): # deadline
                 taskList[i].setDeadline(attributeList[i][4])
             
-            if (j == 5): #priority
+            if (j == 5): # priority
                 taskList[i].setPriority(attributeList[i][5])
                 
-            if (j == 6): #required
+            if (j == 6): # required
                 taskList[i].setRequired(attributeList[i][6])
             
-            if (j == 7): #time windows
+            if (j == 7): # time windows
                 taskList[i].setTimeWindows(getTimeWindows(attributeList[i][7]))
                 
             # With added features, we must add statements here.
@@ -81,10 +82,10 @@ def getTimeWindows(timeWindowString):
         t = 0
         while t < len(daySplit):
             a = re.search("([0-9]+)", daySplit[t])
-            t+=1
+            t += 1
             b = re.search("([0-9]+)", daySplit[t])
-            t+=1
-            day.append((int(a.group()),int(b.group())))
+            t += 1
+            day.append((int(a.group()), int(b.group())))
         timeWindows.append(day)
             
     
