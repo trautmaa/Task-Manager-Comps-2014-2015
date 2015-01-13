@@ -526,7 +526,6 @@ def bestInsertion(taskList, currSchedule):
 
 def isFeasible(taskList, currSchedule):
     print "********** Entering isFeasible **********"
-    print currSchedule
     currSchedule = copy.deepcopy(currSchedule)
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):

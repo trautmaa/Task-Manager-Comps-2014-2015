@@ -91,16 +91,8 @@ def isTaskInsertable(schedule, task, lengthOfDay):
             for timeWindow in day:
                 startTime = max(timeWindow[0], earliestPotentialStart)
                 endTime = min(timeWindow[1], latestPotentialEnd)
-                # print startTime
-                # print endTime
-                # print (task.duration <= endTime - startTime)
                 if (task.duration <= endTime - startTime):
                     assert(startTime <= endTime)
-                    # print
-                    # print "task inserted with:"
-                    # print "duration", task.duration
-                    # print "ending time", task.duration + startTime
-                    # print
                     return True, startTime + task.duration, dayIndex, taskIndex + 1
     return False, None, None, None
 
