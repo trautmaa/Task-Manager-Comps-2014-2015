@@ -73,20 +73,26 @@ def makeObjects(attributeList):
             # With added features, we must add statements here.
     return taskList
 
+'''
+Takes in all the time windows and puts them into a form that VNS can use 
+(distinguishing between days).
+'''
 def getTimeWindows(timeWindowString):
-    timeWindows = []
-    result = re.split("\],\[", timeWindowString)
-    for i in result:
-        daySplit = re.split(",", i)
-        day = []
-        t = 0
-        while t < len(daySplit):
-            a = re.search("([0-9]+)", daySplit[t])
-            t += 1
-            b = re.search("([0-9]+)", daySplit[t])
-            t += 1
-            day.append((int(a.group()), int(b.group())))
-        timeWindows.append(day)
-            
-    
-    return timeWindows
+    days = []
+    result = timeWindowString[1:-1]
+    result = re.split("\],", result)
+    for day in result:
+        timeWindows = []
+        if re.match(".*\[\].*", day) or re.match(".*\[\s*$", day):
+            days.append([])
+            continue
+        day = re.split("\),", day)
+        for tw in range(len(day)):
+            timeWindow = day[tw]
+            twStart = re.search("([0-9]+),", timeWindow)
+            twStart = re.search("[0-9]+", twStart.group())
+            twEnd = re.search(",\s*([0-9]+)", timeWindow)
+            twEnd = re.search("[0-9]+", twEnd.group())
+            timeWindows.append((int(twStart.group()), int(twEnd.group())))
+        days.append(timeWindows)
+    return days

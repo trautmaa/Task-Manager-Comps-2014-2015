@@ -86,9 +86,9 @@ class Task:
  A class to hold the schedule for an individual day
 '''   
 class Route:
-    def __init__(self):
-        self.taskList = []
-        self.endingTimes = []
+    def __init__(self, taskList = None, endingTimes = None):
+        if taskList is None: self.taskList = []
+        if endingTimes is None: self.endingTimes = []
         
     def setTaskList(self, taskList, endingTimes):
         self.taskList = taskList

@@ -12,7 +12,7 @@ import math
 import random
 import copy
 from collections import deque
-from bruteForce import runBruteForceAlg
+#from bruteForce import runBruteForceAlg
 
 global timeLimit
 timeLimit = 5000
@@ -24,7 +24,9 @@ def solve(csvFile):
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
+
     greedySol = greedyByOrder.runGreedyByOrder(csvFile)
+
     printSolution(greedySol)
 #     brute = runBruteForceAlg(csvFile)
     
@@ -72,6 +74,8 @@ def vns(taskList, currSchedule):
     global prevUnplanned
     
     unplannedTasks = deque(taskList[:])
+   
+    printUnplanned()
    
     for day in currSchedule:
         for task in day:
@@ -188,7 +192,7 @@ def shaking(currSchedule, nHood):
 @return: modified solution
 '''
 def crossExchange(currSchedule, nHood):
-#     print "********** Entering crossExchange **********"
+    print "********** Entering crossExchange **********"
         
     if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
@@ -196,30 +200,40 @@ def crossExchange(currSchedule, nHood):
         return currSchedule
     
     # choose two distinct random days
-    day1 = random.randint(0, len(currSchedule))
-    day2 = random.randint(0, len(currSchedule))
+    day1 = random.randint(0, len(currSchedule)-1)
+    day2 = random.randint(0, len(currSchedule)-1)
     while (day1 == day2):
-        day2 = random.randint(0, len(currSchedule))
+        day2 = random.randint(0, len(currSchedule)-1)
         
     # find the length of the routes:
     len1 = len(currSchedule[day1])
     len2 = len(currSchedule[day2])
     
     # for route1 (removed and inserted into day2)
-    route1Len = random.randint(1, min(len1, nHood))
+    if len1 == 0:
+        route1Len = 0
+    else:
+        route1Len = random.randint(1, min(len1, nHood))
     # for route2 (removed and inserted into day1)
-    route2Len = random.randint(0, min(len2, nHood))
+    if len2 == 0:
+        route2Len = 0
+    else:
+        route2Len = random.randint(0, min(len2, nHood))
     
+    routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
+    routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
+
+    route1Start, route1End = routeSegment1[0], routeSegment1[1]
+    route2Start, route2End = routeSegment2[0], routeSegment2[1]
 
     # setting route and  new day to be what they should be
-    route1 = currSchedule[day1][route1Start : route1Start + route1Len]
-    newDay1 = currSchedule[day1][:route1Start] + currSchedule[day1][route1Start + route1Len:]
+    route1 = currSchedule[day1][route1Start : route1End]
+    newDay1 = currSchedule[day1][:route1Start] + currSchedule[day1][route1End:]
     
     
     # starting index of the sub-route we will be removing
-    route2Start = random.randint(0, len2 - route2Len + 1)
-    route2 = currSchedule[day2][route2Start:route2Start + route2Len]
-    newDay2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2Start + route2Len:]
+    route2 = currSchedule[day2][route2Start:route2End]
+    newDay2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2End:]
     
     for task in route2:
         unplannedTasks.append(task)
@@ -228,7 +242,7 @@ def crossExchange(currSchedule, nHood):
     currSchedule[day1] = newDay1
     currSchedule[day2] = newDay2
     
-#     print "********** Exiting crossExchange **********"
+    print "********** Exiting crossExchange **********"
     return currSchedule
 
 '''
@@ -249,6 +263,8 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     longestRouteStart = 0
     # length of longest route 
     longestRouteLen = 0
+    
+    possRoutes = []
     
     # route1: choose random segment w/ customers who have a valid time window in newDay
     # if there is no such route, choose the longest route.
@@ -277,7 +293,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         route1Start = possRoutes[random.randint(len(possRouteStarts))]
     # otherwise choose longest 
     else:
-        route1Start = longestRouteIndex
+        route1Start = longestRouteStart
         route1Len = longestRouteLen
     
     return (route1Start, route1Start + route1Len)
@@ -508,22 +524,25 @@ def bestInsertion(taskList, currSchedule):
     return currSchedule
 
 def isFeasible(taskList, currSchedule):
-#     print "********** Entering isFeasible **********"
+    print "********** Entering isFeasible **********"
     currSchedule = copy.deepcopy(currSchedule)
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):
         newRoute, infeas = isRouteFeasible(currSchedule[r], r)
         if infeas > 0:
+            print infeas
+            print newRoute
+            print "********** Exiting isFeasible **********"
             return None
         else:
             newSchedule[r] = newRoute
-#     print "********** Exiting isFeasible **********"
+    print "********** Exiting isFeasible **********"
     newSchedule = minRoute(taskList, newSchedule)
-#     print newSchedule
+    print newSchedule
     return newSchedule
 
 def isRouteFeasible(currRoute, routeIndex):
-#     print "********** Entering isRouteFeasible **********"
+    print "********** Entering isRouteFeasible **********"
     currRoute = copy.deepcopy(currRoute)
     
     # for each task except the first, add travel time from prev task to curr task
@@ -545,11 +564,16 @@ def isRouteFeasible(currRoute, routeIndex):
             
     oldRoute = copy.deepcopy(currRoute)
     
+    print oldRoute
+    
     currRoute = tightenTWStarts(currRoute, routeIndex)
+    print "starts\n", currRoute
     currRoute = tightenTWEnds(currRoute, routeIndex)
+    print "ends\n", currRoute
+
     
     if currRoute != None:
-#         print "********** Exiting isRouteFeasible1 **********"
+        print "********** Exiting isRouteFeasible1 **********"
         return currRoute, 0
     
     infeas = 0
@@ -579,18 +603,22 @@ def isRouteFeasible(currRoute, routeIndex):
                 infeas +=  max(lastTaskEnd, selectedTW[0]) + task.duration - selectedTW[1]
             lastTaskEnd = max(lastTaskEnd, selectedTW[0]) + task.duration
 
-#     print "********** Exiting isRouteFeasible2 **********"
-    return None, infeas  
-                
+
+    print "********** Exiting isRouteFeasible2 **********"
+    return None, infeas
+                    
 
 '''
 @return: modified schedule with tightened tw starts
 '''
 def tightenTWStarts(currRoute, routeIndex):
-#     print "********** Entering tightenTWStarts **********"
+    print "********** Entering tightenTWStarts **********"
+    print currRoute
     if currRoute == None:
-#         print "********** Exiting tightenTWStarts 1 **********"
+        print "********** Exiting tightenTWStarts 1 **********"
         return None
+    if len(currRoute) == 0:
+        return currRoute
     taskIndex = 0
     task = currRoute.taskList[taskIndex]
     tw = task.timeWindows[routeIndex]
@@ -626,8 +654,9 @@ def tightenTWStarts(currRoute, routeIndex):
             tw = tw[1:]
                 
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
+        print "********** Exiting tightenTWStarts 2 **********"
         return None
-#     print "********** Exiting tightenTWStarts 2 **********"
+    print "********** Exiting tightenTWStarts 3 **********"
     return currRoute
 
 '''
@@ -638,6 +667,8 @@ def tightenTWEnds(currRoute, routeIndex):
     if currRoute == None:
 #         print "********** Exiting tightenTWEnds1 **********"
         return None
+    if len(currRoute) == 0:
+        return currRoute
     
     taskIndex = len(currRoute.taskList) - 1
     task = currRoute.taskList[taskIndex]
@@ -691,6 +722,7 @@ def anyEmptyTWLists(route, routeIndex):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
+
     
 #     print "********** Entering minRoute **********"
     bestSchedule = copy.deepcopy(currSchedule)
@@ -700,11 +732,11 @@ def minRoute(taskList, currSchedule):
     # Minimize each route
     for d in range(len(currSchedule)):
         day = currSchedule[d]
+        if len(day) == 0:
+            continue
         
         # keep track of what tw index each task has been assigned
-        assignedTWs = [0] * len(day)
-        #IF YOU GOT AN ERROR like "NONE" stuff go to 560 ish (isRouteFeasible)
-        
+        assignedTWs = [0] * len(day)        
         
         # set the ending times for each task in the route by scheduling
         # all tasks as early as possible (start at the beginning of the
@@ -822,7 +854,7 @@ time without changing that ending time
 '''
 def dominantRoute(currRoute, assignedTWs, dayIndex):
 #     print "********** Entering dominantRoute **********"
-
+    
     # put everything as late as possible within the assigned time window
     nextTaskStart = currRoute.endingTimes[-1] - currRoute[-1].duration
     
@@ -981,8 +1013,8 @@ def isUnplannedWrong(currSchedule):
 
 def main():
     print "********** Main **********"
-    print solve("test2.csv")
 
+    print solve("test2.csv")
     
 if __name__ == "__main__":
     main()
