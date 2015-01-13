@@ -12,7 +12,7 @@ import math
 import random
 import copy
 from collections import deque
-from bruteForce import runBruteForceAlg
+#from bruteForce import runBruteForceAlg
 
 global timeLimit
 timeLimit = 5000
@@ -976,7 +976,7 @@ def isUnplannedWrong(currSchedule):
 
 def main():
     print "********** Main **********"
-    print solve("test.csv")
+    print solve("test2.csv")
     
 if __name__ == "__main__":
     main()

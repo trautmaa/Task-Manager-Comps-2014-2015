@@ -72,30 +72,10 @@ def makeObjects(attributeList):
             # With added features, we must add statements here.
     return taskList
 
-''' THIS IS WRONG'''
-def getTimeWindows(timeWindowString):
-    timeWindows = []
-    result = re.split("\],\[", timeWindowString)
-    for i in result:
-        daySplit = re.split(",", i)
-        print daySplit
-        day = []
-        t = 0
-        while t < len(daySplit):
-            noTW = re.match(".*(\[\])", daySplit[t])
-            print daySplit[t], noTW
-            if noTW:
-                timeWindows.append([])
-                t += 1
-            twStart = re.search("([0-9]+)", daySplit[t])
-            t+=1
-            twEnd = re.search("([0-9]+)", daySplit[t])
-            t+=1
-            day.append((int(twStart.group()),int(twEnd.group())))
-        timeWindows.append(day)
-    return timeWindows
-
-
+'''
+Takes in all the time windows and puts them into a form that VNS can use 
+(distinguishing between days).
+'''
 def getTimeWindows(timeWindowString):
     days = []
     result = timeWindowString[1:-1]
