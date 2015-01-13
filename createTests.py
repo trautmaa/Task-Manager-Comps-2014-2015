@@ -71,7 +71,6 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     setPriorityOfTask(task, priority)
     setRequiredOfTask(task, required)
     setTimeWindowsOfTask(task, numDays)
-    
 
     return task
 

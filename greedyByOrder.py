@@ -9,14 +9,12 @@ import helperFunctions
 
 from Objects import Schedule, Route
 
-lengthOfDay = 1001
-
 '''
 A function that prints the result of runGreedyByOrder
 in a more detailed format.
 '''
-def printGreedyByOrder(csvFile):
-	print runGreedyByOrder(csvFile)
+def printGreedyByOrder(csvFile, lengthOfDay):
+	print runGreedyByOrder(csvFile, lengthOfDay)
 	print	
 	
 '''
@@ -25,7 +23,7 @@ all time windows in order of earliest ending and then
 creating a schedule by repeatedly picking the first
 task with an available time window from that ordering.
 '''
-def runGreedyByOrder(csvFile):
+def runGreedyByOrder(csvFile, lengthOfDay):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     lastDay = 0
@@ -53,16 +51,17 @@ def runGreedyByOrder(csvFile):
     timeWindowIndex = 0
 
     while (timeWindowIndex < len(lastTimeWindowsList)):
-            currentTask = taskList[lastTimeWindowsList[timeWindowIndex][1]]
+        currentTask = taskList[lastTimeWindowsList[timeWindowIndex][1]]
 
-            isInsertable, endingTime, endingDay = isTaskInsertable(schedule, currentTask)     
-            if (isInsertable):
-                schedule.routeList[endingDay].append(currentTask, endingTime)           
-            timeWindowIndex += 1
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, lengthOfDay)     
+        if (isInsertable):
+            schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
+            schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
+        timeWindowIndex += 1
 
     return schedule
 
-def isTaskInsertable(schedule, task):
+def isTaskInsertable(schedule, task, lengthOfDay):
     for dayIndex, day in enumerate(task.timeWindows):
         currentRoute = schedule.routeList[dayIndex]
         for taskIndex in range(-1, len(currentRoute.taskList)):
@@ -94,6 +93,7 @@ def isTaskInsertable(schedule, task):
                 endTime = min(timeWindow[1], latestPotentialEnd)
                 # print startTime
                 # print endTime
+                # print (task.duration <= endTime - startTime)
                 if (task.duration <= endTime - startTime):
                     assert(startTime <= endTime)
                     # print
@@ -101,12 +101,12 @@ def isTaskInsertable(schedule, task):
                     # print "duration", task.duration
                     # print "ending time", task.duration + startTime
                     # print
-                    return True, startTime + task.duration, dayIndex
-    return False, None, None
+                    return True, startTime + task.duration, dayIndex, taskIndex + 1
+    return False, None, None, None
 
 def main():
     print
-    printGreedyByOrder("test2.csv")
+    printGreedyByOrder("test.csv", 100)
     
 
 

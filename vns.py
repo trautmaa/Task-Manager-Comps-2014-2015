@@ -25,7 +25,8 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile, 100)
+    assert(isFeasible(taskList, greedySol))
 
     printSolution(greedySol)
 #     brute = runBruteForceAlg(csvFile)
@@ -278,7 +279,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         
         # if task(n) has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
-        if(len(origRoute1[n].timeWindows[newDay]) > 0):
+        if(len(origRoute[n].timeWindows[newDay]) > 0):
             if n - currRouteStart == route1Len - 1:
                 possRoutes.append(currRouteStart)
                 currRouteStart += 1
@@ -421,8 +422,8 @@ def threeOPT(taskList, currSchedule):
         return currSchedule
     
     for k in range(len(currRoute) - 2):
-        topRange = min(k+4, currLength - 2)
-        for j in range(k+1, topRange):
+        topRange = min(k + 4, currLength - 2)
+        for j in range(k + 1, topRange):
             route, currFeasibility = isRouteFeasible(currRoute, day)
             newRoute = switchChains(k, j, currRoute)
             newLength = len(newRoute)
@@ -525,6 +526,7 @@ def bestInsertion(taskList, currSchedule):
 
 def isFeasible(taskList, currSchedule):
     print "********** Entering isFeasible **********"
+    print currSchedule
     currSchedule = copy.deepcopy(currSchedule)
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):
@@ -1014,7 +1016,7 @@ def isUnplannedWrong(currSchedule):
 def main():
     print "********** Main **********"
 
-    print solve("test2.csv")
+    print solve("test.csv")
     
 if __name__ == "__main__":
     main()
