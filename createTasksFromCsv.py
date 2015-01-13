@@ -88,7 +88,6 @@ def getTimeWindows(timeWindowString):
         day = re.split("\),", day)
         for tw in range(len(day)):
             timeWindow = day[tw]
-            print timeWindow
             twStart = re.search("([0-9]+),", timeWindow)
             twStart = re.search("[0-9]+", twStart.group())
             twEnd = re.search(",\s*([0-9]+)", timeWindow)
