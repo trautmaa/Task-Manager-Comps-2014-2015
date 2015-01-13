@@ -976,7 +976,7 @@ def isUnplannedWrong(currSchedule):
 
 def main():
     print "********** Main **********"
-    print solve("test3.csv")
+    print solve("test.csv")
     
 if __name__ == "__main__":
     main()
