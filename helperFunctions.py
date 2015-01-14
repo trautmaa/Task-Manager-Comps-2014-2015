@@ -68,6 +68,10 @@ def createSolution(taskOrdering, taskList):
             solution.append(task)
     return [solution]
 
+'''
+Given a list of tasks, returns them in reverse deadline order. It's a terrible
+schedule and therefore perfect for testing VNS.
+'''
 def orderByStupid(taskList):
     taskList = sorted(taskList, key=lambda task: task.deadline)
     taskList.reverse()
@@ -171,16 +175,18 @@ def preprocessTimeWindows(taskList):
                 
                   
 def printRouteJourney(route):
-     for t in range(len(route) - 1):
+    if len(route) == 0:
+        return
+    for t in range(len(route) - 1):
          task = route[t]
          nextTask = route[t + 1]
          print "doing task", task.id, ": ", route.endingTimes[t] - task.duration, "to", route.endingTimes[t], "task duration: ", task.duration
          dist = getDistanceBetweenTasks(task, nextTask)
          print "traveling from", task.x, task.y, "at", route.endingTimes[t], "to", nextTask.x, nextTask.y, "at", route.endingTimes[t] + dist
-     t = len(route) - 1
-     task = route[t]
-     print "doing task", task.id, ": ", route.endingTimes[t] - task.duration, "to", route.endingTimes[t]
-     print "\n"
+    t = len(route) - 1
+    task = route[t]
+    print "doing task", task.id, ": ", route.endingTimes[t] - task.duration, "to", route.endingTimes[t]
+    print "\n"
               
 def printScheduleJourney(sched):
     for r in range(len(sched)):

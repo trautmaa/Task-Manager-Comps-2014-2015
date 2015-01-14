@@ -89,7 +89,7 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(10, "test.csv")
+    writeNTasks(1000, "test1000.csv")
 
 
 if __name__ == '__main__':
