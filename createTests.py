@@ -6,6 +6,14 @@ import csv
 
 from random import randint
 
+xRange = 60
+yRange = 60
+releaseTimeRange = 800
+durationRange = 50
+deadlineRange = 1000
+numDays = 10
+dayLength = 100
+
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
@@ -21,30 +29,25 @@ def setTimeWindowsOfTask(task, numDays):
     deadline = task[4]
     for day in range(numDays):
         dayWindows = []
-        if (((day + 1) * 100) - duration - 1) >= releaseTime and deadline >= (day * 100 + duration):
-            maxNumTimeWindows = min(99, ((day + 1) * 100 - releaseTime), deadline) / duration
+        if (((day + 1) * dayLength) - duration - 1) >= releaseTime and deadline >= (day * dayLength + duration):
+            maxNumTimeWindows = min((dayLength -1), ((day + 1) * dayLength - releaseTime), deadline) / duration
             endingWindowTime = 0
             for window in range(maxNumTimeWindows):
-                if endingWindowTime + duration >= min(deadline, (day + 1) * 100):
+                if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
                     break
                 else:
-                    print endingWindowTime, releaseTime, day * 100, deadline
-                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * 100), min(deadline, (day + 1) * 100 - 1) - duration)
-                    endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * 100 - 1))
+                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * 100), min(deadline, (day + 1) * dayLength - 1) - duration)
+                    endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
                     dayTimeWindow = (startingWindowTime, endingWindowTime)
                     assert(startingWindowTime >= releaseTime)
                     assert(endingWindowTime <= deadline)
                     assert((endingWindowTime - startingWindowTime) >= duration)
-                    assert(endingWindowTime / 100 == startingWindowTime / 100)
+                    assert(endingWindowTime / dayLength == startingWindowTime / dayLength)
                     dayWindows.append(dayTimeWindow)
             
         
         timeWindows.append(dayWindows)
-    print timeWindows
-    print releaseTime, duration, deadline
-    print 
-    print
-
+    
     
     
 #    dayOne = []
@@ -85,7 +88,7 @@ def writeNTasks(n, csvFile):
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
-            writer.writerow(generateTask(60, 60, 800, 50, 1000, 1, 0, 10))
+            writer.writerow(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, 1, 0, numDays))
     return csvFile
 
 def main():
