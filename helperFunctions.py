@@ -193,6 +193,76 @@ def printScheduleJourney(sched):
         route = sched[r]
         print "day", r
         printRouteJourney(route)
+
+# Note: I think I can refactor the next two methods to not use lengthOfDay,
+# but I am putting them here as is right now so brute force can use them.
+
+''' Given a list of tasks, an ordering on the tasks (a list of integers),
+and the length of the day, schedules whichever tasks are possible to schedule
+from that ordering and returns that schedule. We believe (?) this is
+an optimal schedule for that ordering.'''
+def createOptimalSchedule(taskList, taskOrdering, lengthOfDay):
+    lastDay = 0
+    for task in taskList:
+        if len(task.timeWindows) > lastDay:
+            lastDay = len(task.timeWindows) - 1
+
+    schedule = Schedule()
+    for day in range(lastDay + 1):
+        schedule.append(Route())
+
+    # the current index in the time windows list
+    timeWindowIndex = 0
+
+    while (timeWindowIndex < len(taskList)):
+        currentTask = taskList[taskOrdering[timeWindowIndex]]
+
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, lengthOfDay)     
+        if (isInsertable):
+            schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
+            schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
+        timeWindowIndex += 1
+
+    return schedule
+
+'''Given a partial schedule, a task, and the length of the day,
+returns False if the task is not isnertable, and if it is returns
+True, the (earliest) ending time of that task, the (earliest) day on which it can be scheduled,
+and the place in the schedule it should be inserted.'''
+def isTaskInsertable(schedule, task, lengthOfDay):
+    for dayIndex, day in enumerate(task.timeWindows):
+        currentRoute = schedule.routeList[dayIndex]
+        for taskIndex in range(-1, len(currentRoute.taskList)):
+            if (len(currentRoute.taskList) == 0): # no tasks scheduled on that day
+                earliestPotentialStart = 0
+                latestPotentialEnd = lengthOfDay * (dayIndex + 1)
+            elif (taskIndex == -1): # try to insert before 1st existing task
+                nextScheduledTask = currentRoute.taskList[0]
+                nextScheduledTaskEnding = currentRoute.endingTimes[0]
+                earliestPotentialStart = 0
+                latestPotentialEnd = nextScheduledTaskEnding - nextScheduledTask.duration - \
+                getDistanceBetweenTasks(task, nextScheduledTask)
+            elif (taskIndex == len(currentRoute.taskList) - 1): # try to insert after last existing task
+                scheduledTask = currentRoute.taskList[-1]
+                scheduledTaskEnding = currentRoute.endingTimes[-1]
+                earliestPotentialStart = scheduledTaskEnding + getDistanceBetweenTasks(task, scheduledTask)
+                latestPotentialEnd = lengthOfDay * (dayIndex + 1)
+            else: # try to insert between 2 tasks
+                scheduledTask = currentRoute.taskList[taskIndex]
+                scheduledTaskEnding = currentRoute.endingTimes[taskIndex]
+                nextScheduledTask = currentRoute.taskList[taskIndex + 1]
+                nextScheduledTaskEnding = currentRoute.endingTimes[taskIndex + 1]
+                earliestPotentialStart = scheduledTaskEnding + getDistanceBetweenTasks(task, scheduledTask)
+                latestPotentialEnd = nextScheduledTaskEnding - nextScheduledTask.duration - \
+                getDistanceBetweenTasks(task, nextScheduledTask)
+
+            for timeWindow in day:
+                startTime = max(timeWindow[0], earliestPotentialStart)
+                endTime = min(timeWindow[1], latestPotentialEnd)
+                if (task.duration <= endTime - startTime):
+                    assert(startTime <= endTime)
+                    return True, startTime + task.duration, dayIndex, taskIndex + 1
+    return False, None, None, None
     
 
 def main():
