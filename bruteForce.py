@@ -10,6 +10,7 @@ import Objects
 from vns import isFeasible
 from vns import isBetterSchedule
 
+import datetime
 
 '''
 A function given a list of task objects and all the potential task permutations
@@ -19,14 +20,17 @@ the most tasks scheduled.
 def findBestSchedule(taskList, permutations):
     bestSchedule = Objects.Schedule()
     for perm in permutations:
-        newSchedule = helperFunctions.createSchedule(perm, taskList)
+        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)
         #bestScheduleSize = sum(len(route) for route in bestSchedule.routeList)
         #newScheduleSize = sum(len(route) for route in newSchedule.routeList)
         #bestScheduleSize = getScheduleDuration(taskList, bestSchedule)        
-        feasSchedule = isFeasible(taskList, newSchedule)
+        if isBetterSchedule(newSchedule, bestSchedule):
+        	bestSchedule = newSchedule
+        	print '1'
+        '''feasSchedule = isFeasible(taskList, newSchedule)
         if feasSchedule != None:
         	if isBetterSchedule(feasSchedule, bestSchedule):
-        		bestSchedule = feasSchedule
+        		bestSchedule = feasSchedule'''
     return bestSchedule
 
 
@@ -65,7 +69,8 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("test4.csv")
+    printBruteForce("test11.csv")
+    print datetime.datetime.now()
 
 
 if __name__ == '__main__':
