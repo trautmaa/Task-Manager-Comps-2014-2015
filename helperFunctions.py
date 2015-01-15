@@ -191,7 +191,7 @@ def createOptimalSchedule(taskList, taskOrdering):
                     lastTimeWindowEndings[index] = timeWindow[1]
 
     schedule = Schedule()
-    for day in range(lastDay + 1):
+    for day in range(lastDay):
         schedule.append(Route())
 
     # the current index in the time windows list

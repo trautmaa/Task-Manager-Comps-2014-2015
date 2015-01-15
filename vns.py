@@ -232,7 +232,6 @@ def crossExchange(currSchedule, nHood):
         route2Len = 0
     else:
         route2Len = random.randint(0, min(len2, nHood))
-    
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
     routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
 
@@ -294,6 +293,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         
         # if task n has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
+        
         if(len(origRoute[n].timeWindows[newDay]) > 0):
             if n - currRouteStart == segmentLength - 1:
                 possRoutes.append(currRouteStart)
@@ -314,7 +314,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     else:
         route1Start = longestRouteStart
         segmentLength = longestRouteLen
-    
+        
     return (route1Start, route1Start + segmentLength)
     
     
