@@ -194,18 +194,22 @@ def printScheduleJourney(sched):
         print "day", r
         printRouteJourney(route)
 
-# Note: I think I can refactor the next two methods to not use lengthOfDay,
-# but I am putting them here as is right now so brute force can use them.
-
-''' Given a list of tasks, an ordering on the tasks (a list of integers),
-and the length of the day, schedules whichever tasks are possible to schedule
+''' Given a list of tasks and an ordering on the tasks (a list of integers),
+schedules whichever tasks are possible to schedule
 from that ordering and returns that schedule. We believe (?) this is
 an optimal schedule for that ordering.'''
-def createOptimalSchedule(taskList, taskOrdering, lengthOfDay):
+def createOptimalSchedule(taskList, taskOrdering):
     lastDay = 0
     for task in taskList:
         if len(task.timeWindows) > lastDay:
             lastDay = len(task.timeWindows) - 1
+
+    lastTimeWindowEndings = [0 for i in range(lastDay + 1)]
+    for task in taskList:
+        for index, day in enumerate(task.timeWindows):
+            for timeWindow in day:
+                if timeWindow[1] > lastTimeWindowEndings[index]:
+                    lastTimeWindowEndings[index] = timeWindow[1]
 
     schedule = Schedule()
     for day in range(lastDay + 1):
@@ -217,7 +221,7 @@ def createOptimalSchedule(taskList, taskOrdering, lengthOfDay):
     while (timeWindowIndex < len(taskList)):
         currentTask = taskList[taskOrdering[timeWindowIndex]]
 
-        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, lengthOfDay)     
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, lastTimeWindowEndings)     
         if (isInsertable):
             schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
             schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
@@ -225,17 +229,18 @@ def createOptimalSchedule(taskList, taskOrdering, lengthOfDay):
 
     return schedule
 
-'''Given a partial schedule, a task, and the length of the day,
-returns False if the task is not isnertable, and if it is returns
+''' Given a partial schedule, a task, and a list containing the endings of
+the latest time windows for each day,
+returns False if the task is not insertable, and if it is returns
 True, the (earliest) ending time of that task, the (earliest) day on which it can be scheduled,
-and the place in the schedule it should be inserted.'''
-def isTaskInsertable(schedule, task, lengthOfDay):
+and the position in the schedule it should be inserted.'''
+def isTaskInsertable(schedule, task, dayEndings):
     for dayIndex, day in enumerate(task.timeWindows):
         currentRoute = schedule.routeList[dayIndex]
         for taskIndex in range(-1, len(currentRoute.taskList)):
             if (len(currentRoute.taskList) == 0): # no tasks scheduled on that day
                 earliestPotentialStart = 0
-                latestPotentialEnd = lengthOfDay * (dayIndex + 1)
+                latestPotentialEnd = dayEndings[dayIndex]
             elif (taskIndex == -1): # try to insert before 1st existing task
                 nextScheduledTask = currentRoute.taskList[0]
                 nextScheduledTaskEnding = currentRoute.endingTimes[0]
@@ -246,7 +251,7 @@ def isTaskInsertable(schedule, task, lengthOfDay):
                 scheduledTask = currentRoute.taskList[-1]
                 scheduledTaskEnding = currentRoute.endingTimes[-1]
                 earliestPotentialStart = scheduledTaskEnding + getDistanceBetweenTasks(task, scheduledTask)
-                latestPotentialEnd = lengthOfDay * (dayIndex + 1)
+                latestPotentialEnd = dayEndings[dayIndex]
             else: # try to insert between 2 tasks
                 scheduledTask = currentRoute.taskList[taskIndex]
                 scheduledTaskEnding = currentRoute.endingTimes[taskIndex]

@@ -25,7 +25,7 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile, 100)
+    greedySol = greedyByOrder.runGreedyByOrder(csvFile)
     
 #     for r in range(len(greedySol)):
 #         if len(greedySol[r]) > 0:

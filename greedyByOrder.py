@@ -13,8 +13,8 @@ from Objects import Schedule, Route
 A function that prints the result of runGreedyByOrder
 in a more detailed format.
 '''
-def printGreedyByOrder(csvFile, lengthOfDay):
-	print runGreedyByOrder(csvFile, lengthOfDay)
+def printGreedyByOrder(csvFile):
+	print runGreedyByOrder(csvFile)
 	print	
 	
 '''
@@ -23,7 +23,7 @@ all time windows in order of earliest ending and then
 creating a schedule by repeatedly picking the first
 task with an available time window from that ordering.
 '''
-def runGreedyByOrder(csvFile, lengthOfDay):
+def runGreedyByOrder(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
@@ -42,11 +42,11 @@ def runGreedyByOrder(csvFile, lengthOfDay):
     for timeTaskTuple in lastTimeWindowsList:
         taskOrdering.append(timeTaskTuple[1])
 
-    return helperFunctions.createOptimalSchedule(taskList, taskOrdering, lengthOfDay)
+    return helperFunctions.createOptimalSchedule(taskList, taskOrdering)
 
 def main():
     print
-    printGreedyByOrder("test.csv", 100)
+    printGreedyByOrder("test.csv")
     
 
 
