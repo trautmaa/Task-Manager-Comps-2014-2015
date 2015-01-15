@@ -76,24 +76,6 @@ def orderByStupid(taskList):
     taskList = sorted(taskList, key=lambda task: task.deadline)
     taskList.reverse()
     return taskList
-      
-  
-    
-'''
-A function that given a bunch of tasks will order them by their
-deadline from earliest to latest.
-'''
-def orderByDeadline(taskList):
-    taskList = sorted(taskList, key=lambda task: task.deadline)
-    return taskList
-
-'''
-A function that given a bunch of tasks will order them by their
-release time from earliest to latest.
-'''
-def orderByRelease(taskList):
-    taskList = sorted(taskList, key=lambda task: task.releaseTime)
-    return taskList
 
 '''
 A function that takes a list of tasks and a current location and 
@@ -199,10 +181,7 @@ schedules whichever tasks are possible to schedule
 from that ordering and returns that schedule. We believe (?) this is
 an optimal schedule for that ordering.'''
 def createOptimalSchedule(taskList, taskOrdering):
-    lastDay = 0
-    for task in taskList:
-        if len(task.timeWindows) > lastDay:
-            lastDay = len(task.timeWindows) - 1
+    lastDay = len(taskList[0].timeWindows)
 
     lastTimeWindowEndings = [0 for i in range(lastDay + 1)]
     for task in taskList:
