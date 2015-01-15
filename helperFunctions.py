@@ -181,7 +181,6 @@ schedules whichever tasks are possible to schedule
 from that ordering and returns that schedule. We believe (?) this is
 an optimal schedule for that ordering.'''
 def createOptimalSchedule(taskList, taskOrdering):
-    #This is a useless comment, please delete later
     lastDay = len(taskList[0].timeWindows)
 
     lastTimeWindowEndings = [0 for i in range(lastDay + 1)]
