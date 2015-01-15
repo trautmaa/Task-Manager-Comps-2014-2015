@@ -6,6 +6,8 @@ import itertools
 import createTasksFromCsv
 import helperFunctions
 
+from Objects import Schedule, Route
+
 
 '''
 A function that given a csvFile and the function used to determine which
@@ -13,65 +15,61 @@ task we want to do next, this algorithm makes a schedule by picking
 one job at a time using a greedy rule that accounts for the current
 location and time.
 '''
-def runGreedyByPresentChoice(csvFile, orderFunction):
+def runGreedyByPresentChoice(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
-    schedule = selectSchedule(taskList, orderFunction)
+    schedule = makeSchedule(taskList)
     return schedule
 
 '''
 A function that prints the result of runGreedyByPresentChoice
 in a more detailed way.
 '''
-def printGreedyByPresentChoice(csvFile, orderFunction):
-    taskList, taskOrdering = runGreedyByPresentChoice(csvFile, orderFunction)
-    schedule = helperFunctions.createSchedule(taskOrdering, taskList)
+def printGreedyByPresentChoice(csvFile):
+    schedule = runGreedyByPresentChoice(csvFile)
     print schedule
     print
 
 '''
 Refer to runGreedyByPresentChoice.
-Given a method and a task list, returns a greedily selected schedule.
+Given a task list, returns a greedily selected schedule.
 '''
-def selectSchedule(taskList, orderFunction):
-    taskOrdering = []
-    originalTaskList = [item for item in taskList]
-    schedule, presentLocation, presentTime = [], (0, 0), 0 # presentLocation is arbitrary.
-    task = getNextTask(
-        presentTime, presentLocation, taskList, orderFunction)
-    taskOrdering.append(originalTaskList.index(task))
-    while (task != None):
-        schedule.append(task)
-        presentTime = helperFunctions.getEndingTime(presentLocation, presentTime, task) 
-        presentLocation = helperFunctions.getCoords(task)
-        del taskList[taskList.index(task)]
-        task = getNextTask(
-            presentTime, presentLocation, taskList, orderFunction)
-        if task != None:
-            taskOrdering.append(originalTaskList.index(task))
-    return originalTaskList, taskOrdering
+def makeSchedule(taskList):
+    schedule = Schedule()
+    lastDay = len(taskList[0].timeWindows)
+    for day in range(lastDay):
+        schedule.append(Route())
 
-'''
-A function that given a present time and location along with a tasks list, and
-a method that will return the next task that can be started or finished depending on the method.
-'''
-def getNextTask(startingTime, startingLocation, remainingTasksList, orderFunction):
-    finishableTasks = []
-    for task in remainingTasksList:
-        finishable, endingTime = helperFunctions.isFinishableTask(
-            task, startingLocation, startingTime)
-        if finishable:
-            finishableTasks.append(task)
-    if len(finishableTasks) == 0:
-        return None
-    finishableTasks = orderFunction(finishableTasks, startingLocation, startingTime)
-    return finishableTasks[0]
-    
-    
+    lastTimeWindowEndings = [0 for i in range(lastDay + 1)]
+    for task in taskList:
+        for index, day in enumerate(task.timeWindows):
+            for timeWindow in day:
+                if timeWindow[1] > lastTimeWindowEndings[index]:
+                    lastTimeWindowEndings[index] = timeWindow[1]
+
+    insertionSuccesful = True
+    while insertionSuccesful:
+        insertionSuccesful = False
+        bestTaskInfo = (None, None, None, None)
+        bestTask = None
+        for task in taskList:
+            taskInfo = helperFunctions.isTaskInsertable(schedule, task, lastTimeWindowEndings)
+            # if task can be finished earliest
+            if (taskInfo[2] != None and (bestTaskInfo[2] == None or taskInfo[2] < bestTaskInfo[2])):
+                bestTaskInfo = taskInfo
+                bestTask = task
+        if (bestTaskInfo != None and bestTaskInfo[2] != None):
+            insertionSuccesful = True
+            isInsertable, endingTime, endingDay, insertPosition = bestTaskInfo
+            schedule.routeList[endingDay].taskList.insert(insertPosition, bestTask)
+            schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)
+            for index, task in enumerate(taskList):
+                if (task.id == bestTask.id):
+                    taskList.pop(index)
+    return schedule
 
 def main():
     print
-    printGreedyByPresentChoice("test.csv", helperFunctions.orderByStartingTime)
-    printGreedyByPresentChoice("test.csv", helperFunctions.orderByEndingTime)
+    printGreedyByPresentChoice("test.csv")
     
 
 
