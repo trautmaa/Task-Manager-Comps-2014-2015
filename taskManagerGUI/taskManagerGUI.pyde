@@ -1,14 +1,5 @@
-import sys
-newPath = sys.path[1]
-path = newPath.split('/')
 
-print newPath
-print
-print sys.path
-# sys.path.append(newPath)
-
-
-#import helperFunctions
+#import vns
 
 def setup():
     schedule = [[None]]*5
