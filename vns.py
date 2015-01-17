@@ -3,7 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 
-import greedyByOrder
+from greedyByOrder import *
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -25,7 +25,7 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile)
+    greedySol = runGreedyByOrder(csvFile, orderByPriority)
     
 #     for r in range(len(greedySol)):
 #         if len(greedySol[r]) > 0:
@@ -201,8 +201,8 @@ def shaking(currSchedule, nHood):
     return newSchedule
 
 '''
-@param currSolution: list (schedule) of lists (days/routes) of task objects
-@return: modified solution
+@param currSchedule: list (schedule) of lists (days/routes) of task objects
+@return: modified schedule
 '''
 def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
@@ -328,7 +328,7 @@ def optionalExchange1(currSchedule, nHood):
 #     print currSchedule
 #     printUnplanned()
     
-    # set p and q according to nHood Index
+    #select the number of tasks to remove and add from unplanned according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
     if nHood == 12:
@@ -343,7 +343,8 @@ def optionalExchange1(currSchedule, nHood):
     if numToRemove > 0:
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSchedule[day][pos:pos + numToRemove]:
-            unplannedTasks.append(task)
+            if task.required == 0:
+                unplannedTasks.append(task)
         newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
         
     else:
@@ -375,7 +376,7 @@ def optionalExchange1(currSchedule, nHood):
     return currSchedule
 
 '''
-
+Removes tasks from a random day/position and adds removed tasks to unplanned tasks. 
 @return: modified solution
 '''
 def optionalExchange2(currSchedule, nHood):
@@ -391,7 +392,8 @@ def optionalExchange2(currSchedule, nHood):
     
     # using the numToRemove and numToAdd values, add and remove however many customers you need to
     for task in currSchedule[day][pos:pos + numToRemove]:
-        unplannedTasks.append(task)
+        if task.required == 0:
+            unplannedTasks.append(task)
 
     newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
 
@@ -1034,7 +1036,7 @@ def findNoneRoutes(currSchedule):
 def main():
     print "********** Main **********"
 
-    print solve("test1000.csv")
+    print solve("test15.csv")
     
 if __name__ == "__main__":
     main()
