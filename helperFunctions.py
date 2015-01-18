@@ -183,12 +183,14 @@ an optimal schedule for that ordering.'''
 def createOptimalSchedule(taskList, taskOrdering):
     lastDay = len(taskList[0].timeWindows)
 
-    lastTimeWindowEndings = [0 for i in range(lastDay + 1)]
+    # Create a list with the integer of the latest time anything could be scheduled
+    # in any particular day. Used as a proxy for the end of the day.
+    dayEndings = [0 for i in range(lastDay + 1)]
     for task in taskList:
         for index, day in enumerate(task.timeWindows):
             for timeWindow in day:
-                if timeWindow[1] > lastTimeWindowEndings[index]:
-                    lastTimeWindowEndings[index] = timeWindow[1]
+                if timeWindow[1] > dayEndings[index]:
+                    dayEndings[index] = timeWindow[1]
 
     schedule = Schedule()
     for day in range(lastDay + 1):
@@ -200,7 +202,7 @@ def createOptimalSchedule(taskList, taskOrdering):
     while (timeWindowIndex < len(taskList)):
         currentTask = taskList[taskOrdering[timeWindowIndex]]
 
-        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, lastTimeWindowEndings)     
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings)     
         if (isInsertable):
             schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
             schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
