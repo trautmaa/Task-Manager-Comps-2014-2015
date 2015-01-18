@@ -20,17 +20,10 @@ the most tasks scheduled.
 def findBestSchedule(taskList, permutations):
     bestSchedule = Objects.Schedule()
     for perm in permutations:
-        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)
-        #bestScheduleSize = sum(len(route) for route in bestSchedule.routeList)
-        #newScheduleSize = sum(len(route) for route in newSchedule.routeList)
-        #bestScheduleSize = getScheduleDuration(taskList, bestSchedule)        
+        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
         if isBetterSchedule(newSchedule, bestSchedule):
         	bestSchedule = newSchedule
         	print '1'
-        '''feasSchedule = isFeasible(taskList, newSchedule)
-        if feasSchedule != None:
-        	if isBetterSchedule(feasSchedule, bestSchedule):
-        		bestSchedule = feasSchedule'''
     return bestSchedule
 
 
@@ -40,7 +33,6 @@ It just takes a number of how many elements you want in your solution.
 '''
 def getAllPermutations(lengthOfPerms):
     permutations = [i for i in range(lengthOfPerms)]
-    #permutations = list(itertools.permutations(permutations, lengthOfPerms))
     permutations = itertools.permutations(permutations, lengthOfPerms)
 
     return permutations
