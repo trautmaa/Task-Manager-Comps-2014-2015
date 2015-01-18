@@ -11,7 +11,7 @@ yRange = 60
 releaseTimeRange = 800
 durationRange = 50
 deadlineRange = 1000
-numDays = 10
+numDays = 3
 dayLength = 100
 priorityRange = 10
 likelyhoodOfMandatory = .3
@@ -103,7 +103,7 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(1000, "test1000.csv")
+    writeNTasks(8, "test8.csv")
 
 
 if __name__ == '__main__':
