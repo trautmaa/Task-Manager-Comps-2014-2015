@@ -34,6 +34,7 @@ Refer to runGreedyByPresentChoice.
 Given a task list, returns a greedily selected schedule.
 '''
 def makeSchedule(taskList):
+    taskList = helperFunctions.preprocessTimeWindows(taskList)
     schedule = Schedule()
     lastDay = len(taskList[0].timeWindows)
     for day in range(lastDay):

@@ -24,7 +24,6 @@ def findBestSchedule(taskList, permutations):
         newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
         if isBetterSchedule(newSchedule, bestSchedule):
         	bestSchedule = newSchedule
-        	print '1'
     return bestSchedule
 
 
