@@ -1,9 +1,9 @@
 
-#import vns
+import vns
 
 def setup():
-    schedule = [[None]]*5
-        
+    schedule = vns.solve("test15.csv")
+    print schedule    
     #Globals for reference later
     global dayWidth, dayHeight, headerHeight, sideBarWidth
     headerHeight = 50
