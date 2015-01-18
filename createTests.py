@@ -13,15 +13,23 @@ durationRange = 50
 deadlineRange = 1000
 numDays = 10
 dayLength = 100
+priorityRange = 10
+likelyhoodOfMandatory = .3
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    task.append(priority) # This will need to be changed when we do priority...
-    
-def setRequiredOfTask(task, required):
-    task.append(required) # This will need to be changed when we do required...
-    
+    if randint(0, 10) >= likelyhoodOfMandatory *10:
+        task.append(randint(0, priority))
+    else:
+        task.append(-1)
+                   
+def setRequiredOfTask(task):
+    if task[-1] == -1:
+        task.append(1)
+    else:
+        task.append(0)
+        
 def setTimeWindowsOfTask(task, numDays):
     timeWindows = []
     releaseTime = task[2]
@@ -47,13 +55,6 @@ def setTimeWindowsOfTask(task, numDays):
             
         
         timeWindows.append(dayWindows)
-    
-    
-    
-#    dayOne = []
-#    dayOneTimeWindow = (0, 1000)
-#    dayOne.append(dayOneTimeWindow)
-#    timeWindows.append(dayOne)
     task.append(timeWindows)
 
 '''
@@ -72,10 +73,15 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     task.append(randint(1, maxDuration))
     task.append(randint(task[2] + task[3] + 100, deadline))
     setPriorityOfTask(task, priority)
-    setRequiredOfTask(task, required)
+    setRequiredOfTask(task)
     setTimeWindowsOfTask(task, numDays)
 
     return task
+
+def process(taskList, maxSumProfit):
+    for task in taskList:
+        if task[-2] == 1:
+            task[-3] = maxSumProfit
 
 '''
 A function that will write n tasks to a csv file.  It uses
@@ -84,11 +90,16 @@ constraints for generateTask are hard coded but that can
 be changed.  The name of the csv file is returned.
 '''
 def writeNTasks(n, csvFile):
+    taskList = []
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
-            writer.writerow(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, 1, 0, numDays))
+            taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
+        maxSumProfit = n * priorityRange
+        process(taskList, maxSumProfit)
+        for task in taskList:
+            writer.writerow(task)
     return csvFile
 
 def main():

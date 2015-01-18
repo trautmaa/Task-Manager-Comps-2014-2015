@@ -3,7 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 
-import greedyByOrder
+from greedyByOrder import *
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -11,6 +11,7 @@ import time
 import math
 import random
 import copy
+import csv
 from collections import deque
 #from bruteForce import runBruteForceAlg
 
@@ -25,7 +26,7 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
-    greedySol = greedyByOrder.runGreedyByOrder(csvFile)
+    greedySol = runGreedyByOrder(csvFile, orderByPriority)
     
 #     for r in range(len(greedySol)):
 #         if len(greedySol[r]) > 0:
@@ -73,7 +74,7 @@ def solve(csvFile):
     print currSchedule.getProfit()
     
 
-
+    writeTasks("testReturn.csv", currSchedule)
     return currSchedule
 
 
@@ -97,7 +98,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 30
+    stoppingCondition = 10
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -201,8 +202,8 @@ def shaking(currSchedule, nHood):
     return newSchedule
 
 '''
-@param currSolution: list (schedule) of lists (days/routes) of task objects
-@return: modified solution
+@param currSchedule: list (schedule) of lists (days/routes) of task objects
+@return: modified schedule
 '''
 def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
@@ -232,7 +233,6 @@ def crossExchange(currSchedule, nHood):
         route2Len = 0
     else:
         route2Len = random.randint(0, min(len2, nHood))
-    
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
     routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
 
@@ -294,6 +294,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         
         # if task n has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
+        
         if(len(origRoute[n].timeWindows[newDay]) > 0):
             if n - currRouteStart == segmentLength - 1:
                 possRoutes.append(currRouteStart)
@@ -314,7 +315,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     else:
         route1Start = longestRouteStart
         segmentLength = longestRouteLen
-    
+        
     return (route1Start, route1Start + segmentLength)
     
     
@@ -328,7 +329,7 @@ def optionalExchange1(currSchedule, nHood):
 #     print currSchedule
 #     printUnplanned()
     
-    # set p and q according to nHood Index
+    #select the number of tasks to remove and add from unplanned according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
     if nHood == 12:
@@ -343,7 +344,8 @@ def optionalExchange1(currSchedule, nHood):
     if numToRemove > 0:
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSchedule[day][pos:pos + numToRemove]:
-            unplannedTasks.append(task)
+            if task.required == 0:
+                unplannedTasks.append(task)
         newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
         
     else:
@@ -375,7 +377,7 @@ def optionalExchange1(currSchedule, nHood):
     return currSchedule
 
 '''
-
+Removes tasks from a random day/position and adds removed tasks to unplanned tasks. 
 @return: modified solution
 '''
 def optionalExchange2(currSchedule, nHood):
@@ -391,7 +393,8 @@ def optionalExchange2(currSchedule, nHood):
     
     # using the numToRemove and numToAdd values, add and remove however many customers you need to
     for task in currSchedule[day][pos:pos + numToRemove]:
-        unplannedTasks.append(task)
+        if task.required == 0:
+            unplannedTasks.append(task)
 
     newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
 
@@ -1029,13 +1032,46 @@ def findNoneRoutes(currSchedule):
         if (r == None):
             print "IT WAS NONE"
             exit(1)
-            
 
+'''
+A function that will write n tasks to a csv file.  It uses
+generateTask to create the task to write. Right now the
+constraints for generateTask are hard coded but that can 
+be changed.  The name of the csv file is returned.
+'''
+def writeTasks(csvFile, schedule):
+    taskList = []
+    taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
+    with open(csvFile, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerow(taskFeatures)
+        for i in range(len(schedule)):
+            for j in range(len(schedule[i])):
+                task = []
+                task.append(schedule[i][j].x)
+                task.append(schedule[i][j].y)
+                task.append(schedule[i][j].releaseTime)
+                task.append(schedule[i][j].duration)
+                task.append(schedule[i][j].deadline)
+                task.append(schedule[i][j].priority)
+                task.append(schedule[i][j].required)
+                task.append(schedule[i][j].timeWindows)
+                taskList.append(task)
+            taskList.append([])
+        print "taskList", taskList
+        #for taskList in schedule:
+         #   writer.writerow(taskList)
+        for task in taskList:
+            writer.writerow(task)
+    return csvFile
+            
+            
 def main():
     print "********** Main **********"
+    result = solve("test50.csv")
+    print result
+    return result
 
-    print solve("test1000.csv")
-    
 if __name__ == "__main__":
     main()
 
