@@ -1,9 +1,17 @@
 
-import vns
+#Table table
+
+
 
 def setup():
-    schedule = vns.solve("test15.csv")
-    print schedule    
+    
+    table = loadTable("testReturn.csv", "header")
+    print table.getRowCount(), " total rows in table"
+
+
+    
+    schedule = [[]]*5
+
     #Globals for reference later
     global dayWidth, dayHeight, headerHeight, sideBarWidth
     headerHeight = 50
