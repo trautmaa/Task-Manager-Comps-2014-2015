@@ -17,13 +17,14 @@ import createTasksFromCsv
 import helperFunctions
 
 from Objects import Route, Task, Schedule
-
+from vns import isFeasible
 
 '''
 Returns a three dimensional list of decision variables y i,t,k representing
 whether or not task i is scheduled on day t during time window k.
 '''
 def makeYitkVariables(taskList, numDays):
+    numTasks = len(taskList)
     yitkVariables = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
     for i in range(numTasks):
         for t in range(numDays):
@@ -35,8 +36,8 @@ def makeYitkVariables(taskList, numDays):
 Returns a two dimensional list of variables representing the time at which a task finishes on
 a particular day. Variable a i,t represents the finish time of task i on day t.
 '''
-def makeAitVariables(numTasks, numDays):
-    aitVariables = [[None for i in range(numTasks)] for t in range(numDays)]
+def makeAitVariables(numTasks, numDays, latestDeadline):
+    aitVariables = [[None for t in range(numDays)] for i in range(numTasks)]
     for i in range(numTasks):
         for t in range(numDays):
             aitVariables[i][t] = pulp.LpVariable(("a" + "," + str(i) + "," + str(t)), 0, latestDeadline)
@@ -64,7 +65,7 @@ task j.  Note that if i == j, that entry is None.
 '''
 def makeDijConstants(taskList):
     numTasks = len(taskList)
-    dijConstants = [[None for i in range(numTasks)] for j in range(numTasks)]
+    dijConstants = [[None for j in range(numTasks)] for i in range(numTasks)]
     for i in range(numTasks):
         for j in range(numTasks):
             if i != j:
@@ -76,10 +77,11 @@ Returns a list of constants where constant r i,t,k is the beginning of time
 window k for task i on day t.
 '''
 def makeRitkConstants(taskList, numDays):
+    numTasks = len(taskList)
     ritkConstants = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
     for i in range(numTasks):
         for t in range(numDays):
-            for k, timeWindow in taskList[i].timeWindows[t]:
+            for k, timeWindow in enumerate(taskList[i].timeWindows[t]):
                 ritkConstants[i][t][k] = timeWindow[0]
     return ritkConstants
 
@@ -88,10 +90,11 @@ Returns a list of constants where constant f i,t,k is the end of time
 window k for task i on day t.
 '''
 def makeFitkConstants(taskList, numDays):
+    numTasks = len(taskList)
     fitkConstants = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
     for i in range(numTasks):
         for t in range(numDays):
-            for k, timeWindow in taskList[i].timeWindows[t]:
+            for k, timeWindow in enumerate(taskList[i].timeWindows[t]):
                 fitkConstants[i][t][k] = timeWindow[1]
     return fitkConstants
 
@@ -136,7 +139,7 @@ def addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants,
                                     numTasks, numDays):
     for i in range(numTasks):
         for t in range(numDays):
-            for k in range(len(yitkConstants[i][t])):
+            for k in range(len(yitkVariables[i][t])):
                 prob += ritkConstants[i][t][k] + serviceTimeConstants[i] <= aitVariables[i][t] # ritk + si <= ait
                 prob += aitVariables[i][t] <= fitkConstants[i][t][k] + latestTimeWindowEnd * (1 - yitkVariables[i][t][k]) # ait <= B(1 - yitk)
 
@@ -192,26 +195,26 @@ A function that takes a solved integer program and converts it into a makeSchedu
 object.
 '''
 def makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList):
-    solvedTaskTuples = [[] for day in range(len(numDays))]
+    solvedTaskTuples = [[] for day in range(numDays)]
     for taskIndex, taskVar in enumerate(yiVariables):
         if taskVar.varValue == 1:
-            for day in range(len(numDays)):
+            for day in range(numDays):
                 for timeWindowVar in yitkVariables[taskIndex][day]:
                     if timeWindowVar.varValue == 1:
                         solvedTaskTuples[day].append((taskList[taskIndex], aitVariables[taskIndex][day].varValue))
     
     for day in solvedTaskTuples:
-        solvedTaskTuples[day] = sorted(solvedTaskTuples[day], key = lambda tuple:tuple[1])
+        day = sorted(day, key = lambda tuple:tuple[1])
     
-    solvedTaskList = [[] for day in numDays]
-    solvedTaskCompletionTimes = [[] for day in numDays]
-    for day in numDays:
+    solvedTaskList = [[] for day in range(numDays)]
+    solvedTaskCompletionTimes = [[] for day in range(numDays)]
+    for day in range(numDays):
         for taskTuple in solvedTaskTuples[day]:
             solvedTaskList[day].append(taskTuple[0])
             solvedTaskCompletionTimes[day].append(taskTuple[1])
     
     schedule = Schedule()
-    for day in range(len(numDays)):
+    for day in range(numDays):
         route = Route()
         route.setTaskList(solvedTaskList[day], solvedTaskCompletionTimes[day])
         schedule.append(route)
@@ -224,12 +227,13 @@ returning the resulting schedule.
 '''
 def integerProgramSolve(taskList):
     numTasks = len(taskList)
-    numDays = max(taskList, key = lambda task : len(task.timeWindows))
+    mostDaysTask = max(taskList, key = lambda task : len(task.timeWindows))
+    numDays = len(mostDaysTask.timeWindows)
     latestTimeWindowEnd = getLatestDeadline(taskList)
 
     yiVariables = [pulp.LpVariable(("y" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)] # included or not
     yitkVariables = makeYitkVariables(taskList, numDays) # task i scheduled on day t in time window k
-    aitVariables = makeAitVariables(numTasks, numDays) # completion time
+    aitVariables = makeAitVariables(numTasks, numDays, latestTimeWindowEnd) # completion time
     xijtVariables = makeXijtVariables(numTasks, numDays) # task j scheduled following task i on day t
     
     # trying first without any depot constraints
@@ -247,7 +251,7 @@ def integerProgramSolve(taskList):
     prob = pulp.LpProblem("Scheduling", pulp.LpMaximize)
     # OBJECTIVE FUNCTION
     # sum (priority * yi) for each yi
-    prob += pulp.LpAffineExpression([(yiVariables[i], priorityConstants[i]) for i in range(yiVariables)])
+    prob += sum([(yiVariables[i] * priorityConstants[i]) for i in range(len(yiVariables))])
 
 
     # Add all constraints
@@ -285,6 +289,7 @@ def runIntegerProgram(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     schedule = integerProgramSolve(taskList)
+    assert(isFeasible(taskList, schedule))
     return schedule
 
 '''    
