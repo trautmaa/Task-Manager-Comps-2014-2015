@@ -20,17 +20,41 @@ from Objects import Route, Task, Schedule
 
 
 '''
-A function that returns a two-dimensional list where the jth entry in the
-ith sublist represents the variable (boolean) for if we go from task i to
-task j.  Note that if i == j, that entry is None.
+Returns a three dimensional list of decision variables y i,t,k representing
+whether or not task i is scheduled on day t during time window k.
 '''
-def makeXijVariables(numTasks):
-    xijVariables = [[None for i in range(numTasks)] for j in range(numTasks)]
+def makeYitkVariables(taskList, numDays):
+    yitkVariables = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
+    for i in range(numTasks):
+        for t in range(numDays):
+            for k in range(len(taskList[i].timeWindows[t])):
+                yitkVariables[i][t][k] = pulp.LpVariable(("y" + "," + str(i) + "," + str(t) + "," + str(k)), 0, 1, pulp.LpBinary)
+    return yitkVariables
+
+'''
+Returns a two dimensional list of variables representing the time at which a task finishes on
+a particular day. Variable a i,t represents the finish time of task i on day t.
+'''
+def makeAitVariables(numTasks, numDays):
+    aitVariables = [[None for i in range(numTasks)] for t in range(numDays)]
+    for i in range(numTasks):
+        for t in range(numDays):
+            aitVariables[i][t] = pulp.LpVariable(("a" + "," + str(i) + "," + str(t)), 0, latestDeadline)
+    return aitVariables
+
+'''
+A function that returns a three-dimensional list where x t,i,j represents
+whether the jth task is scheduled immediately following the ith task
+on day t. Note that if i == j, that entry is None.
+'''
+def makeXijtVariables(numTasks, numDays):
+    xijtVariables = [[[None for t in range(numDays)] for j in range(numTasks)] for i in range(numTasks)]
     for i in range(numTasks):
         for j in range(numTasks):
-            if i != j:
-                xijVariables[i][j] = pulp.LpVariable(("x" + str(i) + "," + str(j)), 0, 1, pulp.LpBinary)
-    return xijVariables
+            for t in range(numDays):
+                if i != j:
+                    xijtVariables[i][j][t] = pulp.LpVariable(("x" + str(i) + "," + str(j) + "," + str(t)), 0, 1, pulp.LpBinary)
+    return xijtVariables
 
 
 '''
@@ -47,8 +71,30 @@ def makeDijConstants(taskList):
                 dijConstants[i][j] = helperFunctions.getDistanceBetweenTasks(taskList[i], taskList[j])
     return dijConstants
 
+'''
+Returns a list of constants where constant r i,t,k is the beginning of time
+window k for task i on day t.
+'''
+def makeRitkConstants(taskList, numDays):
+    ritkConstants = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
+    for i in range(numTasks):
+        for t in range(numDays):
+            for k, timeWindow in taskList[i].timeWindows[t]:
+                ritkConstants[i][t][k] = timeWindow[0]
+    return ritkConstants
 
-        
+'''
+Returns a list of constants where constant f i,t,k is the end of time
+window k for task i on day t.
+'''
+def makeFitkConstants(taskList, numDays):
+    fitkConstants = [[[None for k in range(len(taskList[i].timeWindows[t]))] for t in range(numDays)] for i in range(len(taskList))]
+    for i in range(numTasks):
+        for t in range(numDays):
+            for k, timeWindow in taskList[i].timeWindows[t]:
+                fitkConstants[i][t][k] = timeWindow[1]
+    return fitkConstants
+
 '''
 We need to add:
     Rule (4) ktSum of yitk = y1
@@ -58,33 +104,41 @@ We need to add:
 '''
 
 '''
-THIS MUST BE CHANGED TO DO DAYS!!!!!!!
 A function that adds constraints to the problem.  This constraint is
-for all jobs i, the sum of the variables xij = the sum of the variables xji
-                the sum of the variables xij = yi
+for all jobs i, the sum of the variables xijt = the sum of the variables xjit
+                and the sum of the variables xijt = the sum of variables yitk
 '''
-def addConnectivityConstraints(prob, xijVariables, xhiVariables, xihVariables, numTasks, yiVariables):
-    for i in range(numTasks):
-        xjiList = []
-        xijList = []
-        for j in range(numTasks):
-            if i != j:
-                xjiList += xijVariables[j][i]
-                xijList += xijVariables[i][j]
-        prob += pulp.lpSum(xjiList) + xhiVariables[i] == pulp.lpSum(xijList) + xihVariables[i] # for job i sum xij +xhi = sum xji + xih
-        prob += pulp.lpSum(xijList) + xihVariables[i] == yiVariables[i] # for job i sum xij = yi
+def addConnectivityConstraints(prob, xijtVariables, yitkVariables, numTasks, numDays, yiVariables):
+    for t in range(numDays):
+        for i in range(numTasks):
+            xjitList = []
+            xijtList = []
+            for j in range(numTasks):
+                if i != j:
+                    xjitList += xijtVariables[j][i][t]
+                    xijtList += xijtVariables[i][j][t]
+            prob += pulp.lpSum(xjitList) == pulp.lpSum(xijtList) # for job i sum xijt = sum xjit
+            
+            yitkList = []
+            for k in range(len(yitkVariables[i][t])):
+                yitkList += yitkVariables[i][t][k]
+            prob += pulp.lpSum(xijtList) == pulp.lpSum(yitkList) # for job i sum xijt = yitk
        
     
 '''
 A function that adds constraints to the problem.  This constraint is
-for all jobs i, the task can't be finished before its release time and its service time
-                the task will finish before its deadline if it is an included task
+for all jobs i on day t with time window k, the task can't be finished before
+the time window start + the service time, and
+the task will finish before the time window end if it is an included task
 '''
-def addCompletionTimeConstraints(prob, releaseConstants, serviceTimeConstants, 
-                                    aiVariables, deadlineConstants, latestDeadline, yiVariables, numTasks):
+def addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants, 
+                                    aitVariables, fitkConstants, latestTimeWindowEnd, yitkVariables,
+                                    numTasks, numDays):
     for i in range(numTasks):
-        prob += releaseConstants[i] + serviceTimeConstants[i] <= aiVariables[i] # ri + si <= ai
-        prob += aiVariables[i] <= deadlineConstants[i] + latestDeadline * (1 - yiVariables[i]) # ai <= B(1 - yi)
+        for t in range(numDays):
+            for k in range(len(yitkConstants[i][t])):
+                prob += ritkConstants[i][t][k] + serviceTimeConstants[i] <= aitVariables[i][t] # ritk + si <= ait
+                prob += aitVariables[i][t] <= fitkConstants[i][t][k] + latestTimeWindowEnd * (1 - yitkVariables[i][t][k]) # ait <= B(1 - yitk)
 
 
 
@@ -94,38 +148,42 @@ for all pairs of distinct jobs, if job j comes after job i: then job j can't fin
                                 before the finish time of job i + the distance between them
                                 + the service time of job j
 '''        
-def addTravelAndServiceTimeConstraints(prob, aiVariables, dijConstants, serviceTimeConstants,
-                                            latestDeadline, xijVariables, numTasks):
+def addTravelAndServiceTimeConstraints(prob, aitVariables, dijConstants, 
+                                            serviceTimeConstants, latestTimeWindowEnd, xijtVariables,
+                                            numTasks, numDays):
     for i in range(numTasks):
         for j in range(numTasks):
             if i != j:
-                prob += aiVariables[i] + dijConstants[i][j] + serviceTimeConstants[j] \
-                <= aiVariables[j] + latestDeadline *(1 - xijVariables[i][j])
+                for t in range(numDays):
+                    prob += aitVariables[i][t] + dijConstants[i][j] + serviceTimeConstants[j] \
+                    <= aitVariables[j][t] + latestTimeWindowEnd * (1 - xijtVariables[i][j][t])
 
 
-'''
-A function that adds all constraints related to the starting location to
-the integer program. These constraints are that only 1 task can come immediately
-after the start, and that if job i comes immediately after the start, it cannot
-finish before its service time + the travel time from the start.
-'''
-def addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
-                                        latestDeadline, xhiVariables, numTasks):
-    prob += pulp.lpSum(xhiVariables) == 1
-    for i in range(numTasks):
-        prob += dhiConstants[i] + serviceTimeConstants[i] \
-        <= aiVariables[i] + latestDeadline * (1 - xhiVariables[i])
+# '''
+# A function that adds all constraints related to the starting location to
+# the integer program. These constraints are that only 1 task can come immediately
+# after the start, and that if job i comes immediately after the start, it cannot
+# finish before its service time + the travel time from the start.
+# '''
+# def addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
+#                                         latestDeadline, xhiVariables, numTasks):
+#     prob += pulp.lpSum(xhiVariables) == 1
+#     for i in range(numTasks):
+#         prob += dhiConstants[i] + serviceTimeConstants[i] \
+#         <= aiVariables[i] + latestDeadline * (1 - xhiVariables[i])
 
 
 '''
 A function that takes a list of tasks and iterates over them,
-returning the latest deadline out of all tasks.
+returning the latest time window ending of any task.
 '''
 def getLatestDeadline(taskList):
     latestDeadline = 0
     for task in taskList:
-        if task.deadline > latestDeadline:
-            latestDeadline = task.deadline
+        for day in task.timeWindows:
+            for timeWindow in day:
+                if timeWindow[1] > latestDeadline:
+                    latestDeadline = timeWindow[1]
     return latestDeadline
 
 
@@ -133,21 +191,30 @@ def getLatestDeadline(taskList):
 A function that takes a solved integer program and converts it into a makeSchedule
 object.
 '''
-def makeSchedule(yiVariables, aiVariables, taskList):
-    solvedTaskTuples = []
-    for index, taskVar in enumerate(yiVariables):
-        if (taskVar.varValue == 1):
-            solvedTaskTuples.append((taskList[index], aiVariables[index].varValue))
-    sortedTaskTuples = sorted(solvedTaskTuples, key = lambda tuple:tuple[1])
-    solvedTaskList = []
-    solvedTaskCompletionTimes = []
-    for taskTuple in sortedTaskTuples:
-        solvedTaskList.append(taskTuple[0])
-        solvedTaskCompletionTimes.append(taskTuple[1])
-    route = Route()
-    route.setTaskList(solvedTaskList, solvedTaskCompletionTimes)
+def makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList):
+    solvedTaskTuples = [[] for day in range(len(numDays))]
+    for taskIndex, taskVar in enumerate(yiVariables):
+        if taskVar.varValue == 1:
+            for day in range(len(numDays)):
+                for timeWindowVar in yitkVariables[taskIndex][day]:
+                    if timeWindowVar.varValue == 1:
+                        solvedTaskTuples[day].append((taskList[taskIndex], aitVariables[taskIndex][day].varValue))
+    
+    for day in solvedTaskTuples:
+        solvedTaskTuples[day] = sorted(solvedTaskTuples[day], key = lambda tuple:tuple[1])
+    
+    solvedTaskList = [[] for day in numDays]
+    solvedTaskCompletionTimes = [[] for day in numDays]
+    for day in numDays:
+        for taskTuple in solvedTaskTuples[day]:
+            solvedTaskList[day].append(taskTuple[0])
+            solvedTaskCompletionTimes[day].append(taskTuple[1])
+    
     schedule = Schedule()
-    schedule.append(route)
+    for day in range(len(numDays)):
+        route = Route()
+        route.setTaskList(solvedTaskList[day], solvedTaskCompletionTimes[day])
+        schedule.append(route)
     return schedule
 
 
@@ -157,42 +224,48 @@ returning the resulting schedule.
 '''
 def integerProgramSolve(taskList):
     numTasks = len(taskList)
-    latestDeadline = getLatestDeadline(taskList)
-    startingLocation = (0, 0) # probably update this eventually
+    numDays = max(taskList, key = lambda task : len(task.timeWindows))
+    latestTimeWindowEnd = getLatestDeadline(taskList)
 
     yiVariables = [pulp.LpVariable(("y" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)] # included or not
-    aiVariables = [pulp.LpVariable(("a" + str(i)), 0, latestDeadline) for i in range(numTasks)] # completion time
-    xijVariables = makeXijVariables(numTasks)
-    xhiVariables = [pulp.LpVariable(("xH" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)]
-    xihVariables = [pulp.LpVariable(("x" + str(i) + "H"), 0, 1, pulp.LpBinary) for i in range(numTasks)]
+    yitkVariables = makeYitkVariables(taskList, numDays) # task i scheduled on day t in time window k
+    aitVariables = makeAitVariables(numTasks, numDays) # completion time
+    xijtVariables = makeXijtVariables(numTasks, numDays) # task j scheduled following task i on day t
+    
+    # trying first without any depot constraints
+    # xhiVariables = [pulp.LpVariable(("xH" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)]
+    # xihVariables = [pulp.LpVariable(("x" + str(i) + "H"), 0, 1, pulp.LpBinary) for i in range(numTasks)]
+
     dijConstants = makeDijConstants(taskList)
-    dhiConstants = [helperFunctions.getDistanceBetweenCoords(startingLocation, helperFunctions.getCoords(task)) for task in taskList]
-    deadlineConstants = [task.deadline for task in taskList]
-    releaseConstants = [task.releaseTime for task in taskList]
+    priorityConstants = [task.getProfit() for task in taskList]
+    # dhiConstants = [helperFunctions.getDistanceBetweenCoords(startingLocation, helperFunctions.getCoords(task)) for task in taskList]
+    fitkConstants = makeFitkConstants(taskList, numDays) # ends of time window k for task i on day t
+    ritkConstants = makeRitkConstants(taskList, numDays) # starts of time window k for task i on day t
     serviceTimeConstants = [task.duration for task in taskList]
 
     # Initialize problem 
     prob = pulp.LpProblem("Scheduling", pulp.LpMaximize)
     # OBJECTIVE FUNCTION
-    prob += pulp.lpSum(yiVariables) 
+    # sum (priority * yi) for each yi
+    prob += pulp.LpAffineExpression([(yiVariables[i], priorityConstants[i]) for i in range(yiVariables)])
 
 
     # Add all constraints
-    addConnectivityConstraints(prob, xijVariables, xhiVariables, xihVariables, numTasks, yiVariables)
+    addConnectivityConstraints(prob, xijtVariables, yitkVariables, numTasks, numDays, yiVariables)
     
-    addCompletionTimeConstraints(prob, releaseConstants, serviceTimeConstants, 
-                                    aiVariables, deadlineConstants, latestDeadline, yiVariables,
-                                    numTasks)
+    addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants, 
+                                    aitVariables, fitkConstants, latestTimeWindowEnd, yitkVariables,
+                                    numTasks, numDays)
 
-    addTravelAndServiceTimeConstraints(prob, aiVariables, dijConstants, 
-                                            serviceTimeConstants, latestDeadline, xijVariables,
-                                            numTasks)
+    addTravelAndServiceTimeConstraints(prob, aitVariables, dijConstants, 
+                                            serviceTimeConstants, latestTimeWindowEnd, xijtVariables,
+                                            numTasks, numDays)
 
-    addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
-                                        latestDeadline, xhiVariables,
-                                        numTasks)
+    # addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
+    #                                     latestDeadline, xhiVariables,
+    #                                     numTasks)
     
-    prob += pulp.lpSum(xihVariables) == 1 # Ending job constraint
+    # prob += pulp.lpSum(xihVariables) == 1 # Ending job constraint
 
     # Gurobi model variables can be set using keyword arguments
     # (https://docs.python.org/2/tutorial/controlflow.html#keyword-arguments)
@@ -202,7 +275,7 @@ def integerProgramSolve(taskList):
     solver = pulp.solvers.GUROBI()
     prob.solve(solver)
     assert(prob.status == 1) # Problem was solved
-    return makeSchedule(yiVariables, aiVariables, taskList)
+    return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
 
 '''
 A helper function that does everything but print the solution,
@@ -210,7 +283,7 @@ for use in comparing different algorithms.
 '''
 def runIntegerProgram(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
-    taskList = helperFunctions.preprocessTimeWindows(taskList)
+    helperFunctions.preprocessTimeWindows(taskList)
     schedule = integerProgramSolve(taskList)
     return schedule
 
