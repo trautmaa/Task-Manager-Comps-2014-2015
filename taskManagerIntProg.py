@@ -199,7 +199,7 @@ def integerProgramSolve(taskList):
     # refer to http://www.gurobi.com/documentation/6.0/reference-manual/refman
     # for specific parameter documentation
     # e.g.: solver = pulp.solvers.GUROBI(OutputFlag = 0, Threads = 4, TimeLimit = 120)
-    solver = pulp.solvers.GUROBI(TimeLimit = 60)
+    solver = pulp.solvers.GUROBI()
     prob.solve(solver)
     assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, aiVariables, taskList)
@@ -210,6 +210,7 @@ for use in comparing different algorithms.
 '''
 def runIntegerProgram(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
+    taskList = helperFunctions.preprocessTimeWindows(taskList)
     schedule = integerProgramSolve(taskList)
     return schedule
 

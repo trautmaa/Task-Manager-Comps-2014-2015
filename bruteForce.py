@@ -18,7 +18,7 @@ will create a schedule for each ordering and output one of the schedules with
 the most tasks scheduled.
 '''
 def findBestSchedule(taskList, permutations):
-    taskList = helperFunctions.preprocessTimeWindows(taskList)
+    helperFunctions.preprocessTimeWindows(taskList)
     bestSchedule = Objects.Schedule()
     for perm in permutations:
         newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
@@ -61,7 +61,7 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("test11.csv")
+    printBruteForce("test.csv")
     print datetime.datetime.now()
 
 

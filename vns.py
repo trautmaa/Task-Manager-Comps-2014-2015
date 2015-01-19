@@ -2,8 +2,8 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-
-from greedyByOrder import *
+import greedyByPresentChoice
+import greedyByOrder
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -26,28 +26,32 @@ def solve(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
 
-    greedySol = runGreedyByOrder(csvFile, orderByPriority)
-    
+    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
+    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
+    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
+    bestGreedy = max(solutionList, key= lambda schedule : schedule.getProfit())
+
 #     for r in range(len(greedySol)):
 #         if len(greedySol[r]) > 0:
 #             greedySol[r].setTaskList([greedySol[r].taskList[0]], [None])
         
         
-    assert(isFeasible(taskList, greedySol))
+    assert(isFeasible(taskList, bestGreedy))
 
-    print greedySol
+    print bestGreedy
 
 #     brute = runBruteForceAlg(csvFile)
     
     # brute = runBruteForceAlg(csvFile)
     
-    modTasks = greedySol[:]
-    currSchedule = createSchedule(copy.deepcopy(greedySol))
+    modTasks = bestGreedy[:]
+    currSchedule = createSchedule(copy.deepcopy(bestGreedy))
     # Modify the greedy algorithm
     currSchedule = vns(taskList, currSchedule)
     
     print 'greedy solution'
-    print greedySol
+    print bestGreedy
 
     print 'vns solution'
     print currSchedule
@@ -69,8 +73,8 @@ def solve(csvFile):
     
     
     print "Profit of Greedy Schedule is: "
-    print greedySol.getProfit()
-    print "Profit of VMS Schedule is: "
+    print bestGreedy.getProfit()
+    print "Profit of VNS Schedule is: "
     print currSchedule.getProfit()
     
 
