@@ -8,13 +8,15 @@ To run this properly, drag and drop the file onto processing-py, available at
 
 https://github.com/jdf/processing.py
 '''
-
+import vns
 
 def setup():
 #     table = loadTable("testReturn.csv", "header")
 #     print table.getRowCount(), " total rows in table"
-
-    schedule = [[]]*5
+    
+    
+#     schedule = [[]]*5
+    schedule = vns.solve("test15.csv")
 
     #Globals for reference later
     global dayWidth, dayHeight, headerHeight, sideBarWidth

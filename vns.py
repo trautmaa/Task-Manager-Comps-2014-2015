@@ -4,6 +4,7 @@
 
 
 from greedyByOrder import *
+
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -27,6 +28,7 @@ def solve(csvFile):
     helperFunctions.preprocessTimeWindows(taskList)
 
     greedySol = runGreedyByOrder(csvFile, orderByPriority)
+    #greedySol = runGreedyByPresentChoice(csvFile)
     
 #     for r in range(len(greedySol)):
 #         if len(greedySol[r]) > 0:
