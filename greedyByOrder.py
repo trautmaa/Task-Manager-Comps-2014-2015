@@ -8,8 +8,6 @@ import createTasksFromCsv
 import helperFunctions
 
 from Objects import Schedule, Route
-from audioop import reverse
-from _ctypes_test import func
 
 '''
 A function that prints the result of runGreedyByOrder
