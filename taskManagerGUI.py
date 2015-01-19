@@ -13,7 +13,7 @@ import vns
 def setup():
     
 #     schedule = [[]]*5
-    schedule = vns.solve("test4.csv")
+    schedule = vns.solve("test11.csv")
 
     print len(schedule)
 
@@ -29,7 +29,6 @@ def setup():
     size(w, h)
     
     setupScreen(schedule)
-    print "abt to enter drawDays"
     drawDays(schedule)
     
 
@@ -61,23 +60,28 @@ def drawDays(schedule):
     #Lines differentiating the days in the schedule
     stroke(200)
     for d in range(1,len(schedule)):
-        dayX = dayWidth * d + sideBarWidth
         #new for loop index from 0
         line(dayX, headerHeight, dayX, dayHeight+headerHeight)
-        print "arriving in drawTasks"
+
+    #draw the tasks
+    for d in range(len(schedule)):
+        dayX = dayWidth * d + sideBarWidth
         drawTasks(schedule[d], dayX)
-        
+
     popStyle()
 
 def drawTasks(route, leftX):
     pushStyle()
-    #This is gonna fuck up multiple days (start/end times too high on later days)
-    print
     for t in range(len(route)):
+        #THis is gonna fuck up on days later than day 1
         task = route[t]
-        print task
-        endingTime = (route.endingTimes[t]/100) * dayHeight
-        startTime = endingTime - task.duration/100 * dayHeight
-        rect(dayX, headerHeight + startTime, dayWidth, task.duration/100)
+        print task, route.endingTimes[t]
+        startTime = ((route.endingTimes[t] - task.duration)/1000.0) * dayHeight
+        print startTime
+        
+        fill(100,100,100)
+        
+        print leftX, headerHeight + startTime, dayWidth, task.duration
+        rect(leftX, headerHeight + startTime, dayWidth, (task.duration/1000.0) * dayHeight )
         
     popStyle()
