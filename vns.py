@@ -31,10 +31,6 @@ def solve(csvFile):
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key= lambda schedule : schedule.getProfit())
-
-#     for r in range(len(greedySol)):
-#         if len(greedySol[r]) > 0:
-#             greedySol[r].setTaskList([greedySol[r].taskList[0]], [None])
         
         
     assert(isFeasible(taskList, bestGreedy))
