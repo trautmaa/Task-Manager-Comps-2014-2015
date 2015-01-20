@@ -13,7 +13,7 @@ import vns
 def setup():
     
 #     schedule = [[]]*5
-    schedule = vns.solve("test11.csv")
+    schedule = vns.solve(pwd("test11.csv"))
 
     print len(schedule)
 

@@ -26,7 +26,7 @@ tasks list will be returned.
 '''
 def readInTask(csvFile):
     tasks = []
-    with open(pwd(csvFile), 'rU') as f:
+    with open(csvFile, 'rU') as f:
         reader = csv.reader(f, delimiter = ",")
         for row in reader:
             tasks.append(row)
