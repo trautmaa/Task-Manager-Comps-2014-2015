@@ -12,10 +12,10 @@ Make sure your input variables make sense!!!!!!!!!
 '''
 xRange = 60
 yRange = 60
-releaseTimeRange = 8000
-durationRange = 800
-deadlineRange = 10080
-numDays = 7
+releaseTimeRange = 800
+durationRange = 240
+deadlineRange = 1440
+numDays = 1
 dayLength = 1440
 priorityRange = 10
 likelyhoodOfMandatory = .3 # has to be between .1 and .9

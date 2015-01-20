@@ -61,6 +61,7 @@ def printBruteForce(csvFile):
     print
     print "profit is:"
     print schedule.getProfit()
+    print
 
 def main():
     print

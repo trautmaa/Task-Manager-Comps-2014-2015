@@ -200,20 +200,41 @@ def addFirstLastTaskConstraints(prob, numTasks, numDays, xihtVariables, xhitVari
             xihtList.append(xihtVariables[i][t])
             xhitList.append(xhitVariables[i][t])
         prob += pulp.lpSum(xihtList) == pulp.lpSum(xhitList)
+        prob += pulp.lpSum(xihtList) <= 1
+        prob += pulp.lpSum(xhitList) <= 1
 
 
-# '''
-# A function that adds all constraints related to the starting location to
-# the integer program. These constraints are that only 1 task can come immediately
-# after the start, and that if job i comes immediately after the start, it cannot
-# finish before its service time + the travel time from the start.
-# '''
-# def addStartingLocationConstraints(prob, dhiConstants, serviceTimeConstants, aiVariables,
-#                                         latestDeadline, xhiVariables, numTasks):
-#     prob += pulp.lpSum(xhiVariables) == 1
-#     for i in range(numTasks):
-#         prob += dhiConstants[i] + serviceTimeConstants[i] \
-#         <= aiVariables[i] + latestDeadline * (1 - xhiVariables[i])
+def printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables,
+    xihtVariables, xhitVariables):
+    print
+    print prob
+    print
+    for var in yiVariables:
+        print var, var.varValue
+    print
+    for task in yitkVariables:
+        for day in task:
+            for windowVar in day:
+                print windowVar, windowVar.varValue
+    print
+    for task in aitVariables:
+        for dayVar in task:
+            print dayVar, dayVar.varValue
+    print
+    for i in xijtVariables:
+        for j in i:
+            for dayVar in j:
+                if dayVar != None:
+                    print dayVar, dayVar.varValue
+    print
+    for task in xihtVariables:
+        for dayVar in task:
+            print dayVar, dayVar.varValue
+    print
+    for task in xhitVariables:
+        for dayVar in task:
+            print dayVar, dayVar.varValue
+    print
 
 
 '''
@@ -243,8 +264,9 @@ def makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList):
                     if timeWindowVar.varValue == 1:
                         solvedTaskTuples[day].append((taskList[taskIndex], aitVariables[taskIndex][day].varValue))
     
-    for day in solvedTaskTuples:
-        day = sorted(day, key = lambda tuple:tuple[1])
+    for index, day in enumerate(solvedTaskTuples):
+        # sort by completion time
+        solvedTaskTuples[index] = sorted(day, key = lambda tuple:tuple[1])
     
     solvedTaskList = [[] for day in range(numDays)]
     solvedTaskCompletionTimes = [[] for day in range(numDays)]
@@ -312,7 +334,7 @@ def integerProgramSolve(taskList):
     # e.g.: solver = pulp.solvers.GUROBI(OutputFlag = 0, Threads = 4, TimeLimit = 120)
     solver = pulp.solvers.GUROBI()
     prob.solve(solver)
-    # print prob
+    # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
     assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
 
@@ -335,6 +357,8 @@ def main():
     solvedSchedule = runIntegerProgram("test.csv")
     print
     print solvedSchedule
+    print
+    print "profit is: " + str(solvedSchedule.getProfit())
     print
 
 
