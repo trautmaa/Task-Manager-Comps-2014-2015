@@ -4,7 +4,7 @@
 
 import createTasksFromCsv
 
-from math import ceil
+import math
 from Objects import Category, Task, Route, Schedule
 
 '''
@@ -12,7 +12,7 @@ A function given two task objects will return the euclidean distance
 between them. I should check if **.5 is faster than math.sqrt()?
 '''
 def getDistanceBetweenTasks(taskA, taskB):
-    return getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))
+    return int(math.ceil(getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))))
 
 '''
 A function that returns the distance between 2 tuple coordinates.
