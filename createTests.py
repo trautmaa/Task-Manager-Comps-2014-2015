@@ -8,9 +8,9 @@ from random import randint
 
 xRange = 60
 yRange = 60
-releaseTimeRange = 800
+releaseTimeRange = 100
 durationRange = 50
-deadlineRange = 1000
+deadlineRange = 300
 numDays = 3
 dayLength = 100
 priorityRange = 10
