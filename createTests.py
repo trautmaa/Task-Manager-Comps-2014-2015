@@ -6,10 +6,14 @@ import csv
 
 from random import randint
 
+
+'''
+Make sure your input variables make sense!!!!!!!!!
+'''
 xRange = 60
 yRange = 60
-releaseTimeRange = 9840
-durationRange = 120
+releaseTimeRange = 8000
+durationRange = 800
 deadlineRange = 10080
 numDays = 7
 dayLength = 1440
@@ -19,8 +23,8 @@ likelyhoodOfMandatory = .1 #has to be between .1 and .9
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    if randint(1, 10) > likelyhoodOfMandatory * 10:
-        task.append(randint(0, priority))
+    if randint(0, 10) >= likelyhoodOfMandatory * 10:
+        task.append(randint(1, priority))
     else:
         task.append(-1)
                    
@@ -103,7 +107,7 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(3, "test.csv")
+    writeNTasks(8, "test.csv")
 
 
 if __name__ == '__main__':

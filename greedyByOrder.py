@@ -15,9 +15,9 @@ in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderMethod):
     schedule = runGreedyByOrder(csvFile, orderMethod)
-    #print schedule
-    print schedule.getProfit()
-    print
+    print schedule
+    print "The", str(orderMethod), "gave a profit of", str(schedule.getProfit())
+    print 
     print
     print
 	

@@ -57,6 +57,7 @@ detailed format.
 def printBruteForce(csvFile):
     schedule = runBruteForceAlg(csvFile)
     print schedule
+    print schedule.getProfit()
     print
 
 def main():
