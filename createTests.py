@@ -8,11 +8,11 @@ from random import randint
 
 xRange = 60
 yRange = 60
-releaseTimeRange = 800
-durationRange = 50
-deadlineRange = 1000
+releaseTimeRange = 2880
+durationRange = 180
+deadlineRange = 1440 * 3
 numDays = 3
-dayLength = 100
+dayLength = 1440
 priorityRange = 10
 likelyhoodOfMandatory = .3
 
@@ -44,7 +44,7 @@ def setTimeWindowsOfTask(task, numDays):
                 if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
                     break
                 else:
-                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * 100), min(deadline, (day + 1) * dayLength - 1) - duration)
+                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * dayLength), min(deadline, (day + 1) * dayLength - 1) - duration)
                     endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
                     dayTimeWindow = (startingWindowTime, endingWindowTime)
                     assert(startingWindowTime >= releaseTime)

@@ -250,7 +250,6 @@ def integerProgramSolve(taskList):
     # Initialize problem 
     prob = pulp.LpProblem("Scheduling", pulp.LpMaximize)
     # OBJECTIVE FUNCTION
-    # sum (priority * yi) for each yi
     prob += sum([(yiVariables[i] * priorityConstants[i]) for i in range(len(yiVariables))])
 
 
