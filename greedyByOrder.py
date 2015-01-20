@@ -14,13 +14,16 @@ A function that prints the result of runGreedyByOrder
 in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderMethod):
-	print runGreedyByOrder(csvFile, orderMethod)
-	print	
-	
+    schedule = runGreedyByOrder(csvFile, orderMethod)
+    #print schedule
+    print schedule.getProfit()
+    print
+    print
+    print  
 
 def orderByPriority(timeWindowsAndPriorities):
 	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[0])
-	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[1],reverse = True)
+	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[1], reverse = True)
 	return timeWindowsAndPriorities
 
 def orderOptionalByDeadline(timeWindowsAndPriorities):
@@ -37,13 +40,12 @@ def orderOptionalByDeadline(timeWindowsAndPriorities):
 	optionalTasks = sorted(optionalTasks, key=lambda timeIdTuple: timeIdTuple[0])
 	orderedTasks = mandatoryTasks + optionalTasks
 	return orderedTasks
+
 '''
 A function that will create a schedule based on ordering
 all time windows in order of earliest ending and then
 creating a schedule by repeatedly picking the first
 task with an available time window from that ordering.
-
-
 '''
 def runGreedyByOrder(csvFile,orderMethod):
     taskList = createTasksFromCsv.getTaskList(csvFile)
@@ -73,9 +75,9 @@ def runGreedyByOrder(csvFile,orderMethod):
 
 def main():
     print "priority"
-    printGreedyByOrder("test15.csv", orderByPriority)
+    printGreedyByOrder("test.csv", orderByPriority)
     print "deadline"
-    printGreedyByOrder("test15.csv", orderOptionalByDeadline)
+    printGreedyByOrder("test.csv", orderOptionalByDeadline)
     
     
 

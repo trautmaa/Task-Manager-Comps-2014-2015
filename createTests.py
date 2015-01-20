@@ -8,18 +8,18 @@ from random import randint
 
 xRange = 60
 yRange = 60
-releaseTimeRange = 2880
-durationRange = 180
-deadlineRange = 1440 * 3
-numDays = 3
+releaseTimeRange = 1000
+durationRange = 360
+deadlineRange = 1440
+numDays = 1
 dayLength = 1440
 priorityRange = 10
-likelyhoodOfMandatory = .3
+likelyhoodOfMandatory = .3 # has to be between .1 and .9
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    if randint(0, 10) >= likelyhoodOfMandatory * 10:
+    if randint(1, 10) > likelyhoodOfMandatory * 10:
         task.append(randint(0, priority))
     else:
         task.append(-1)
@@ -96,7 +96,7 @@ def writeNTasks(n, csvFile):
         writer.writerow(taskFeatures)
         for i in range(n):
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
-        maxSumProfit = n * priorityRange + 1
+        maxSumProfit = (n+1) * priorityRange + 1
         process(taskList, maxSumProfit)
         for task in taskList:
             writer.writerow(task)

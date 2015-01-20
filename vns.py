@@ -16,7 +16,7 @@ from collections import deque
 #from bruteForce import runBruteForceAlg
 
 global timeLimit
-timeLimit = 5000
+timeLimit = 1000000000
 
 '''
 @return: an ordering of tasks
@@ -30,7 +30,7 @@ def solve(csvFile):
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key= lambda schedule : schedule.getProfit())
+    bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
         
         
     assert(isFeasible(taskList, bestGreedy))
@@ -45,6 +45,7 @@ def solve(csvFile):
     currSchedule = createSchedule(copy.deepcopy(bestGreedy))
     # Modify the greedy algorithm
     currSchedule = vns(taskList, currSchedule)
+    assert(isFeasible(taskList, currSchedule))
     
     print 'greedy solution'
     print bestGreedy
@@ -98,7 +99,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 10
+    stoppingCondition = 60
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -1068,7 +1069,7 @@ def writeTasks(csvFile, schedule):
             
 def main():
     print "********** Main **********"
-    result = solve("test50.csv")
+    result = solve("test.csv")
     print result
     return result
 

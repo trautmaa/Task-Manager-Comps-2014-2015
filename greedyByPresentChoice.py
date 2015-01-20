@@ -28,6 +28,8 @@ def printGreedyByPresentChoice(csvFile):
     schedule = runGreedyByPresentChoice(csvFile)
     print schedule
     print
+    print "profit is:"
+    print schedule.getProfit()
 
 '''
 Refer to runGreedyByPresentChoice.

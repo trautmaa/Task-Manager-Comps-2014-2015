@@ -58,6 +58,8 @@ def printBruteForce(csvFile):
     schedule = runBruteForceAlg(csvFile)
     print schedule
     print
+    print "profit is:"
+    print schedule.getProfit()
 
 def main():
     print
