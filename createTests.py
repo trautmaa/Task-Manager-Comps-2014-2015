@@ -6,12 +6,16 @@ import csv
 
 from random import randint
 
+
+'''
+Make sure your input variables make sense!!!!!!!!!
+'''
 xRange = 60
 yRange = 60
-releaseTimeRange = 1000
-durationRange = 360
-deadlineRange = 1440
-numDays = 1
+releaseTimeRange = 8000
+durationRange = 800
+deadlineRange = 10080
+numDays = 7
 dayLength = 1440
 priorityRange = 10
 likelyhoodOfMandatory = .3 # has to be between .1 and .9
@@ -19,8 +23,8 @@ likelyhoodOfMandatory = .3 # has to be between .1 and .9
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    if randint(1, 10) > likelyhoodOfMandatory * 10:
-        task.append(randint(0, priority))
+    if randint(0, 10) >= likelyhoodOfMandatory * 10:
+        task.append(randint(1, priority))
     else:
         task.append(-1)
                    
