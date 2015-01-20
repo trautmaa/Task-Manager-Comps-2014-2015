@@ -14,9 +14,14 @@ A function that prints the result of runGreedyByOrder
 in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderMethod):
-	print runGreedyByOrder(csvFile, orderMethod)
-	print	
+    schedule = runGreedyByOrder(csvFile, orderMethod)
+    #print schedule
+    print schedule.getProfit()
+    print
+    print
+    print
 	
+    
 
 def orderByPriority(timeWindowsAndPriorities):
 	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[0])
@@ -73,9 +78,9 @@ def runGreedyByOrder(csvFile,orderMethod):
 
 def main():
     print "priority"
-    printGreedyByOrder("test15.csv", orderByPriority)
+    printGreedyByOrder("test.csv", orderByPriority)
     print "deadline"
-    printGreedyByOrder("test15.csv", orderOptionalByDeadline)
+    printGreedyByOrder("test.csv", orderOptionalByDeadline)
     
     
 

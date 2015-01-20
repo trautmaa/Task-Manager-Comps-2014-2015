@@ -16,7 +16,7 @@ from collections import deque
 #from bruteForce import runBruteForceAlg
 
 global timeLimit
-timeLimit = 5000
+timeLimit = 1000000000
 
 '''
 @return: an ordering of tasks
@@ -1068,7 +1068,7 @@ def writeTasks(csvFile, schedule):
             
 def main():
     print "********** Main **********"
-    result = solve("test50.csv")
+    result = solve("test.csv")
     print result
     return result
 

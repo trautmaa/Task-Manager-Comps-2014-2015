@@ -8,18 +8,18 @@ from random import randint
 
 xRange = 60
 yRange = 60
-releaseTimeRange = 100
-durationRange = 50
-deadlineRange = 300
-numDays = 3
-dayLength = 100
+releaseTimeRange = 9840
+durationRange = 120
+deadlineRange = 10080
+numDays = 7
+dayLength = 1440
 priorityRange = 10
-likelyhoodOfMandatory = .3
+likelyhoodOfMandatory = .1 #has to be between .1 and .9
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    if randint(0, 10) >= likelyhoodOfMandatory * 10:
+    if randint(1, 10) > likelyhoodOfMandatory * 10:
         task.append(randint(0, priority))
     else:
         task.append(-1)
@@ -44,7 +44,7 @@ def setTimeWindowsOfTask(task, numDays):
                 if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
                     break
                 else:
-                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * 100), min(deadline, (day + 1) * dayLength - 1) - duration)
+                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * dayLength), min(deadline, (day + 1) * dayLength - 1) - duration)
                     endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
                     dayTimeWindow = (startingWindowTime, endingWindowTime)
                     assert(startingWindowTime >= releaseTime)
@@ -96,14 +96,14 @@ def writeNTasks(n, csvFile):
         writer.writerow(taskFeatures)
         for i in range(n):
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
-        maxSumProfit = n * priorityRange + 1
+        maxSumProfit = (n+1) * priorityRange + 1
         process(taskList, maxSumProfit)
         for task in taskList:
             writer.writerow(task)
     return csvFile
 
 def main():
-    writeNTasks(8, "test.csv")
+    writeNTasks(3, "test.csv")
 
 
 if __name__ == '__main__':
