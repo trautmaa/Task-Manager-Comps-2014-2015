@@ -339,11 +339,6 @@ def integerProgramSolve(taskList, timeLimit):
     else:
         solver = pulp.solvers.GUROBI(OutputFlag = 0, TimeLimit = timeLimit)
 
-    # for var in [1, 3]:
-    #     prob += yiVariables[var] == 1
-    # prob += yitkVariables[1][0][0] == 1
-    # prob += yiVariables[3] == 1
-
     prob.solve(solver)
 
     # for debugging infeasible models:
@@ -353,6 +348,7 @@ def integerProgramSolve(taskList, timeLimit):
 
     # for debugging feasible models:
     # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
+    
     assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
 
@@ -364,7 +360,7 @@ def runIntegerProgram(csvFile, timeLimit = -1):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     schedule = integerProgramSolve(taskList, timeLimit)
-    # assert(isFeasible(taskList, schedule))
+    assert(isFeasible(taskList, schedule))
     return schedule
 
 '''    
