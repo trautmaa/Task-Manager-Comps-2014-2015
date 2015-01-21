@@ -4,26 +4,26 @@
 
 import csv
 
-from random import randint
+from random import randint, random
 
 
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-xRange = 60
-yRange = 60
-releaseTimeRange = 800
-durationRange = 240
-deadlineRange = 1440
-numDays = 1
 dayLength = 1440
-priorityRange = 10
-likelyhoodOfMandatory = .3 # has to be between .1 and .9
+numDays = 2
+xRange = 120
+yRange = 120
+durationRange = 300
+releaseTimeRange = dayLength * numDays - durationRange
+deadlineRange = dayLength * numDays
+priorityRange = 100
+likelyhoodOfMandatory = .3 # has to be between 0 and 1
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
 def setPriorityOfTask(task, priority):
-    if randint(0, 10) >= likelyhoodOfMandatory * 10:
+    if random() >= likelyhoodOfMandatory:
         task.append(randint(1, priority))
     else:
         task.append(-1)
@@ -100,14 +100,14 @@ def writeNTasks(n, csvFile):
         writer.writerow(taskFeatures)
         for i in range(n):
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
-        maxSumProfit = (n+1) * priorityRange + 1
+        maxSumProfit = (n + 1) * priorityRange + 1
         process(taskList, maxSumProfit)
         for task in taskList:
             writer.writerow(task)
     return csvFile
 
 def main():
-    writeNTasks(8, "test.csv")
+    writeNTasks(20, "test.csv")
 
 
 if __name__ == '__main__':

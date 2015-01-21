@@ -12,6 +12,7 @@ This program uses Python's PuLP - a linear programming libray - to model and sol
 '''
 
 import pulp
+import sys
 
 import createTasksFromCsv
 import helperFunctions
@@ -167,7 +168,7 @@ def addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants,
     for i in range(numTasks):
         for t in range(numDays):
             for k in range(len(yitkVariables[i][t])):
-                prob += ritkConstants[i][t][k] + serviceTimeConstants[i] <= aitVariables[i][t] # ritk + si <= ait
+                prob += (ritkConstants[i][t][k] + serviceTimeConstants[i]) * yitkVariables[i][t][k] <= aitVariables[i][t] # ritk + si <= ait
                 prob += aitVariables[i][t] <= fitkConstants[i][t][k] + latestTimeWindowEnd * (1 - yitkVariables[i][t][k]) # ait <= B(1 - yitk)
 
 
@@ -287,7 +288,7 @@ def makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList):
 Function that, given a list of tasks, constructs and solves an integer program,
 returning the resulting schedule.
 '''
-def integerProgramSolve(taskList):
+def integerProgramSolve(taskList, timeLimit):
     numTasks = len(taskList)
     mostDaysTask = max(taskList, key = lambda task : len(task.timeWindows))
     numDays = len(mostDaysTask.timeWindows)
@@ -332,8 +333,25 @@ def integerProgramSolve(taskList):
     # refer to http://www.gurobi.com/documentation/6.0/reference-manual/refman
     # for specific parameter documentation
     # e.g.: solver = pulp.solvers.GUROBI(OutputFlag = 0, Threads = 4, TimeLimit = 120)
-    solver = pulp.solvers.GUROBI()
+
+    if timeLimit < 0:
+        solver = pulp.solvers.GUROBI(OutputFlag = 0)
+    else:
+        solver = pulp.solvers.GUROBI(OutputFlag = 0, TimeLimit = timeLimit)
+
+    # for var in [1, 3]:
+    #     prob += yiVariables[var] == 1
+    # prob += yitkVariables[1][0][0] == 1
+    # prob += yiVariables[3] == 1
+
     prob.solve(solver)
+
+    # for debugging infeasible models:
+    # model = prob.solverModel
+    # model.computeIIS()
+    # model.write("gurobiModel.ilp")
+
+    # for debugging feasible models:
     # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
     assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
@@ -342,10 +360,10 @@ def integerProgramSolve(taskList):
 A helper function that does everything but print the solution,
 for use in comparing different algorithms.
 '''
-def runIntegerProgram(csvFile):
+def runIntegerProgram(csvFile, timeLimit = -1):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    schedule = integerProgramSolve(taskList)
+    schedule = integerProgramSolve(taskList, timeLimit)
     # assert(isFeasible(taskList, schedule))
     return schedule
 
@@ -354,8 +372,19 @@ A main function that will read in the list of tasks from a csv, construct the in
 and print the solution it produces.
 '''
 def main():
-    solvedSchedule = runIntegerProgram("test.csv")
+    if len(sys.argv) > 1:
+        try:
+            timeLimit = int(sys.argv[1])
+        except TypeError:
+            print "time limit argument not an integer"
+            exit()
+    else:
+        timeLimit = -1
+    solvedSchedule = runIntegerProgram("test.csv", timeLimit)
     print
+    if timeLimit != -1:
+        print "WARNING: As a time limit was set, output may not be optimal."
+        print
     print solvedSchedule
     print
     print "profit is: " + str(solvedSchedule.getProfit())
