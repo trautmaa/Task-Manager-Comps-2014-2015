@@ -26,7 +26,7 @@ def setup():
     global schedule
 #     schedule = [[]]*5
 #     schedule = vns.solve(pwd("test50.csv"))
-    csvFile = pwd("test50.csv")
+    csvFile = pwd("test1000.csv")
     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
@@ -34,9 +34,9 @@ def setup():
     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
 
     schedule = bestGreedy
-
+    print schedule
     #Globals for reference later
-    global dayWidth, dayHeight, headerHeight, sideBarWidth
+    global dayWidth, dayHeight, headerHeight, sideBarWidth, boxDimension, boxX, boxY, maxX, maxY
     headerHeight = 50
     sideBarWidth = 75
     dayWidth = min(200, (displayWidth - sideBarWidth)/len(schedule))
@@ -44,6 +44,23 @@ def setup():
     w = len(schedule) * dayWidth + sideBarWidth
     h = min(900, displayHeight)
     dayHeight = h/2 - headerHeight
+
+    boxDimension = displayHeight - dayHeight - 200 - headerHeight
+    boxX = w/2 - boxDimension/2
+    boxY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - boxDimension)/2)
+
+    maxX = 0
+    maxY = 0
+    for day in range(len(schedule)):
+        for t in range(len(schedule[day])):
+            task = schedule[day][t]
+            taskX = task.x
+            taskY = task.y
+            if taskX > maxX:
+                maxX = taskX
+            if taskY > maxY:
+                maxY = taskY
+    
     size(w, h)
     
     setupScreen()
@@ -53,7 +70,6 @@ def draw():
     whichTask = -1
     whichDay = -1
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
-    print whichDay, whichTask
     drawScreen()
     highlight(whichTask, whichDay)
     
@@ -79,14 +95,29 @@ def update(x, y, whichTask, whichDay):
 #Highlight the correct day and task
 def highlight(whichTask, whichDay):
     
+    #empty the taskRects list
+    for i in range(len(taskRects)):
+        taskRects.pop()
+    
+    for i in range(len(taskMapDots)):
+        taskMapDots.pop()
+    
     #redraw all the tasks
     for d in range(len(schedule)):
         day = schedule[d]
         drawTasks(day, sideBarWidth + (d * dayWidth))
 
+    #redraw all the lines and times
+    for i in range(10, 110, 10):
+        y = headerHeight + (i/100.0) * dayHeight
+        strokeWeight(1)
+        stroke(0, 0, 0, 50)
+        #text(str(i), 0, y)
+        line(sideBarWidth, int(y), width, int(y))
+        
     if whichDay != -1 and whichTask != -1:
         #highlight the current task
-        fill(175,200,230)
+        fill(175,200,230, 200)
         task = taskRects[whichDay][whichTask]
         rect(task[0], task[1], task[2], task[3])
 
@@ -122,6 +153,7 @@ def setupScreen():
     fill(175, 175, 200)
     rect(0, headerHeight, sideBarWidth, dayHeight)
     
+    #Add times to the sidebar
     textSize(15)
     fill(10,10,25)
     for i in range(10, 110, 10):
@@ -131,6 +163,10 @@ def setupScreen():
         text(str(i), 0, y)
         line(sideBarWidth, int(y), width, int(y))
     
+    #Create Map box
+    fill(255,255,255)
+    rect(boxX, boxY, boxDimension, boxDimension)
+    drawMap()
     popStyle()
 
 def drawDays():
@@ -138,15 +174,18 @@ def drawDays():
     
     #Lines differentiating the days in the schedule
     stroke(200)
+    for i in range(len(taskRects)):
+        taskRects.pop()
+
     for d in range(0,len(schedule)):
         #new for loop index from 0
         dayX = dayWidth * d + sideBarWidth
         drawTasks(schedule[d], dayX)
+        
         dayRects.append([dayX, headerHeight, dayWidth, dayHeight])
         if(d > 0):
             
             line(dayX, headerHeight, dayX, dayHeight+headerHeight)
-
 
     popStyle()
 
@@ -158,7 +197,7 @@ def drawTasks(route, leftX):
     noStroke()
     
     dayToAdd = []
-    
+    mapLocationsToAdd = []
     for t in range(len(route)):
         task = route[t]
         
@@ -167,10 +206,36 @@ def drawTasks(route, leftX):
         
         fill(175,200,230, 50)
         
+        #scale our coordinates to values within the box
+        xToAdd = (float(task.x) / float(maxX) * (boxDimension - (float(boxDimension)/10.0)) + (boxX + float(boxDimension)/20.0))
+        yToAdd = (float(task.y) / float(maxY) * (boxDimension - (boxDimension/10)) + (boxY + boxDimension/20))
+        #print "taskX", task.x, "maxX", maxX, "xToAdd", xToAdd
+        #print "taskX/maxX", float(task.x) / float(maxX)
+        mapLocationsToAdd.append([xToAdd, yToAdd])
+        
+        
         dayToAdd.append([leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight])
         
         rect(leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight )
         
     taskRects.append(dayToAdd)
+    taskMapDots.append(mapLocationsToAdd)
+    
+    popStyle()
+
+    
+    
+def drawMap():
+    pushStyle()
+    fill(0,0,0)
+    for day in range(len(taskMapDots)):
+        for t in range(len(taskMapDots[day])):
+            task = taskMapDots[day][t]
+            print "task", task
+            x = task[0]
+            y = task[1]
+            ellipse(x, y, 10, 10)
+    
+    
     
     popStyle()
