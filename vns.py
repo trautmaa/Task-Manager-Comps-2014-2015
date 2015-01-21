@@ -18,6 +18,8 @@ from collections import deque
 global timeLimit
 timeLimit = 5000
 
+random.seed(211680280677)
+
 '''
 @return: an ordering of tasks
 '''
@@ -31,8 +33,9 @@ def solve(csvFile):
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
-        
-        
+    bestGreedy = min(solutionList, key = lambda schedule : schedule.getProfit())
+    
+    print bestGreedy
     assert(isFeasible(taskList, bestGreedy))
 
     print bestGreedy
@@ -552,7 +555,7 @@ def isFeasible(taskList, currSchedule):
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):
         newRoute, infeas = isRouteFeasible(currSchedule[r], r)
-        if infeas > 0:
+        if infeas > 0 or newRoute == None:
 #             print "********** Exiting isFeasible **********"
             return None
         else:
@@ -562,7 +565,7 @@ def isFeasible(taskList, currSchedule):
     return newSchedule
 
 def isRouteFeasible(currRoute, routeIndex):
-#     print "********** Entering isRouteFeasible **********"
+    print "********** Entering isRouteFeasible **********"
     currRoute = copy.deepcopy(currRoute)
     
     # for each task except the first, add travel time from prev task to curr task
@@ -584,12 +587,13 @@ def isRouteFeasible(currRoute, routeIndex):
             
     oldRoute = copy.deepcopy(currRoute)
     
+    print "tightening route", routeIndex
     currRoute = tightenTWStarts(currRoute, routeIndex)
     currRoute = tightenTWEnds(currRoute, routeIndex)
 
     
     if currRoute != None:
-#         print "********** Exiting isRouteFeasible1 **********"
+        print "********** Exiting isRouteFeasible1 **********"
         return currRoute, 0
     
     infeas = 0
@@ -597,7 +601,7 @@ def isRouteFeasible(currRoute, routeIndex):
     lastTaskEnd = currRoute[0].releaseTime
     
     
-     # find proper time window for this task (after end of last task)
+    # find proper time window for this task (after end of last task)
     # if not available, add all of duration to infeas
     # if available but it doesn't fit, put the task as early as possible within tw,
     # add any duration spent outside of tw to infeas
@@ -620,7 +624,7 @@ def isRouteFeasible(currRoute, routeIndex):
             lastTaskEnd = max(lastTaskEnd, selectedTW[0]) + task.duration
 
 
-#     print "********** Exiting isRouteFeasible2 **********"
+    print "********** Exiting isRouteFeasible2 **********"
     return None, infeas
                     
 
@@ -628,50 +632,56 @@ def isRouteFeasible(currRoute, routeIndex):
 @return: modified schedule with tightened tw starts
 '''
 def tightenTWStarts(currRoute, routeIndex):
-#     print "********** Entering tightenTWStarts **********"
+    print "********** Entering tightenTWStarts **********"
     if currRoute == None:
-#         print "********** Exiting tightenTWStarts 1 **********"
+        print "********** Exiting tightenTWStarts 1 **********"
         return None
     if len(currRoute) == 0:
         return currRoute
+    
     
     taskIndex = 0
     task = currRoute.taskList[taskIndex]
     tw = task.timeWindows[routeIndex]
     while taskIndex < len(currRoute) - 1 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0 :
-        
         task = currRoute.taskList[taskIndex]
-        
         tw = task.timeWindows[routeIndex]
         twNext = currRoute.taskList[taskIndex + 1].timeWindows[routeIndex]
         
-#         print "tightening starts for task", task.id, "taskIndex", taskIndex
-#         print "tws", tw
-#         print "next task's tws", twNext
-        
+        print "route["+str(taskIndex) + "] =", task.id
+        print tw
+        print taskIndex+1, currRoute.taskList[taskIndex+1].id, twNext
+
+        print
          # if duration of task i does not fit in its first tw or it can fit between the start of its second time window
          #  and the start of the next task's first tw
-
-        if (len(tw) > 0 and len(twNext) > 0) and (task.duration > tw[0][1] - tw[0][0] or\
-         (len(tw) > 1 and task.duration + tw[1][0] < twNext[0][0])):
+        print task.duration
+        print tw[0]
+        print 
+        if (len(tw) > 0 and len(twNext) > 0) and ((task.duration > tw[0][1] - tw[0][0]) or\
+         (len(tw) > 1 and (task.duration + tw[1][0] < twNext[0][0]))):
             # remove that task's first tw
+            print "REMOVING FIRST BCAUDSR wrong"
             tw = tw[1:]
             if len(tw) == 0:
+                print "EXITING ON TASK", task.id
                 break
-            
+        
+        # if duration of task i at the start of its first tw ends before the start of the next task's first tw
         if len(tw) > 0 and len(twNext) > 0 and task.duration + tw[0][0] < twNext[0][0]:
             # set the beginning of that time window to be the minimum of the the ending time of task i's first time window
             # and the start of task i+1's first time window
-            tw[0] = (int(math.floor(min(twNext[0][0], tw[0][1]) - task.duration)), tw[0][1])
-
-            # else if the duration of task i set at the beginning of its first tw overlaps any tws for ANY
-            # LATER TASK
+            print "start of tw", tw[0][0], ", twNext", twNext[0][0], ", duration", task.duration
+            tw[0] = (min(twNext[0][0], tw[0][1]) - task.duration, tw[0][1])
+            
+        # if the duration of task i set at the beginning of its first tw overlaps any tws for the next task
         if len(tw) > 0 and len(twNext) > 0 and task.duration + tw[0][0] > twNext[0][0]:
-#             print "CHECKING TWNEXT"
             # reset the beginnings of all time windows to be as early as possible
             # after the end of task i (with i scheduled as early as possible)
             for w in range(len(twNext)):
-                twNext[w] = (int(math.floor(max(tw[0][0] + task.duration, twNext[w][0]))), twNext[w][1])
+                print "start of tw", tw[0][0], "+ duration", task.duration, "=", tw[0][0] + task.duration
+                print "start of next task's tw", twNext[w][0]
+                twNext[w] = (max(tw[0][0] + task.duration, twNext[w][0]), twNext[w][1])
 #         
 #         print "Done tightening starts for task", task.id, "taskIndex", taskIndex
 #         print "tws", tw
@@ -679,30 +689,42 @@ def tightenTWStarts(currRoute, routeIndex):
         task.timeWindows[routeIndex] = tw
         currRoute.taskList[taskIndex + 1].timeWindows[routeIndex] = twNext
         
+        print "after:"
+        print tw
+        print taskIndex+1, currRoute.taskList[taskIndex+1].id, twNext
+        print 
+        
         taskIndex += 1
-        
-        
+    
+    task =  currRoute.taskList[taskIndex]
+    tw = task.timeWindows[routeIndex]    
+    twIndex = 0
     # if this is the last customer and they still have time windows left,
-    if taskIndex == len(currRoute) - 1 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0 and task.duration > tw[0][1] - tw[0][0]:
-            # remove that task's first tw
-            tw = tw[1:]
+    if taskIndex == len(currRoute) - 1 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0 :
+        while len(tw) > 0 and twIndex < len(tw) : 
+            # remove the task's bad tw
+            if task.duration > tw[twIndex][1] - tw[twIndex][0]:
+                tw = tw[1:]
+                task.timeWindows[routeIndex] = tw
+            twIndex += 1
                 
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
-#         print "********** Exiting tightenTWStarts 2 **********"
+        print "********** Exiting tightenTWStarts 2 **********"
         return None
-#     print "********** Exiting tightenTWStarts 3 **********"
+    print "********** Exiting tightenTWStarts 3 **********"
     return currRoute
 
 '''
 @return: modified schedule with tightened tw ends
 '''
 def tightenTWEnds(currRoute, routeIndex):
-#     print "********** Entering tightenTWEnds **********"
+    print "********** Entering tightenTWEnds **********"
     if currRoute == None:
-#         print "********** Exiting tightenTWEnds1 **********"
+        print "********** Exiting tightenTWEnds1 **********"
         return None
     if len(currRoute) == 0:
         return currRoute
+#     print currRoute
     
     taskIndex = len(currRoute.taskList) - 1
     task = currRoute.taskList[taskIndex]
@@ -711,47 +733,76 @@ def tightenTWEnds(currRoute, routeIndex):
         task = currRoute.taskList[taskIndex]
         tw = task.timeWindows[routeIndex]
         twPrev = currRoute.taskList[taskIndex - 1].timeWindows[routeIndex]
+        
+        print "route["+str(taskIndex) + "] =", task.id
+        print tw
+        print twPrev, "is prev"
+        
         # if duration of task i does not fit in its last tw or it can fit between the end of its second to last time w
         #  and the end of the previous task's last tw:
-        if len(tw)>0 and len(twPrev)>0 and task.duration > tw[-1][1] - tw[-1][0]\
-        or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
-            # remove the last time w
+        print "duration", task.duration
+        
+        twIndex = 0
+        while len(tw) > 0 and twIndex > len(tw) :
+            if task.duration > tw[twIndex][1] - tw[twIndex][0]:
+                tw = tw[:twIndex] + tw[twIndex + 1:]
+            twIndex += 1
+        if len(tw)>0 and len(twPrev)>0 and (len(tw) > 1 and tw[-2][0] - task.duration > twPrev[-1][0]):
+            # remove the last time w 
             tw = tw[:-1]
             if len(tw) == 0:
                 break
-        # else if duration of task i at the end of its last tw starts before the end of the previous task's last tw
+        # if duration of task i at the end of its last tw starts before the end of the previous task's last tw
         if len(tw)>0 and len(twPrev)>0 and tw[-1][1] - task.duration < twPrev[-1][1]:
-            # set the end of that time w to be the maximum of the the starting time of task i's last time w
+            # set the end of that tw to be the maximum of the the starting time of task i's last time w
             # and the end of task i-1's last time w
-            tw[-1] = (tw[-1][0], int(math.ceil(max(twPrev[-1][1], tw[-1][0] + task.duration))))
-         
-        # else if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
-        if len(tw)>0 and len(twPrev)>0 and tw[-1][1] - task.duration > twPrev[-1][1]:
+            
+            tw[-1] = (tw[-1][0], max(twPrev[-1][1], tw[-1][0] + task.duration))
+        
+        # if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
+        if len(tw)>0 and len(twPrev)>0 and tw[-1][1] - task.duration < twPrev[-1][1]:
             # reset the endings of all time windows to be as late as possible
             # before the beginning of task i (with i scheduled as late as possible)
             for w in range(len(twPrev)):
-                twPrev[w] = (twPrev[w][0], int(math.ceil(min(tw[-1][1] - task.duration, twPrev[w][1]))))
+                print "want min of "
+                print tw[-1][1] - task.duration
+                print twPrev[w][1]
+                print
+                twPrev[w] = (twPrev[w][0], min(tw[-1][1] - task.duration, twPrev[w][1]))
 
         task.timeWindows[routeIndex] = tw
         currRoute.taskList[taskIndex - 1].timeWindows[routeIndex] = twPrev
-                
+        
+        print "after:"
+        print tw
+        print taskIndex -1, "prev task", twPrev
         taskIndex -= 1
+        
+    task = currRoute.taskList[taskIndex]
+    tw = task.timeWindows[routeIndex]
+    twIndex = 0
     if taskIndex == 0 and len(currRoute.taskList[taskIndex].timeWindows[routeIndex]) > 0:
-        if task.duration > tw[0][1] - tw[0][0]:
-            # remove that task's first tw
-            tw = tw[:-1]
+        while len(tw) > 0 and twIndex < len(tw):
+            if task.duration > tw[twIndex][1] - tw[twIndex][0]:
+                # remove that task's last tw
+                tw = tw[:-1]
+                task.timeWindows[routeIndex] = tw
+            twIndex += 1
     
-
+    for task in currRoute:
+        print task.id, task.timeWindows[routeIndex]
+    
     if taskIndex > 0 or anyEmptyTWLists(currRoute, routeIndex):
         return None
     
-#     print "********** Exiting tightenTWEnds2 **********"
+    print "********** Exiting tightenTWEnds2 **********"
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
     for t in range(len(route)):  
         task = route[t]
         if len(task.timeWindows[routeIndex]) < 1:
+            print "THE TWS for task", task.id,"was EMPTY"
             return True
     return False
 
@@ -759,14 +810,18 @@ def anyEmptyTWLists(route, routeIndex):
 @return: shortest duration of this schedule ordering
 '''
 def minRoute(taskList, currSchedule):
-
-    
     print "********** Entering minRoute **********"
     bestSchedule = copy.deepcopy(currSchedule)
+#     print currSchedule
     
     # Minimize each route
     for d in range(len(currSchedule)):
         day = currSchedule[d]
+        
+        print "start of minRouteLoop", d
+        print day
+        isRouteActuallyFeasible(day)
+        
         if len(day) == 0:
             continue
         
@@ -793,30 +848,28 @@ def minRoute(taskList, currSchedule):
         # Find the dominant version of this route (shortest possible route
         # with this ending time.
         
-        #AVERY THIS IS WHERE THE CURRENT PROBLEM IS APPEARING
-        #EXAMPLE:
-#         Error in route
-#         [(task: (ID: 17, Location: (58, 5), Release Time: 322, Duration: 15, Deadline: 518, Priority: 1, Required: 0, Time Windows: [(354, 379), (384, 399), (408, 474), (479, 495), (502, 518), ]), ending at: 517)
-#         (task: (ID: 7, Location: (34, 28), Release Time: 70, Duration: 40, Deadline: 526, Priority: 1, Required: 0, Time Windows: [(133, 173), (191, 198), (214, 294), (381, 395), (406, 463), (468, 485), (489, 495), (486, 526), ]), ending at: 526)
-#         (task: (ID: 39, Location: (43, 11), Release Time: 239, Duration: 36, Deadline: 634, Priority: 1, Required: 0, Time Windows: [(261, 282), (282, 298), (365, 394), (409, 458), (466, 482), (482, 499), (559, 597), (614, 632), ]), ending at: 595)
-#         ]
-#         task 1 overlaps task 0
+
         
         print "checking initRoute"
         isRouteActuallyFeasible(day)
+        
         latestWaitingTask = getLatestWaitingTask(day)
         if latestWaitingTask == -1:
             bestSchedule[d] = day
             continue
         bestRoute = dominantRoute(day, assignedTWs, d)
+        
+        
         print " after dominantRoute 0"
         isRouteActuallyFeasible(bestRoute)
         
         latestWaitingTask = getLatestWaitingTask(bestRoute)
         
+        
         # While this there are still tasks with waiting time and the latest
         # waiting task has time windows to switch to
         while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
+            
             # move the latest waiting task to its next time window.
             newRoute = switchTimeWindows(bestRoute, latestWaitingTask, d, assignedTWs)
             # find the shortest route with that ending time
@@ -829,6 +882,10 @@ def minRoute(taskList, currSchedule):
             
         print "after dom and switch loop"
         isRouteActuallyFeasible(bestRoute)
+        
+        if bestRoute == None:
+            print "WHAT"
+            exit()
         
         # update the schedule to have this route
         bestSchedule[d] = bestRoute
@@ -853,7 +910,7 @@ def minRoute(taskList, currSchedule):
 def getLatestWaitingTask(currRoute):
     for task in range(len(currRoute) - 1, 0, -1):
         if currRoute.endingTimes[task] - currRoute[task].duration > currRoute.endingTimes[task - 1]:
-            return task
+            return task - 1
     return -1
 
 '''
@@ -864,7 +921,9 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     
     #store the task we are working with
     latestWaitingTask = currRoute[latestWaitingTaskIndex]
+    print "latest waiting task", latestWaitingTask
     # store the new time window it is moving to
+    #tw = actual (start, end)
     tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex] + 1]
     
     #moving the latestWaitingTask to its next time window as early as possible within the new time window
@@ -893,13 +952,22 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
         # that fits this task before the end of that time window and the start of the next task
         for tw in range(len(routeTWs)):
             timeWindow = routeTWs[tw]
+            print "time window: ", timeWindow
             if timeWindow[0] + task.duration <= nextTaskStart:
                 assignedTWs[t] = tw
+                print "reassigning assignedTWs: ", assignedTWs[t]
+                print nextTaskStart
+                print timeWindow
                 currRoute.endingTimes[t] = min(nextTaskStart, timeWindow[1])
+                print "ending time in curroute has been reset: ", currRoute.endingTimes[t]
             else:
                 nextTaskStart = currRoute.endingTimes[t] - task.duration
-                
+                print "AFTER ELSE nextTaskStart has been reset: ", nextTaskStart
                 break
+            
+        nextTaskStart = currRoute.endingTimes[t] - task.duration
+        print "OUTSIDE FOR nextTaskStart has been reset: ", nextTaskStart
+
     print "before squidging later tasks"
     # Move all tasks after latestWaitingTask as early as possible
     isRouteActuallyFeasible(currRoute)
@@ -914,6 +982,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
             else:
                 prevTaskEnd = currRoute.endingTimes[t]
                 break
+        prevTaskEnd = currRoute.endingTimes[t]
     print "after all squidging"
     isRouteActuallyFeasible(currRoute)
     print "********** Exiting switchTimeWindows **********"
@@ -925,7 +994,7 @@ time without changing that ending time
 
 @return: the dominant version of the schedule being passed in (squidging)
 '''
-def dominantRoute(currRoute, assignedTWs, dayIndex):
+def   dominantRoute(currRoute, assignedTWs, dayIndex):
     print "********** Entering dominantRoute **********"
     print currRoute
     
@@ -1102,6 +1171,8 @@ def findNoneRoutes(currSchedule):
             exit(1)
 
 def isRouteActuallyFeasible(currRoute):
+    if len(currRoute) == 0:
+        return
     task = currRoute[0]
     if currRoute.endingTimes[0] == None:
         return
@@ -1153,7 +1224,7 @@ def writeTasks(csvFile, schedule):
             
 def main():
     print "********** Main **********"
-    result = solve("test50.csv")
+    result = solve("test1000.csv")
     print result
     return result
 
