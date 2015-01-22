@@ -21,6 +21,11 @@ def printGreedyByOrder(csvFile, orderMethod):
     print
     print  
 
+def orderByPriorityOverAvailability(timeWindowsAndPriorities):
+    timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[3], reverse = True)
+    print timeWindowsAndPriorities
+    return timeWindowsAndPriorities
+    
 def orderByPriority(timeWindowsAndPriorities):
 	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[0])
 	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[1], reverse = True)
@@ -60,12 +65,13 @@ def runGreedyByOrder(csvFile,orderMethod):
             for window in day:
                 if window[1] >= latestTime:
                     latestTime = window[1]
-        timeWindowsAndPriorities.append((latestTime, task.priority, task.id))
+        timeWindowsAndPriorities.append((latestTime, task.priority, task.id, float(task.priority)/float(task.getNumTimeWindows())))
 		
 	# sorting by deadline	
     
     timeWindowsAndPriorities = orderMethod(timeWindowsAndPriorities)
     # sorting by priority
+    print timeWindowsAndPriorities
     
     taskOrdering = []
     for timeTaskTuple in timeWindowsAndPriorities:
@@ -78,6 +84,8 @@ def main():
     printGreedyByOrder("test.csv", orderByPriority)
     print "deadline"
     printGreedyByOrder("test.csv", orderOptionalByDeadline)
+    print "priority/availability"
+    printGreedyByOrder("test.csv", orderByPriorityOverAvailability)
     
     
 

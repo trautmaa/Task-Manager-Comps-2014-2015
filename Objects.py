@@ -60,6 +60,13 @@ class Task:
         
     def getProfit(self):
         return self.priority
+    
+    def getNumTimeWindows(self):
+        numWindows = 0
+        for day in self.timeWindows:
+            for window in day:
+                numWindows += 1
+        return numWindows
 
 
     def __str__(self):

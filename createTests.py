@@ -75,7 +75,7 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     for feature in [xConstraint, yConstraint, releaseTime]:
         task.append(randint(0, feature)) 
     task.append(randint(1, maxDuration))
-    task.append(randint(task[2] + task[3] + 100, deadline))
+    task.append(randint(task[2] + task[3], deadline))
     setPriorityOfTask(task, priority)
     setRequiredOfTask(task)
     setTimeWindowsOfTask(task, numDays)
