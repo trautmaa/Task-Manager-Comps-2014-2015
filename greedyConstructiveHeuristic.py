@@ -32,7 +32,7 @@ def getScore(priority, waitingTime, extraDist):
     
 def getExtraDistanceFromInsertion(route, position):
     if position == (len(route) + 1):
-        extraDist = 0
+        extraDist = 0.1
     elif position == 0:
         extraDist = getDistanceBetweenTasks(route[0], route[1])
     else: 
@@ -47,7 +47,7 @@ def returnScheduleInsertedWithBestTask(schedule, taskList):
     for task in taskList:
         whichTaskToInsert.append(getBestInsertionOfTaskByTime(schedule, task))
     whichTaskToInsert = sorted(whichTaskToInsert, reverse = True)
-    return whichTaskToInsert[0][1]
+    return whichTaskToInsert[0][1], whichTaskToInsert[0][2] 
         
 def runGreedyConstructiveHeuristic(csvFile):
     taskList = createTasksFromCsv.getTaskList(csvFile)
@@ -55,6 +55,14 @@ def runGreedyConstructiveHeuristic(csvFile):
     
     schedule = Schedule()
     numDays = len(taskList[0].timeWindows)
+    for day in range(numDays):
+        route = Route()
+        schedule.append(route)
+    
+    numTasks = len(taskList)
+    for i in range(numTasks):
+        schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, taskList)
+        taskList.remove(taskToRemove) #I don't know if I can actually do this....
         
 
 def getWaitingTimeOfSchedule(schedule):
