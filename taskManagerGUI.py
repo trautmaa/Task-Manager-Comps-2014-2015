@@ -25,7 +25,7 @@ def setup():
     
     global schedule
 #     schedule = [[]]*5
-#     schedule = vns.solve(pwd("test50.csv"))
+    schedule = vns.solve(pwd("test50.csv"))
     csvFile = pwd("test1000.csv")
     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
