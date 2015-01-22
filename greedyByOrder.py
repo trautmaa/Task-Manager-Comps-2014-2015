@@ -65,7 +65,7 @@ def runGreedyByOrder(csvFile,orderMethod):
             for window in day:
                 if window[1] >= latestTime:
                     latestTime = window[1]
-        timeWindowsAndPriorities.append((latestTime, task.priority, task.id, float(task.priority)/float(task.getNumTimeWindows())))
+        timeWindowsAndPriorities.append((latestTime, task.priority, task.id, float(task.priority)/max(float(task.getNumTimeWindows()), 1)))
 		
 	# sorting by deadline	
     
