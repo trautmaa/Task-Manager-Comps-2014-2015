@@ -10,15 +10,17 @@ from random import randint, random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
+numberOfTasks = 3
 dayLength = 1440
 numDays = 2
 xRange = 120
 yRange = 120
-durationRange = 300
-releaseTimeRange = dayLength * numDays - durationRange
-deadlineRange = dayLength * numDays
-priorityRange = 100
-likelyhoodOfMandatory = .3 # has to be between 0 and 1
+durationRange = 300 # tasks will receive durations no longer than this
+releaseTimeRange = (dayLength * numDays) - durationRange # tasks will receive release times no earlier than this
+deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
+priorityRange = 10 # optional tasks assigned priority between 1 and this
+likelyhoodOfMandatory = .3 # between 0 and 1, chance a task is generated as mandatory
+maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
 
@@ -41,8 +43,13 @@ def setTimeWindowsOfTask(task, numDays):
     deadline = task[4]
     for day in range(numDays):
         dayWindows = []
+        # if a time window can be scheduled on that day for this task
         if (((day + 1) * dayLength) - duration - 1) >= releaseTime and deadline >= (day * dayLength + duration):
-            maxNumTimeWindows = min((dayLength -1), ((day + 1) * dayLength - releaseTime), deadline) / duration
+
+            # either deadline / duration, or dayLength / duration, or (endOfDay - releaseTime) / duration
+            maxNumTimeWindows = min((dayLength - 1), ((day + 1) * dayLength - releaseTime), deadline) / duration
+            # further constrain by global parameter
+            maxNumTimeWindows = min(maxNumTimeWindows, maxTaskTimeWindows)
             endingWindowTime = 0
             for window in range(maxNumTimeWindows):
                 if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
@@ -107,7 +114,7 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(20, "test.csv")
+    writeNTasks(numberOfTasks, "test.csv")
 
 
 if __name__ == '__main__':

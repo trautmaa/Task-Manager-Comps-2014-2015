@@ -4,6 +4,7 @@
 
 import itertools
 
+import random
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -36,7 +37,6 @@ def getAllPermutations(lengthOfPerms):
     permutations = itertools.permutations(permutations, lengthOfPerms)
 
     return permutations
-
 
 '''
 A function that will run our brute force algorithm to find the

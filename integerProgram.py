@@ -288,7 +288,7 @@ def makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList):
 Function that, given a list of tasks, constructs and solves an integer program,
 returning the resulting schedule.
 '''
-def integerProgramSolve(taskList, timeLimit):
+def integerProgramSolve(taskList, timeLimit, outputFlag):
     numTasks = len(taskList)
     mostDaysTask = max(taskList, key = lambda task : len(task.timeWindows))
     numDays = len(mostDaysTask.timeWindows)
@@ -335,9 +335,9 @@ def integerProgramSolve(taskList, timeLimit):
     # e.g.: solver = pulp.solvers.GUROBI(OutputFlag = 0, Threads = 4, TimeLimit = 120)
 
     if timeLimit < 0:
-        solver = pulp.solvers.GUROBI(OutputFlag = 0)
+        solver = pulp.solvers.GUROBI(OutputFlag = outputFlag)
     else:
-        solver = pulp.solvers.GUROBI(OutputFlag = 0, TimeLimit = timeLimit)
+        solver = pulp.solvers.GUROBI(OutputFlag = outputFlag, TimeLimit = timeLimit)
 
     prob.solve(solver)
 
@@ -349,34 +349,53 @@ def integerProgramSolve(taskList, timeLimit):
     # for debugging feasible models:
     # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
     
-    assert(prob.status == 1) # Problem was solved
+    # assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
 
 '''
 A helper function that does everything but print the solution,
 for use in comparing different algorithms.
 '''
-def runIntegerProgram(csvFile, timeLimit = -1):
+def runIntegerProgram(csvFile, timeLimit = -1, outputFlag = 0):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    schedule = integerProgramSolve(taskList, timeLimit)
-    assert(isFeasible(taskList, schedule))
+    schedule = integerProgramSolve(taskList, timeLimit, outputFlag)
+    # assert(isFeasible(taskList, schedule))
     return schedule
+
+'''
+Helper function called in main to process the optional command linear
+arguments specifying the time limit in seconds for the integer program
+to run, and whether or not you want ongoing output as it runs.
+'''
+def processCommandLineArgs(args):
+    if len(args) > 1:
+        try:
+            timeLimit = int(sys.argv[1])
+        except TypeError:
+            print "time limit argument not an integer"
+            exit()
+        if len(args) > 2:
+            try:
+                outputFlag = int(sys.argv[2])
+            except TypeError:
+                print "output flag argument not an integer"
+                exit()
+        else:
+            outputFlag = 0
+    else:
+        timeLimit = -1
+        outputFlag = 0
+    return timeLimit, outputFlag
 
 '''    
 A main function that will read in the list of tasks from a csv, construct the integer program,
 and print the solution it produces.
 '''
 def main():
-    if len(sys.argv) > 1:
-        try:
-            timeLimit = int(sys.argv[1])
-        except TypeError:
-            print "time limit argument not an integer"
-            exit()
-    else:
-        timeLimit = -1
-    solvedSchedule = runIntegerProgram("test.csv", timeLimit)
+    print
+    timeLimit, outputFlag = processCommandLineArgs(sys.argv)
+    solvedSchedule = runIntegerProgram("test.csv", timeLimit, outputFlag)
     print
     if timeLimit != -1:
         print "WARNING: As a time limit was set, output may not be optimal."
