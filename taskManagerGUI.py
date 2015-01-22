@@ -8,7 +8,7 @@ To run this properly, drag and drop the file onto processing-py, available at
 
 https://github.com/jdf/processing.py
 '''
-import vns,greedyByOrder, greedyByPresentChoice
+import vns, greedyByOrder, greedyByPresentChoice
 
 
 
@@ -25,8 +25,10 @@ def setup():
     
     global schedule
 #     schedule = [[]]*5
-    schedule = vns.solve(pwd("test50.csv"))
-    csvFile = pwd("test1000.csv")
+    csvFile = pwd("test50.csv")
+    #vns schedule:
+    #schedule = vns.solve(pwd("test50.csv"))
+    schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
