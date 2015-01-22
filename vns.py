@@ -882,6 +882,8 @@ def minRoute(taskList, currSchedule):
             
             # move the latest waiting task to its next time window.
             newRoute = switchTimeWindows(bestRoute, latestWaitingTask, d, assignedTWs)
+            if newRoute == None:
+                break
             # find the shortest route with that ending time
             newRoute = dominantRoute(newRoute, assignedTWs, d)
             
@@ -924,20 +926,28 @@ def getLatestWaitingTask(currRoute):
     return -1
 
 '''
-@return: the updated schedule after moving the latestWaitingTask to the next time window and updating the other tasks
+@return: the updated schedule after moving the latestWaitingTask to the next 
+time window and updating the other tasks
 '''
 def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     print "********** Entering switchTimeWindows **********"
-    print "right at beginning of switchTimeWindows"
+
+    currRoute = copy.deepcopy(currRoute)
+    
+    print "Beginning of switchTimeWindows"
     isRouteActuallyFeasible(currRoute)
-    failSafeReturn = copy.deepcopy(currRoute)
-    print "ORIGINAL ROUTE", currRoute
+    
+    print "Original Route:"
+    print currRoute
+    
     #store the task we are working with
     latestWaitingTask = currRoute[latestWaitingTaskIndex]
-    print "latest waiting task", latestWaitingTask
+    print "latest waiting task = route["+str(latestWaitingTaskIndex)+" =", latestWaitingTask.id
+    
     # store the new time window it is moving to
-    #tw = actual (start, end)
-    tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex] + 1]
+    tw = latestWaitingTask.timeWindows[day][assignedTWs[latestWaitingTaskIndex]]
+    
+    print "LWT time windows on day:", tw
     
     #moving the latestWaitingTask to its next time window as early as possible within the new time window
     latestWaitingTask.endingTime = latestWaitingTask.duration + tw[0]
@@ -954,62 +964,62 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     # Move all tasks before latestWaitingTask as late as possible 
     
     print "before squidging earlier tasks"
-    #isRouteActuallyFeasible(currRoute)
     print currRoute
+    
     for t in range(latestWaitingTaskIndex - 1, -1, -1):
         task = currRoute[t]
         routeTWs = task.timeWindows[day]
         
-        print "route["+str(t)+"] = ", task
-        print "nextTaskStart", nextTaskStart
+        
         
         # for each time window in that route find the latest possible time window
         # that fits this task before the end of that time window and the start of the next task
         for tw in range(len(routeTWs)):
             timeWindow = routeTWs[tw]
-            print "time window: ", timeWindow
             if timeWindow[0] + task.duration <= nextTaskStart:
                 assignedTWs[t] = tw
-                print "reassigning assignedTWs: ", assignedTWs[t]
-                print nextTaskStart
-                print timeWindow
+
                 currRoute.endingTimes[t] = min(nextTaskStart, timeWindow[1])
-                print "ending time in curroute has been reset: ", currRoute.endingTimes[t]
+                print "   ending time in currRoute has been reset: ", currRoute.endingTimes[t]
             else:
                 nextTaskStart = currRoute.endingTimes[t] - task.duration
-                print "AFTER ELSE nextTaskStart has been reset: ", nextTaskStart
+                print "\t\t\tAFTER ELSE nextTaskStart has been reset: ", nextTaskStart
                 break
             
         nextTaskStart = currRoute.endingTimes[t] - task.duration
-        print "after FOR loop, nextTaskStart has been reset: ", nextTaskStart
+        print " after FOR loop, nextTaskStart has been reset: ", nextTaskStart
+
+    print "after squidging starts"
 
     print "before squidging later tasks"
+    
     # Move all tasks after latestWaitingTask as early as possible
-    #isRouteActuallyFeasible(currRoute)
     for t in range(latestWaitingTaskIndex + 1, len(assignedTWs)):
         task = currRoute[t]
-        print "Task", task
-        print "task.timewindows", task.timeWindows
         routeTWs = task.timeWindows[day]
-        print "length of TW", len(routeTWs)
-        print "TW", routeTWs
-#         if len(routeTWs) < 2:
-#             print failSafeReturn
-#             print "********** Exiting switchTimeWindows **********"
-#             return failSafeReturn
+        
+        print " route["+str(t)+"] = ", task.id
+        print " nextTaskStart", nextTaskStart
+        
         for tw in range(len(routeTWs) - 1, -1, -1):
             timeWindow = routeTWs[tw]
-            print "timeWindow[1]" , timeWindow[1]
-            print "duration", task.duration
-            print "prevTaskEnd", prevTaskEnd
-            
             if timeWindow[1] - task.duration >= prevTaskEnd:
                 assignedTWs[t] = tw
+                
+                print "   reassigning assignedTWs: ", assignedTWs[t]
+                print nextTaskStart
+                print timeWindow
+                
                 currRoute.endingTimes[t] = max(prevTaskEnd, timeWindow[0]) + task.duration
             else:
                 prevTaskEnd = currRoute.endingTimes[t]
                 break
         prevTaskEnd = currRoute.endingTimes[t]
+        if currRoute.endingTimes[t] - task.duration < currRoute.endingTimes[t-1]:
+            print "Infeasible switch"
+            print "********** Exiting switchTimeWindows **********"
+            return None
+    
     print "after all squidging"
     print currRoute
     isRouteActuallyFeasible(currRoute)
@@ -1216,7 +1226,7 @@ def isRouteActuallyFeasible(currRoute):
                 prevTask = currRoute[t-1]
                 task = currRoute[t]
                 
-            print "task", t, "overlaps task", t-1
+            print "task", t, "overlaps task\a", t-1
             exit()
         lastEndingTime = currRoute.endingTimes[t] - task.duration
         
