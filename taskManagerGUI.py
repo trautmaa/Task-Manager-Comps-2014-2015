@@ -56,13 +56,19 @@ def setup():
     boxX = w/2 - boxDimension/2
     boxY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - boxDimension)/2)
 
-    #populate the taskMapDots list with some rainbow colors
+    #THIS IS NOT WORKING HOW I WANT IT TO :(
+    #populate the rectColors list with some rainbow colors
     for d in range(len(schedule)):
     	scaleFactor = (d)/len(schedule) * len(colorList)
     	baseColor = int(floor(scaleFactor))
     	percentBetweenColors = scaleFactor - baseColor
-    	colorForDay = blendColor(colorList[baseColor]*percentBetweenColors,colorList[baseColor+1],BLEND)
+    	colorForDay = blendColor(colorList[baseColor-1],colorList[baseColor],0)
     	rectColors.append(colorForDay)
+        #colorForDay = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
+    	rectColors.append(colorForDay)
+    print "rectCoors", rectColors
+    print "firstone", color(255, 0, 0)
+    print "2nd", color(255, 255, 0)
 
     #determine maximum coordinate values
     maxX = 0
@@ -123,7 +129,7 @@ def highlight(whichTask, whichDay):
         day = schedule[d]
         drawTasks(day, sideBarWidth + (d * dayWidth))
 
-    #redraw all the lines and times
+    #redraw all the window's lines and times
     for i in range(10, 110, 10):
         y = headerHeight + (i/100.0) * dayHeight
         strokeWeight(1)
@@ -135,7 +141,7 @@ def highlight(whichTask, whichDay):
         #highlight the current task's rectangle
         fill(175,200,230, 200)
         task = taskRects[whichDay][whichTask]
-        fill(rectColors[whichDay], 200)
+        fill(rectColors[whichDay], 125)
         rect(task[0], task[1], task[2], task[3])
     
     if whichDay != -1:
@@ -222,6 +228,9 @@ def drawTasks(route, leftX):
     pushStyle()
     noStroke()
     
+    #get dayNum from leftX:
+    dayNum = (leftX - sideBarWidth) / dayWidth
+    
     dayToAdd = []
     mapLocationsToAdd = []
     for t in range(len(route)):
@@ -230,12 +239,14 @@ def drawTasks(route, leftX):
         dayNum = int(route.endingTimes[t] - task.duration)/int(dayLength)
         startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - dayNum) * dayHeight
         
-        #set color of our unhighlighted tasks
-        fill(175,200,230, 50)
+        #set color of our unhighlighted tasks - depends on the day
+        fill(rectColors[dayNum], 50)
         
         #scale our coordinates to values within the box
-        xToAdd = (float(task.x) / float(maxX) * (boxDimension - (float(boxDimension)/10.0)) + (boxX + float(boxDimension)/20.0))
-        yToAdd = (float(task.y) / float(maxY) * (boxDimension - (boxDimension/10)) + (boxY + boxDimension/20))
+        xToAdd = (float(task.x) / float(maxX) * \
+                  (boxDimension - (float(boxDimension)/10.0)) + (boxX + float(boxDimension)/20.0))
+        yToAdd = (float(task.y) / float(maxY) * \
+                  (boxDimension - (boxDimension/10)) + (boxY + boxDimension/20))
 
         #mapLocationsToAdd is a list of each task's coordinates
         mapLocationsToAdd.append([xToAdd, yToAdd])
@@ -307,8 +318,10 @@ def drawDayMap(whichDay):
 
         #line settings
         strokeWeight(2)
-        stroke(50)
-
+        #stroke(50)
+        #color the line depending on the day's color
+        stroke(rectColors[whichDay], 50)
+        
         #draw line
         line(x1, y1, x2, y2)
     popStyle()
