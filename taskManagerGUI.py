@@ -10,15 +10,15 @@ https://github.com/jdf/processing.py
 '''
 import vns, greedyByOrder, greedyByPresentChoice
 
-
-
 def setup():
     #PLEASE LINK DAYLENGTH TO SCHEDULE SET DAY LENGTH
     global dayLength
     dayLength = float(100)
     
-    global taskRects, taskMapDots, dayRects
+    global taskRects, taskMapDots, dayRects, colorList, rectColors
     
+    colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
+                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     taskRects = []
     taskMapDots = []
     dayRects = []
@@ -27,15 +27,15 @@ def setup():
 #     schedule = [[]]*5
     csvFile = pwd("test50.csv")
     #vns schedule:
-    #schedule = vns.solve(pwd("test50.csv"))
-    schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
-    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
-    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
-
-    schedule = bestGreedy
+    schedule = vns.solve(pwd("test50.csv"))
+#     schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+#     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+#     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
+#     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
+#     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
+#     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
+# 
+#     schedule = bestGreedy
     print schedule
     #Globals for reference later
     global dayWidth, dayHeight, headerHeight, sideBarWidth, boxDimension, boxX, boxY, maxX, maxY
@@ -64,7 +64,6 @@ def setup():
                 maxY = taskY
     
     size(w, h)
-    
     setupScreen()
 
 
@@ -73,6 +72,7 @@ def draw():
     whichDay = -1
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
     drawScreen()
+    drawMap(whichDay, whichTask)
     highlight(whichTask, whichDay)
     
     
@@ -122,6 +122,13 @@ def highlight(whichTask, whichDay):
         fill(175,200,230, 200)
         task = taskRects[whichDay][whichTask]
         rect(task[0], task[1], task[2], task[3])
+    
+    if whichDay != -1:
+        drawDayMap(whichDay)
+        
+        
+
+        
 
 def drawScreen():
     pushStyle()
@@ -140,6 +147,8 @@ def setupScreen():
     pushStyle()
     
     noStroke()
+    
+    background(230)
     
     #Schedule
     fill(255,255,255)
@@ -165,10 +174,7 @@ def setupScreen():
         text(str(i), 0, y)
         line(sideBarWidth, int(y), width, int(y))
     
-    #Create Map box
-    fill(255,255,255)
-    rect(boxX, boxY, boxDimension, boxDimension)
-    drawMap()
+    
     popStyle()
 
 def drawDays():
@@ -224,20 +230,48 @@ def drawTasks(route, leftX):
     taskMapDots.append(mapLocationsToAdd)
     
     popStyle()
-
     
     
-def drawMap():
+def drawMap(whichDay, whichTask):
     pushStyle()
+    #Create Map box
+    fill(255,255,255)
+    rect(boxX, boxY, boxDimension, boxDimension)
     fill(0,0,0)
     for day in range(len(taskMapDots)):
         for t in range(len(taskMapDots[day])):
+            if day == whichDay:
+                stroke(0)
+                if t == whichTask: 
+                    stroke(0)
+                else:
+                    stroke(0, alpha = 100)
+            else:
+                stroke(0, alpha = 20)
+                
+            
+                
             task = taskMapDots[day][t]
-            print "task", task
             x = task[0]
             y = task[1]
-            ellipse(x, y, 10, 10)
-    
-    
-    
+            strokeWeight(10)
+            point(x, y)
+    if whichDay != -1:
+        drawDayMap(whichDay)
     popStyle()
+    
+#Function to draw the lines connecting the tasks you do on a certain day
+def drawDayMap(whichDay):
+    pushStyle()
+    for t in range(len(taskMapDots[whichDay])-1):
+        task = taskMapDots[whichDay][t]
+        nextTask = taskMapDots[whichDay][t+1]
+        x1 = task[0]
+        y1 = task[1]
+        x2 = nextTask[0]
+        y2 = nextTask[1]
+        strokeWeight(2)
+        stroke(50)
+        line(x1, y1, x2, y2)
+    popStyle()
+    

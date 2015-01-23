@@ -104,7 +104,7 @@ def vns(taskList, currSchedule):
             unplannedTasks.remove(task)
     
     # Number of seconds VNS is allowed to run
-    stoppingCondition = 60
+    stoppingCondition = 3
     
     # Number of neighborhood structures
     nHoodMax = 17
