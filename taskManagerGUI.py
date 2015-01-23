@@ -9,6 +9,7 @@ To run this properly, drag and drop the file onto processing-py, available at
 https://github.com/jdf/processing.py
 '''
 import vns, greedyByOrder, greedyByPresentChoice
+from math import floor
 
 def setup():
     #PLEASE LINK DAYLENGTH TO SCHEDULE SET DAY LENGTH
@@ -16,15 +17,19 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    
+    global schedule
+
     colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
                  color(0, 255, 255), color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     taskRects = []
+    rectColors = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
+                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255)\
+                 , color(255, 0, 255), color(255, 0, 0), color(255, 255, 0), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
+                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255)\
+                 , color(255, 0, 255), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0)]
     taskMapDots = []
     dayRects = []
     
-    global schedule
-#     schedule = [[]]*5
     csvFile = pwd("test50.csv")
     #vns schedule:
     schedule = vns.solve(pwd("test50.csv"))
@@ -51,6 +56,15 @@ def setup():
     boxX = w/2 - boxDimension/2
     boxY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - boxDimension)/2)
 
+    #populate the taskMapDots list with some rainbow colors
+    for d in range(len(schedule)):
+    	scaleFactor = (d)/len(schedule) * len(colorList)
+    	baseColor = int(floor(scaleFactor))
+    	percentBetweenColors = scaleFactor - baseColor
+    	colorForDay = blendColor(colorList[baseColor]*percentBetweenColors,colorList[baseColor+1],BLEND)
+    	rectColors.append(colorForDay)
+
+    #determine maximum coordinate values
     maxX = 0
     maxY = 0
     for day in range(len(schedule)):
@@ -118,9 +132,10 @@ def highlight(whichTask, whichDay):
         line(sideBarWidth, int(y), width, int(y))
         
     if whichDay != -1 and whichTask != -1:
-        #highlight the current task
+        #highlight the current task's rectangle
         fill(175,200,230, 200)
         task = taskRects[whichDay][whichTask]
+        fill(rectColors[whichDay], 200)
         rect(task[0], task[1], task[2], task[3])
     
     if whichDay != -1:
@@ -185,6 +200,9 @@ def drawDays():
     for i in range(len(taskRects)):
         taskRects.pop()
 
+    for i in range(len(taskMapDots)):
+    	taskMapDots.pop()
+
     for d in range(0,len(schedule)):
         #new for loop index from 0
         dayX = dayWidth * d + sideBarWidth
@@ -212,50 +230,64 @@ def drawTasks(route, leftX):
         dayNum = int(route.endingTimes[t] - task.duration)/int(dayLength)
         startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - dayNum) * dayHeight
         
+        #set color of our unhighlighted tasks
         fill(175,200,230, 50)
         
         #scale our coordinates to values within the box
         xToAdd = (float(task.x) / float(maxX) * (boxDimension - (float(boxDimension)/10.0)) + (boxX + float(boxDimension)/20.0))
         yToAdd = (float(task.y) / float(maxY) * (boxDimension - (boxDimension/10)) + (boxY + boxDimension/20))
-        #print "taskX", task.x, "maxX", maxX, "xToAdd", xToAdd
-        #print "taskX/maxX", float(task.x) / float(maxX)
+
+        #mapLocationsToAdd is a list of each task's coordinates
         mapLocationsToAdd.append([xToAdd, yToAdd])
         
-        
+        #dayToAdd is a list of each task's rectangle's dimensions for a given day
         dayToAdd.append([leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight])
         
+        #draw the rectangle for each task
         rect(leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight )
-        
+       
+    #taskRects is a list of lists of the task rectangle's dimensions
     taskRects.append(dayToAdd)
     taskMapDots.append(mapLocationsToAdd)
-    
+    #print len(taskRects), len(taskMapDots)
+
     popStyle()
     
-    
+#drawMap 
 def drawMap(whichDay, whichTask):
     pushStyle()
     #Create Map box
     fill(255,255,255)
     rect(boxX, boxY, boxDimension, boxDimension)
+
+    #draw the dots
     fill(0,0,0)
     for day in range(len(taskMapDots)):
         for t in range(len(taskMapDots[day])):
+
+        	#set the stroke depending on whichDay and whichTask are selected
             if day == whichDay:
-                stroke(0)
+
+            	#selected task gets a black dot
                 if t == whichTask: 
-                    stroke(0)
+                    stroke(rectColors[day])
+
+                #non-selected task on a selected day gets a gray dot
                 else:
-                    stroke(0, alpha = 100)
-            else:
-                stroke(0, alpha = 20)
-                
+                    stroke(rectColors[day], alpha = 100)
             
-                
+            #non-selected task on a non-selected day gets a lighter dot, on the rainbow spectrum
+            else:
+                stroke(rectColors[day], alpha = 40)
+            
+            #draw the dot
             task = taskMapDots[day][t]
             x = task[0]
             y = task[1]
             strokeWeight(10)
             point(x, y)
+
+    #if cursor is over a day, draw the lines connecting that day's tasks
     if whichDay != -1:
         drawDayMap(whichDay)
     popStyle()
@@ -266,12 +298,18 @@ def drawDayMap(whichDay):
     for t in range(len(taskMapDots[whichDay])-1):
         task = taskMapDots[whichDay][t]
         nextTask = taskMapDots[whichDay][t+1]
+
+        #line dimensions
         x1 = task[0]
         y1 = task[1]
         x2 = nextTask[0]
         y2 = nextTask[1]
+
+        #line settings
         strokeWeight(2)
         stroke(50)
+
+        #draw line
         line(x1, y1, x2, y2)
     popStyle()
     
