@@ -15,15 +15,11 @@ in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderMethod):
     schedule = runGreedyByOrder(csvFile, orderMethod)
-    print schedule
+    #print schedule
     print "The", str(orderMethod), "gave a profit of", str(schedule.getProfit())
-    print 
-    print
-    print  
 
 def orderByPriorityOverAvailability(timeWindowsAndPriorities):
     timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[3], reverse = True)
-    print timeWindowsAndPriorities
     return timeWindowsAndPriorities
     
 def orderByPriority(timeWindowsAndPriorities):
@@ -71,7 +67,6 @@ def runGreedyByOrder(csvFile,orderMethod):
     
     timeWindowsAndPriorities = orderMethod(timeWindowsAndPriorities)
     # sorting by priority
-    print timeWindowsAndPriorities
     
     taskOrdering = []
     for timeTaskTuple in timeWindowsAndPriorities:

@@ -10,7 +10,7 @@ from random import randint, random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-numberOfTasks = 3
+numberOfTasks = 100
 dayLength = 1440
 numDays = 2
 xRange = 120
