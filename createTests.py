@@ -10,16 +10,16 @@ from random import randint, random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-numberOfTasks = 100
+numberOfTasks = 30
 dayLength = 1440
-numDays = 2
-xRange = 120
-yRange = 120
-durationRange = 300 # tasks will receive durations no longer than this
+numDays = 3
+xRange = 60
+yRange = 60
+durationRange = 120 # tasks will receive durations no longer than this
 releaseTimeRange = (dayLength * numDays) - durationRange # tasks will receive release times no earlier than this
 deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
 priorityRange = 10 # optional tasks assigned priority between 1 and this
-likelyhoodOfMandatory = .3 # between 0 and 1, chance a task is generated as mandatory
+likelyhoodOfMandatory = .1 # between 0 and 1, chance a task is generated as mandatory
 maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
@@ -40,7 +40,7 @@ def setTimeWindowsOfTask(task, numDays):
     timeWindows = []
     releaseTime = task[2]
     duration = task[3]
-    deadline = task[4]
+    deadline = task[4]    
     for day in range(numDays):
         dayWindows = []
         # if a time window can be scheduled on that day for this task
@@ -66,6 +66,10 @@ def setTimeWindowsOfTask(task, numDays):
             
         
         timeWindows.append(dayWindows)
+    
+    # to replicate old conditions:
+    # task.append([[releaseTime, deadline]])
+
     task.append(timeWindows)
 
 '''
