@@ -2,6 +2,10 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
+'''
+To do:
+
+'''
 
 '''
 To run this properly, drag and drop the file onto processing-py, available at
@@ -17,16 +21,15 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule
+    global schedule, blues
+
+    blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
+                        color(150, 170, 213), color(200, 212, 238)]
 
     colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
-                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
+                 color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     taskRects = []
-    rectColors = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
-                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255)\
-                 , color(255, 0, 255), color(255, 0, 0), color(255, 255, 0), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
-                 color(0, 255, 255), color(0, 255, 255), color(0, 0, 255)\
-                 , color(255, 0, 255), color(255, 0, 0), color(255, 255, 0), color(0, 255, 0)]
+    rectColors = []
     taskMapDots = []
     dayRects = []
     
@@ -43,7 +46,9 @@ def setup():
 #     schedule = bestGreedy
     print schedule
     #Globals for reference later
-    global dayWidth, dayHeight, headerHeight, sideBarWidth, boxDimension, boxX, boxY, maxX, maxY
+    global dayWidth, dayHeight, headerHeight, sideBarWidth, mapDimension, mapX, mapY, maxX, maxY
+    global textX, textY, textDimensionX, textDimensionY
+        
     headerHeight = 50
     sideBarWidth = 75
     dayWidth = min(200, (displayWidth - sideBarWidth)/len(schedule))
@@ -52,23 +57,23 @@ def setup():
     h = min(900, displayHeight)
     dayHeight = h/2 - headerHeight
 
-    boxDimension = displayHeight - dayHeight - 200 - headerHeight
-    boxX = w/2 - boxDimension/2
-    boxY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - boxDimension)/2)
 
-    #THIS IS NOT WORKING HOW I WANT IT TO :(
+    #Set dimension and coordinates for map and text box
+    mapDimension = h - dayHeight - 2 * headerHeight
+    
+    textDimensionX = mapDimension
+    textDimensionY = mapDimension / 2
+    
+    mapX = (w - mapDimension - textDimensionX) * 2 / 3 + textDimensionX
+    mapY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - mapDimension)/2)
+
+    #set X and Y for our text box
+    textX = (w - mapDimension - textDimensionX) * 1/3
+    textY = mapY + mapDimension * 3 / 16
+
+
     #populate the rectColors list with some rainbow colors
-    for d in range(len(schedule)):
-    	scaleFactor = (d)/len(schedule) * len(colorList)
-    	baseColor = int(floor(scaleFactor))
-    	percentBetweenColors = scaleFactor - baseColor
-    	colorForDay = blendColor(colorList[baseColor-1],colorList[baseColor],0)
-    	rectColors.append(colorForDay)
-        #colorForDay = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
-    	rectColors.append(colorForDay)
-    print "rectCoors", rectColors
-    print "firstone", color(255, 0, 0)
-    print "2nd", color(255, 255, 0)
+    setColors()
 
     #determine maximum coordinate values
     maxX = 0
@@ -86,6 +91,31 @@ def setup():
     size(w, h)
     setupScreen()
 
+def setColors():
+    for d in range(len(schedule)):
+        
+        scaleFactor = float(d+1)/float(len(schedule)) * (len(colorList) - 1)
+        baseColor = int(floor(scaleFactor))
+        percentBetweenColors = scaleFactor - baseColor
+        #find new r, g and b where its scaled according to the percentBetweenColors
+        oldC = [red(colorList[baseColor - 1]), green(colorList[baseColor - 1]), blue(colorList[baseColor - 1])]
+        oldNextC = [red(colorList[baseColor]), green(colorList[baseColor]), blue(colorList[baseColor])] 
+        
+        
+        newC = [abs(oldC[c] - oldNextC[c]) for c in range(len(oldC))]
+        
+        for c in range(len(newC)):
+            if oldC[c] == 0:
+                newC[c] = oldC[c] + (oldNextC[c] - oldC[c]) * percentBetweenColors
+            else:
+                newC[c] = oldC[c] - (oldC[c] - oldNextC[c]) * percentBetweenColors
+        
+        newColor = color(newC[0], newC[1], newC[2])
+        
+        
+#         newColor = blendColor(colorList[baseColor-1],colorList[baseColor],0)
+        #newColor = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
+        rectColors.append(newColor)
 
 def draw():
     whichTask = -1
@@ -93,6 +123,7 @@ def draw():
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
     drawScreen()
     drawMap(whichDay, whichTask)
+    drawTextBox(whichDay, whichTask)
     highlight(whichTask, whichDay)
     
     
@@ -143,13 +174,25 @@ def highlight(whichTask, whichDay):
         task = taskRects[whichDay][whichTask]
         fill(rectColors[whichDay], 125)
         rect(task[0], task[1], task[2], task[3])
+        #add task information to text box
+        textSize(20)
+        fill(blues[3])
+        textItemsList = []
+        task = schedule[whichDay][whichTask]
+        textStr = ""
+        textStr = textStr + "ID: " + str(task.id) + "\n"
+        textStr = textStr + "Release Time: " + str(task.releaseTime) + "\n"
+        textStr = textStr + "X Coordinate: " + str(task.x) + "\n"
+        textStr = textStr + "Y Coordinate: " + str(task.y) + "\n"
+        textStr = textStr + "Start Time: " + str(schedule[whichDay].endingTimes[whichTask] - task.duration) + "\n"
+        
+        
+        text(textStr, textX + textDimensionX / 10, textY + textDimensionY / 10)
+        
     
     if whichDay != -1:
         drawDayMap(whichDay)
-        
-        
-
-        
+    
 
 def drawScreen():
     pushStyle()
@@ -169,7 +212,7 @@ def setupScreen():
     
     noStroke()
     
-    background(230)
+    background(blues[3])
     
     #Schedule
     fill(255,255,255)
@@ -178,11 +221,11 @@ def setupScreen():
     drawDays()
     
     #Header
-    fill(175, 200, 175)
+    fill(blues[1])
     rect(0,0, width, headerHeight)
 
     #Sidebar
-    fill(175, 175, 200)
+    fill(blues[0]) 
     rect(0, headerHeight, sideBarWidth, dayHeight)
     
     #Add times to the sidebar
@@ -244,9 +287,9 @@ def drawTasks(route, leftX):
         
         #scale our coordinates to values within the box
         xToAdd = (float(task.x) / float(maxX) * \
-                  (boxDimension - (float(boxDimension)/10.0)) + (boxX + float(boxDimension)/20.0))
+                  (mapDimension - (float(mapDimension)/10.0)) + (mapX + float(mapDimension)/20.0))
         yToAdd = (float(task.y) / float(maxY) * \
-                  (boxDimension - (boxDimension/10)) + (boxY + boxDimension/20))
+                  (mapDimension - (mapDimension/10)) + (mapY + mapDimension/20))
 
         #mapLocationsToAdd is a list of each task's coordinates
         mapLocationsToAdd.append([xToAdd, yToAdd])
@@ -263,13 +306,15 @@ def drawTasks(route, leftX):
     #print len(taskRects), len(taskMapDots)
 
     popStyle()
-    
+
+
+
 #drawMap 
 def drawMap(whichDay, whichTask):
     pushStyle()
     #Create Map box
     fill(255,255,255)
-    rect(boxX, boxY, boxDimension, boxDimension)
+    rect(mapX, mapY, mapDimension, mapDimension)
 
     #draw the dots
     fill(0,0,0)
@@ -302,7 +347,20 @@ def drawMap(whichDay, whichTask):
     if whichDay != -1:
         drawDayMap(whichDay)
     popStyle()
+
+#Function to draw the text box
+def drawTextBox(whichDay, whichTask):
+    pushStyle()
     
+    #Create Text box
+    fill(255,255,255)
+    rect(textX, textY, textDimensionX, textDimensionY)
+    
+    
+    
+    popStyle()
+    
+
 #Function to draw the lines connecting the tasks you do on a certain day
 def drawDayMap(whichDay):
     pushStyle()
