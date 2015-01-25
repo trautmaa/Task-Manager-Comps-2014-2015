@@ -15,15 +15,74 @@ import csv
 from collections import deque
 #from bruteForce import runBruteForceAlg
 
+
+#AVERY connect this to actual dayLength
 global timeLimit
 timeLimit = 5000
 
 random.seed(211680280677)
 
+#PROCESSING DELETE
+def setup():
+    
+    size(displayWidth, displayHeight - 100)
+    
+    global hasRun, sideBarWidth, headerHeight
+    
+    hasRun = []
+    sideBarWidth = 75
+    headerHeight = 30
+    
+    rect(0, 0, width, headerHeight)
+    
+    
+
+#PROCESSING DELETE
+def draw():
+    if len(hasRun) == 0:
+        currSchedule = solve(pwd("test50.csv"))
+        hasRun.append(0)
+        
+        # width of the screen minus the side bar with divided by the number of routes in the schedule 
+        routeWidth =  (width - sideBarWidth)/ len(currSchedule)
+        fill(255)
+        stroke(150)
+        for x in range(sideBarWidth, width, routeWidth):
+            rect(x, headerHeight, routeWidth, height - headerHeight)
+            routeIndex = (x-sideBarWidth)/routeWidth
+            if routeIndex < len(currSchedule):
+                drawRouteTimeWindows(x, currSchedule[routeIndex], routeWidth, routeIndex)
+    
+    pass
+
+#PROCESSING DELETE
+def redrawOnCommand():
+    # when this is called, loop until the user
+    # pushes the right arrow
+    pass
+
+#PROCESSING DELETE
+def drawRouteTimeWindows(routeX, route, routeWidth,  routeIndex):
+    pushStyle()
+    stroke(50)
+    fill(50, 50, 50, 150)
+    for t in range(len(route)):
+        task = route[t]
+        taskWidth = routeWidth / len(route)
+        taskX = routeX + t * taskWidth
+        
+        for tw in range(len(task.timeWindows[routeIndex])):
+            timeWindow = task.timeWindows[routeIndex][tw]
+            scale = float(height - headerHeight)/100.0
+            twStart = (timeWindow[0] - routeIndex * 100) * scale
+            twEnd = (timeWindow[1] - routeIndex * 100) * scale
+            rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
+    popStyle()
 '''
 @return: an ordering of tasks
 '''
 def solve(csvFile):
+    
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
@@ -82,6 +141,7 @@ def solve(csvFile):
 
 #     writeTasks("testReturn.csv", currSchedule)
     return currSchedule
+
 
 
 '''
@@ -1287,5 +1347,5 @@ def main():
     return result
 
 if __name__ == "__main__":
-    main()
-
+    #main()
+    pass
