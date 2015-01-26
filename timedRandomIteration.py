@@ -14,7 +14,6 @@ randomly selected permutations of tasks. Stops and
 returns the best schedule after numSeconds seconds have passed.
 '''
 def randomlyPickBestScheduleUnderTime(csvFile, numSeconds):
-    numberIterations = 0
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
     
@@ -30,14 +29,10 @@ def randomlyPickBestScheduleUnderTime(csvFile, numSeconds):
         if schedule.getProfit() > bestProfit:
             bestProfit = schedule.getProfit()
             bestSchedule = schedule
-        numberIterations += 1
-    print
-    print numberIterations
-    print
     return bestSchedule
     
 def main():
-    schedule = randomlyPickBestScheduleUnderTime("test.csv", 15)
+    schedule = randomlyPickBestScheduleUnderTime("test.csv", 120)
     print schedule
     print
     print "priority is: "

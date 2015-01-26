@@ -20,6 +20,9 @@ from collections import deque
 global timeLimit
 timeLimit = 5000
 
+# Number of seconds VNS is allowed to run
+stoppingCondition = 60
+
 random.seed(211680280677)
 
 
@@ -105,9 +108,6 @@ def vns(taskList, currSchedule):
     for day in currSchedule:
         for task in day:
             unplannedTasks.remove(task)
-    
-    # Number of seconds VNS is allowed to run
-    stoppingCondition = 5
     
     # Number of neighborhood structures
     nHoodMax = 17
@@ -1284,7 +1284,7 @@ def writeTasks(csvFile, schedule):
             
 def main():
     print "********** Main **********"
-    result = solve("test1000.csv")
+    result = solve("test.csv")
     print result
     
     
