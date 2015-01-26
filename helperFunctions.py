@@ -176,6 +176,41 @@ def printScheduleJourney(sched):
         print "day", r
         printRouteJourney(route)
 
+'''
+A function that will write n tasks to a csv file.  It uses
+generateTask to create the task to write. Right now the
+constraints for generateTask are hard coded but that can 
+be changed.  The name of the csv file is returned.
+''' 
+def writeTasks(csvFile, schedule):
+    taskList = []
+    taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
+    with open(csvFile, 'wb') as f:
+        writer = csv.writer(f)
+        writer.writerow(taskFeatures)
+        for r in range(len(schedule)):
+            route = schedule[r]
+            for t in range(len(schedule[r])):
+                task = []
+                task.append(route[t].x)
+                task.append(route[t].y)
+                task.append(route[t].releaseTime)
+                task.append(route[t].duration)
+                task.append(route[t].deadline)
+                task.append(route[t].priority)
+                task.append(route[t].required)
+                task.append(route[t].timeWindows)
+                taskList.append(task)
+            taskList.append([])
+        print "taskList", taskList
+        for task in taskList:
+            writer.writerow(task)
+    return csvFile
+
+
+
+
+
 ''' Given a list of tasks and an ordering on the tasks (a list of integers),
 schedules whichever tasks are possible to schedule
 from that ordering and returns that schedule. We believe (?) this is

@@ -28,6 +28,11 @@ random.seed(211680280677)
 '''
 def solve(csvFile):
     
+    global schedSteps
+    
+    # keep track of the schedules as vns progresses
+    schedSteps =[]
+    
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
@@ -39,8 +44,9 @@ def solve(csvFile):
 #     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
 #     bestGreedy = min(solutionList, key = lambda schedule : schedule.getProfit())
     bestGreedy = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    
-    print bestGreedy
+
+    schedSteps.append(("greedySched", bestGreedy))
+            
     assert(isFeasible(taskList, bestGreedy))
 
     print bestGreedy
@@ -84,8 +90,8 @@ def solve(csvFile):
     print currSchedule.getProfit()
     
 
-#     writeTasks("testReturn.csv", currSchedule)
-    return currSchedule
+#     helperFunctions.writeTasks("testReturn.csv", currSchedule)
+    return currSchedule, schedSteps
 
 '''
 @return: best schedule found in time limit
@@ -137,13 +143,24 @@ def vns(taskList, currSchedule):
             
             iterCount += 1
             
+            schedSteps.append(("Sched before anything, nHood %d" %(nHood), currSchedule))
+            
             shakeSolution = shaking(currSchedule, nHood)
+            
+            schedSteps.append(("Sched after shaking, nHood %d" %(nHood), shakeSolution))
+            
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
+            
+            schedSteps.append(("Sched after iterativeImprovent, nHood %d" %(nHood), iterSolution))
+            
 
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
             feasibleSchedule = isFeasible(taskList, iterSolution)
+            if feasibleSchedule != None:
+                schedSteps.append(("Sched after isFeasible", feasibleSchedule))
+            
             
             # if feasible and better
             #     accept it as the new solution, reset nHood of numIterations
@@ -208,6 +225,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
+    schedSteps.append(("At the end of shaking, nHood %d" %(nHood), newSchedule))
 #     print "********** Exiting shaking **********"
     return newSchedule
 
@@ -433,6 +451,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
         newSchedule = bestInsertion(taskList, currSchedule)
 
 #     print "********** Exiting iterativeImprovement **********"
+    schedSteps.append(("At the end of iterativeImprovement at nHood %d" %(nHood), newSchedule))
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
@@ -567,13 +586,16 @@ def isFeasible(taskList, currSchedule):
         else:
             newSchedule[r] = newRoute
 #     print "********** Exiting isFeasible **********"
+    schedSteps.append(("Before minRoute:", newSchedule))
+
     newSchedule = minRoute(taskList, newSchedule)
+    
+    schedSteps.append(("At the end of isFeasible", newSchedule))
     return newSchedule
 
 def isRouteFeasible(currRoute, routeIndex):
 #     print "********** Entering isRouteFeasible **********"
     currRoute = copy.deepcopy(currRoute)
-    
     
     # for each task except the first, add travel time from prev task to curr task
     # to the duration of task, then subtract that same time from each time window
@@ -600,6 +622,7 @@ def isRouteFeasible(currRoute, routeIndex):
     
     if currRoute != None:
 #         print "********** Exiting isRouteFeasible1 **********"
+        schedSteps.append(("Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex))
         return currRoute, 0
     
     infeas = 0
@@ -631,6 +654,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
+    schedSteps.append(("Route %d is not feasible after TTWS. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex))
     return None, infeas
                     
 
@@ -1036,7 +1060,7 @@ time without changing that ending time
 
 @return: the dominant version of the schedule being passed in (squidging)
 '''
-def   dominantRoute(currRoute, assignedTWs, dayIndex):
+def dominantRoute(currRoute, assignedTWs, dayIndex):
     print "********** Entering dominantRoute **********"
     print currRoute
     
@@ -1246,40 +1270,6 @@ def changedTimeWindowsInSchedule(route, r, taskList):
                 print "Error: task", task.id, "timewindow", timeWindow, "does not match", taskListTW
                 exit()
             
-            
-
-
-'''
-A function that will write n tasks to a csv file.  It uses
-generateTask to create the task to write. Right now the
-constraints for generateTask are hard coded but that can 
-be changed.  The name of the csv file is returned.
-'''
-def writeTasks(csvFile, schedule):
-    taskList = []
-    taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
-    with open(csvFile, 'wb') as f:
-        writer = csv.writer(f)
-        writer.writerow(taskFeatures)
-        for i in range(len(schedule)):
-            for j in range(len(schedule[i])):
-                task = []
-                task.append(schedule[i][j].x)
-                task.append(schedule[i][j].y)
-                task.append(schedule[i][j].releaseTime)
-                task.append(schedule[i][j].duration)
-                task.append(schedule[i][j].deadline)
-                task.append(schedule[i][j].priority)
-                task.append(schedule[i][j].required)
-                task.append(schedule[i][j].timeWindows)
-                taskList.append(task)
-            taskList.append([])
-        print "taskList", taskList
-        # for taskList in schedule:
-         #   writer.writerow(taskList)
-        for task in taskList:
-            writer.writerow(task)
-    return csvFile
             
             
 def main():
