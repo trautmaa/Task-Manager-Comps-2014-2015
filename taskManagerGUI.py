@@ -26,6 +26,16 @@ def setup():
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
                         color(150, 170, 213), color(200, 212, 238)]
 
+    greens = [color(37, 108, 118), color(63, 131, 140), color(99, 160, 169),
+               color(150, 198, 205), color(203, 231, 234)]
+    
+    oranges = [color(192, 123, 59), color(229, 162, 100), color(255, 199, 148),
+                color(255, 219, 185), color(255, 237, 221)]
+    
+    yellows = [color(192, 147, 59), color(229, 185, 100), color(255, 219, 148),
+                color(255, 231, 185), color(255, 243, 221)]
+    
+
     colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
                  color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     taskRects = []

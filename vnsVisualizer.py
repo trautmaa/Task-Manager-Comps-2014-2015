@@ -7,6 +7,28 @@ def setup():
     
     global sideBarWidth, headerHeight, schedSteps, currStep, sched
     
+    global dayColor, twColor, headerColor, sideBarColor, textColor
+    
+    blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
+             color(150, 170, 213), color(200, 212, 238)]
+    
+    greens = [color(37, 108, 118), color(63, 131, 140), color(99, 160, 169),
+              color(150, 198, 205), color(203, 231, 234)]
+    
+    oranges = [color(192, 123, 59), color(229, 162, 100), color(255, 199, 148),
+               color(255, 219, 185), color(255, 237, 221)]
+    
+    yellows = [color(192, 147, 59), color(229, 185, 100), color(255, 219, 148),
+               color(255, 231, 185), color(255, 243, 221)]
+    
+    
+    dayColor = yellows[-1]
+    twColor = blues[2]
+    sideBarColor = blues[0]
+    headerColor = blues[1]
+    
+    textColor = oranges[-1]
+    
     sched = []
     
     sideBarWidth = 75
@@ -14,13 +36,18 @@ def setup():
     currStep = [-1]
         
     currSchedule, schedSteps = vns.solve(pwd("test50.csv"))
+    fill(sideBarColor, 255)
+    noStroke()
+    rect(0, headerHeight, sideBarWidth, height-headerHeight)
+    
+    frameRate(5)
     
 
-# PROCESSING DELETE
 def draw():
     if len(sched) == 0:
         currStep[0] = 0
         sched.append(schedSteps[currStep[0]])
+        drawRoute()
     
     if keyPressed and keyCode == RIGHT:
         currStep[0] += 1
@@ -42,8 +69,9 @@ def draw():
 
 # PROCESSING DELETE
 def drawRoute():
-
-    fill(255, 255, 255, 255)
+    pushStyle()
+    
+    fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
 
     
@@ -53,7 +81,7 @@ def drawRoute():
     stringInfo = sched[0][0]
     
     routeWidth = (width - sideBarWidth) / len(currSchedule)
-    fill(255)
+    fill(dayColor, 255)
     stroke(150)
     for x in range(sideBarWidth, width, routeWidth):
         rect(x, headerHeight, routeWidth, height - headerHeight)
@@ -62,8 +90,9 @@ def drawRoute():
             drawRouteTimeWindows(x, currSchedule[routeIndex], routeWidth, routeIndex)
     print stringInfo
     
-    fill(0, 0, 0, 255)
+    fill(textColor, 255)
     text(stringInfo, width/2 - 200, 10, 400, headerHeight)
+    popStyle()
     
 
 
@@ -71,7 +100,7 @@ def drawRoute():
 def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
     pushStyle()
     stroke(50)
-    fill(50, 50, 50, 150)
+    fill(twColor, 150)
     for t in range(len(route)):
         task = route[t]
         taskWidth = routeWidth / len(route)
