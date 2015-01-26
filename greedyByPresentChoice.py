@@ -2,6 +2,7 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
+import copy
 import itertools
 import createTasksFromCsv
 import helperFunctions
@@ -36,6 +37,7 @@ Refer to runGreedyByPresentChoice.
 Given a task list, returns a greedily selected schedule.
 '''
 def makeSchedule(taskList):
+    taskList = copy.deepcopy(taskList)
     helperFunctions.preprocessTimeWindows(taskList)
     schedule = Schedule()
     lastDay = len(taskList[0].timeWindows)

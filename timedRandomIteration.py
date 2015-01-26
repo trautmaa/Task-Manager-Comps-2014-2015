@@ -2,11 +2,13 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-
+import sys
 import createTasksFromCsv
 import helperFunctions
 import time
 import random
+
+defaultTimeLimit = 15
 
 '''
 Reads a list of tasks from a file, and tries to create schedules using
@@ -30,9 +32,21 @@ def randomlyPickBestScheduleUnderTime(csvFile, numSeconds):
             bestProfit = schedule.getProfit()
             bestSchedule = schedule
     return bestSchedule
+
+def processCommandLineArgs(args):
+    if len(sys.argv) > 1:
+        try:
+            timeLimit = int(sys.argv[1])
+        except ValueError:
+            print "command line argument not an integer"
+            exit()
+        return timeLimit
+    else:
+        return defaultTimeLimit
     
 def main():
-    schedule = randomlyPickBestScheduleUnderTime("test.csv", 120)
+    timeLimit = processCommandLineArgs(sys.argv)
+    schedule = randomlyPickBestScheduleUnderTime("test.csv", timeLimit)
     print schedule
     print
     print "priority is: "

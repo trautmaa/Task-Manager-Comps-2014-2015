@@ -372,13 +372,13 @@ def processCommandLineArgs(args):
     if len(args) > 1:
         try:
             timeLimit = int(sys.argv[1])
-        except TypeError:
+        except ValueError:
             print "time limit argument not an integer"
             exit()
         if len(args) > 2:
             try:
                 outputFlag = int(sys.argv[2])
-            except TypeError:
+            except ValueError:
                 print "output flag argument not an integer"
                 exit()
         else:

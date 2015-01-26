@@ -4,15 +4,14 @@
 
 import createTasksFromCsv
 
-import math
-from Objects import Category, Task, Route, Schedule
+from Objects import Task, Route, Schedule
 
 '''
 A function given two task objects will return the euclidean distance
 between them. I should check if **.5 is faster than math.sqrt()?
 '''
 def getDistanceBetweenTasks(taskA, taskB):
-    return int(math.ceil(getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))))
+    return getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))
 
 '''
 A function that returns the distance between 2 tuple coordinates.
@@ -27,48 +26,6 @@ def getCoords(task):
     return (task.x, task.y)
 
 '''
-A function which given a task, the present location and the present time
-returns True if it is finishable (before the task's deadline) and False
-if not, along with the time at which the task would complete.
-'''
-def isFinishableTask(task, presentLocation, presentTime):
-    finishingTime = getEndingTime(presentLocation, presentTime, task)
-    return (finishingTime <= task.deadline), finishingTime
-
-'''
-A function that given an ordering of tasks and a list of objects
-will output the schedule that can be created from that ordering.
-@return: a schedule object based on the earliest possible schedule
-'''
-def createSchedule(taskOrdering, taskList):
-    currentLocation = (0, 0)
-    currentTime = 0
-    route = Route()
-    for i in taskOrdering:
-        task = taskList[i] # taskOrdering is a permutation
-        includable, endingTime = isFinishableTask(task, currentLocation, currentTime)
-        if includable:
-            currentLocation = getCoords(task)
-            route.append(task, endingTime)
-            currentTime = endingTime
-    schedule = Schedule()
-    schedule.append(route)
-    return schedule
-
-def createSolution(taskOrdering, taskList):
-    currentLocation = (0, 0)
-    currentTime = 0
-    solution = []
-    for i in taskOrdering:
-        task = taskList[i]
-        includable, endingTime = isFinishableTask(task, currentLocation, currentTime)
-        if includable:
-            currentLocation = getCoords(task)
-            currentTime = endingTime
-            solution.append(task)
-    return [solution]
-
-'''
 Given a list of tasks, returns them in reverse deadline order. It's a terrible
 schedule and therefore perfect for testing VNS.
 '''
@@ -76,46 +33,6 @@ def orderByStupid(taskList):
     taskList = sorted(taskList, key=lambda task: task.deadline)
     taskList.reverse()
     return taskList
-
-'''
-A function that takes a list of tasks and a current location and 
-orders the tasks with respect to the earliest time they could be started.
-'''
-def orderByStartingTime(taskList, currentLocation, currentTime):
-    taskList = sorted(taskList, key=lambda task:
-        getStartingTimeOfNextTask(
-            currentTime, currentLocation, getCoords(task), task.releaseTime))
-    return taskList
-
-'''
-A function that takes a list of tasks and a current location and 
-orders the tasks with respect to the earliest time they could be started.
-'''
-def orderByEndingTime(taskList, currentLocation, currentTime):
-    taskList = sorted(taskList, key=lambda task:
-        getEndingTime(currentLocation, currentTime, task))
-    return taskList
-
-'''
-Takes the present location, the present time, and a task object,
-and returns the earliest time at which that task could be completed.
-'''
-def getEndingTime(presentLocation, presentTime, task):
-    distance = getDistanceBetweenCoords(presentLocation, getCoords(task))
-    startingTime = max((presentTime + distance), task.releaseTime)
-    endingTime = startingTime + task.duration
-    return endingTime
-
-'''
-A function given the finishing time of the last task done along with that 
-task itself and the next task will return the time you will be able to
-start the next task.
-'''
-def getStartingTimeOfNextTask(finishingTime, presentLocation, nextLocation, releaseTime):
-    distance = getDistanceBetweenCoords(presentLocation, nextLocation)
-    startingTimeOfNextTask = max((finishingTime + distance), releaseTime)
-    return startingTimeOfNextTask
-
 
 '''
 A function that will output a task list in a semi-readable fashion.
@@ -206,9 +123,6 @@ def writeTasks(csvFile, schedule):
         for task in taskList:
             writer.writerow(task)
     return csvFile
-
-
-
 
 
 ''' Given a list of tasks and an ordering on the tasks (a list of integers),
