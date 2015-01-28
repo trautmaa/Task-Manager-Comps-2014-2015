@@ -50,8 +50,13 @@ def isFeasible(node, currTime, currPath):
         return False
     return True
 
-def notSoftDominated():
-    Do this when you're smarter
+def notSoftDominated(currPath):
+    currTime = time of currPath
+    for each ordering where we swap the last node with each other node (v1,v2,v3|v3,v2,v1|v1,v3,v2):
+        if the newPath is feasible:
+            if the newTime < currTime:
+                return False
+    return True
 
 def inBounds(node, currTime):
     Do this when you're smarter
