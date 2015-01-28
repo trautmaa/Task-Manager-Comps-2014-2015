@@ -31,22 +31,22 @@ class Task:
         pass
     
     def setX(self, x):
-        self.x = int(x)
+        self.x = float(x)
 
     def setY(self, y):
-        self.y = int(y)
+        self.y = float(y)
         
     def setReleaseTime(self, r):
-        self.releaseTime = int(r)
+        self.releaseTime = float(r)
 
     def setDuration(self, dur):
-        self.duration = int(dur)
+        self.duration = float(dur)
 
     def setDeadline(self, dead):
-        self.deadline = int(dead)
+        self.deadline = float(dead)
         
     def setPriority(self, priority):
-        self.priority = int(priority)
+        self.priority = float(priority)
         
     def setRequired(self, required):
         self.required = required
