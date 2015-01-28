@@ -5,6 +5,10 @@
 '''
 To do:
 
+Make highlighted dots more noticeable
+ghost time windows
+make time more readable
+
 '''
 
 '''
