@@ -76,11 +76,11 @@ def runGreedyByOrder(csvFile,orderMethod):
 
 def main():
     print "priority"
-    printGreedyByOrder("test.csv", orderByPriority)
+    printGreedyByOrder("test50.csv", orderByPriority)
     print "deadline"
-    printGreedyByOrder("test.csv", orderOptionalByDeadline)
+    printGreedyByOrder("test50.csv", orderOptionalByDeadline)
     print "priority/availability"
-    printGreedyByOrder("test.csv", orderByPriorityOverAvailability)
+    printGreedyByOrder("test50.csv", orderByPriorityOverAvailability)
     
     
 
