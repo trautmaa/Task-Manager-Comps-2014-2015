@@ -46,7 +46,7 @@ def processCommandLineArgs(args):
     
 def main():
     timeLimit = processCommandLineArgs(sys.argv)
-    schedule = randomlyPickBestScheduleUnderTime("toptw0.csv", timeLimit)
+    schedule = randomlyPickBestScheduleUnderTime("50_c103.csv", timeLimit)
     print schedule
     print
     print "priority is: "
