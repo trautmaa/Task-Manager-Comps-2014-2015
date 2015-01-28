@@ -20,7 +20,7 @@ global timeLimit
 timeLimit = 5000
 
 # Number of seconds VNS is allowed to run
-stoppingCondition = 10
+stoppingCondition = 3
 
 random.seed(211680280677)
 

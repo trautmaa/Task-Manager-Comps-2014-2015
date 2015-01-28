@@ -5,9 +5,8 @@
 '''
 To do:
 
-Make highlighted dots more noticeable
+Make highlighting go the other way too
 ghost time windows
-make time more readable
 
 '''
 
@@ -25,8 +24,9 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, blues
+    global schedule, blues, minWidth, timeList, timeWindowRects
 
+    #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
                         color(150, 170, 213), color(200, 212, 238)]
 
@@ -39,15 +39,21 @@ def setup():
     yellows = [color(192, 147, 59), color(229, 185, 100), color(255, 219, 148),
                 color(255, 231, 185), color(255, 243, 221)]
     
-
+    #rainbow from which to create rectColors rainbow spectrum
     colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
                  color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
+    
+    #what times we see on the sidebar
+    timeList = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6]
+    
+    #initialize global lists to empty
     taskRects = []
+    timeWindowRects = []
     rectColors = []
     taskMapDots = []
     dayRects = []
     
-    csvFile = pwd("test50.csv")
+    csvFile = pwd("test1000.csv")
     #vns schedule:
     schedule, useless = vns.solve(csvFile)
 #     schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
@@ -66,10 +72,14 @@ def setup():
     headerHeight = 50
     sideBarWidth = 75
     dayWidth = min(200, (displayWidth - sideBarWidth)/len(schedule))
-    
-    w = len(schedule) * dayWidth + sideBarWidth
+
+    #Set global minimum screen width
+    minWidth = 1000
+        
+    w = max(len(schedule) * dayWidth + sideBarWidth, minWidth)
     h = min(900, displayHeight)
     dayHeight = h/2 - headerHeight
+
 
 
     #Set dimension and coordinates for map and text box
@@ -83,7 +93,7 @@ def setup():
 
     #set X and Y for our text box
     textX = (w - mapDimension - textDimensionX) * 1/3
-    textY = mapY + mapDimension * 3 / 16
+    textY = mapY + mapDimension * 1 / 16
 
 
     #populate the rectColors list with some rainbow colors
@@ -166,6 +176,7 @@ def highlight(whichTask, whichDay):
     for i in range(len(taskRects)):
         taskRects.pop()
     
+    #empty the taskMapDots list
     for i in range(len(taskMapDots)):
         taskMapDots.pop()
     
@@ -180,7 +191,7 @@ def highlight(whichTask, whichDay):
         strokeWeight(1)
         stroke(0, 0, 0, 50)
         #text(str(i), 0, y)
-        line(sideBarWidth, int(y), width, int(y))
+        line(sideBarWidth, int(y), sideBarWidth + (dayWidth * len(schedule)), int(y))
         
     if whichDay != -1 and whichTask != -1:
         #highlight the current task's rectangle
@@ -201,7 +212,7 @@ def highlight(whichTask, whichDay):
         textStr = textStr + "Start Time: " + str(schedule[whichDay].endingTimes[whichTask] - task.duration) + "\n"
         
         
-        text(textStr, textX + textDimensionX / 10, textY + textDimensionY / 10)
+        text(textStr, textX + textDimensionX / 100, textY + textDimensionY / 10)
         
     
     if whichDay != -1:
@@ -212,13 +223,16 @@ def drawScreen():
     pushStyle()
     noStroke()
     
-    #Schedule
-    fill(255,255,255)
-    rect(sideBarWidth,headerHeight,width, dayHeight)
+    drawSchedule()
     
     drawDays()
     
     popStyle()
+
+#draw schedule...
+def drawSchedule():
+    fill(255,255,255)
+    rect(sideBarWidth, headerHeight, dayWidth * len(schedule), dayHeight)
 
 #A function to set up the preliminary style details for the given schedule
 def setupScreen():
@@ -228,9 +242,7 @@ def setupScreen():
     
     background(blues[3])
     
-    #Schedule
-    fill(255,255,255)
-    rect(sideBarWidth,headerHeight,width, dayHeight)
+    drawSchedule()
     
     drawDays()
     
@@ -244,13 +256,17 @@ def setupScreen():
     
     #Add times to the sidebar
     textSize(15)
-    fill(10,10,25)
+    fill(240,240,240)
     for i in range(10, 110, 10):
-        y = headerHeight + (i/100.0) * dayHeight
-        strokeWeight(1)
+        y = (headerHeight + ((i/100.0 - .07) * dayHeight))
+        strokeWeight(2)
         stroke(0, 0, 0, 50)
-        text(str(i), 0, y)
-        line(sideBarWidth, int(y), width, int(y))
+        timeText = "%d:%02d" % (timeList[i/10 - 1], 00)
+        text(timeText, 0, y)
+
+        #limit line width to width of days
+        line(sideBarWidth, int(y), sideBarWidth + (dayWidth * len(schedule)), int(y))
+    
     
     
     popStyle()
@@ -293,9 +309,8 @@ def drawTasks(route, leftX):
     for t in range(len(route)):
         task = route[t]
         
-        dayNum = int(route.endingTimes[t] - task.duration)/int(dayLength)
-        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - dayNum) * dayHeight
-        
+        foo = int(route.endingTimes[t] - task.duration)/int(dayLength)
+        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - foo) * dayHeight
         #set color of our unhighlighted tasks - depends on the day
         fill(rectColors[dayNum], 50)
         
@@ -334,13 +349,15 @@ def drawMap(whichDay, whichTask):
     fill(0,0,0)
     for day in range(len(taskMapDots)):
         for t in range(len(taskMapDots[day])):
+            strokeWeight(10)
 
         	#set the stroke depending on whichDay and whichTask are selected
             if day == whichDay:
 
-            	#selected task gets a black dot
+            	#selected task gets a bigger dot
                 if t == whichTask: 
                     stroke(rectColors[day])
+                    strokeWeight(15)
 
                 #non-selected task on a selected day gets a gray dot
                 else:
@@ -354,7 +371,6 @@ def drawMap(whichDay, whichTask):
             task = taskMapDots[day][t]
             x = task[0]
             y = task[1]
-            strokeWeight(10)
             point(x, y)
 
     #if cursor is over a day, draw the lines connecting that day's tasks
