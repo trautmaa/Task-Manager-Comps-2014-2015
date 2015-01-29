@@ -57,4 +57,4 @@ def writeFromReadInTasks(inputCSVFile, outputCSVFile):
                 writer.writerow(newTask)
     
 for i in range(9):
-    writeFromReadInTasks("50_c10" + str(i+1) + ".txt", "50_c10" + str(i+1) + ".csv")
+    writeFromReadInTasks("pr0" + str(i+1) + ".txt", "pr0" + str(i+1) + ".csv")
