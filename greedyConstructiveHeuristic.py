@@ -105,7 +105,25 @@ def runGreedyConstructiveHeuristic(csvFile):
         
 
 def getWaitingTimeOfSchedule(schedule):
-    pass
+    totalWaitingTime = 0
+    for route in schedule:
+        totalWaitingTime += getWaitingTimeOfRoute(route)
+    return totalWaitingTime
+
+def getWaitingTimeOfRoute(route):
+    totalWaitingTime = 0
+    for i in range(len(route)-1):
+        firstTask = route[i]
+        endingTimeOfFirstTask = route.endingTimes[i]
+        secondTask = route[i+1]
+        startingTimeOfSecondTask = route.endingTimes[i+1] - secondTask.duration
+        distanceBetweenTasks = getDistanceBetweenTasks(route[i], route[i+1])
+        taskWaitTime = startingTimeOfSecondTask - endingTimeOfFirstTask - distanceBetweenTasks
+        totalWaitingTime += taskWaitTime
+    return totalWaitingTime
+        
+        
+        
 
 
 
