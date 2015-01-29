@@ -6,7 +6,7 @@
 To do:
 
 Make highlighting go the other way too
-ghost time windows
+
 
 '''
 
@@ -24,7 +24,7 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, blues, minWidth, timeList, timeWindowRects, timeWindowsPerTask
+    global schedule, blues, minWidth, timeList, timeWindowRects
 
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
@@ -205,11 +205,10 @@ def highlight(whichTask, whichDay):
         rect(task[0], task[1], task[2], task[3])
         
         #make its time window ghosts appear
-        
-        #LEAVE ME
-        #timeWindows = timeWindowRects[whichDay][whichTask]
-        #fill(rectColors[whichDay], 50)
-        #rect()
+        timeWindows = timeWindowRects[whichDay][whichTask]
+        fill(rectColors[whichDay], 50)
+        for i in range(len(timeWindows)):
+            rect(timeWindows[i][0], timeWindows[i][1], timeWindows[i][2], timeWindows[i][3])
         
         #add task information to text box
         textSize(20)
@@ -325,12 +324,14 @@ def drawTasks(route, leftX):
     for t in range(len(route)):
         task = route[t]
         
-        foo = int(route.endingTimes[t] - task.duration)/int(dayLength)
-        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - foo) * dayHeight
+        #scale tasks so dimensions fit within day
+        #WTF DOES THIS DO v
+        percentOfDay = int(route.endingTimes[t] - task.duration)/int(dayLength)
+        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - percentOfDay) * dayHeight
         #set color of our unhighlighted tasks - depends on the day
         fill(rectColors[dayNum], 50)
         
-        #scale our coordinates to values within the box
+        #for the MAP, scale our coordinates to values within the box
         xToAdd = (float(task.x) / float(maxX) * \
                   (mapDimension - (float(mapDimension)/10.0)) + (mapX + float(mapDimension)/20.0))
         yToAdd = (float(task.y) / float(maxY) * \
@@ -345,29 +346,30 @@ def drawTasks(route, leftX):
         #draw the rectangle for each task
         rect(leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight )
         
-        #populate the timeWindowRects list
+        #initialize local helper list
+        timeWindowsPerTask = []
+        
+        #populate the timeWindowRects list; draw these when task is highlighted
         for tw in range(len(task.timeWindows[dayNum])):
             twStart = task.timeWindows[dayNum][tw][0]
             twEnd = task.timeWindows[dayNum][tw][1]
             
-        	#timeWindow = task.timeWindows[dayNum][tw]
+            percentOfDay = int(twStart) / int(dayLength)
+            startTime = ((float(twStart) / float(dayLength)) - percentOfDay) * dayHeight
             
-            #add rect dimensions for each time window
+            numTimeWindowsForTask = len(task.timeWindows[dayNum])
+            widths = dayWidth/numTimeWindowsForTask
+            xStart = leftX + tw * widths
             
-            #LEAVE ME
-            #timeWindowsPerTask.append([leftX, headerHeight + twStart, dayWidth, (float(twEnd)/float(dayLength)) * dayHeight])       	
+            #add rect dimensions for each time window            
+            timeWindowsPerTask.append([xStart, headerHeight + startTime, widths, (float(twEnd - twStart)/float(dayLength)) * dayHeight])       	
        
        #add the timewindow rects for each task
-       
-       #LEAVE ME
-        #timeWindowsToAdd.append(timeWindowsPerTask)
-       
-    #for each task, add the list of timewindow dimensions
-    #LEAVE ME
-    #timeWindowRects.append(timeWindowsToAdd)
-   
+        timeWindowsToAdd.append(timeWindowsPerTask)
+          
     
     #taskRects is a list of lists of the task rectangle's dimensions
+    timeWindowRects.append(timeWindowsToAdd)
     taskRects.append(dayToAdd)
     taskMapDots.append(mapLocationsToAdd)
 
