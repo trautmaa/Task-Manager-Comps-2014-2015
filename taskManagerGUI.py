@@ -24,7 +24,7 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, blues, minWidth, timeList, timeWindowRects
+    global schedule, blues, minWidth, timeList, timeWindowRects, timeWindowsPerTask
 
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
@@ -203,6 +203,14 @@ def highlight(whichTask, whichDay):
         task = taskRects[whichDay][whichTask]
         fill(rectColors[whichDay], 125)
         rect(task[0], task[1], task[2], task[3])
+        
+        #make its time window ghosts appear
+        
+        #LEAVE ME
+        #timeWindows = timeWindowRects[whichDay][whichTask]
+        #fill(rectColors[whichDay], 50)
+        #rect()
+        
         #add task information to text box
         textSize(20)
         fill(blues[3])
@@ -339,11 +347,27 @@ def drawTasks(route, leftX):
         
         #populate the timeWindowRects list
         for tw in range(len(task.timeWindows[dayNum])):
-        	timeWindow = task.timeWindows[dayNum][tw]
-        	timeWindowsToAdd.append(timeWindow)       	
+            twStart = task.timeWindows[dayNum][tw][0]
+            twEnd = task.timeWindows[dayNum][tw][1]
+            
+        	#timeWindow = task.timeWindows[dayNum][tw]
+            
+            #add rect dimensions for each time window
+            
+            #LEAVE ME
+            #timeWindowsPerTask.append([leftX, headerHeight + twStart, dayWidth, (float(twEnd)/float(dayLength)) * dayHeight])       	
        
+       #add the timewindow rects for each task
+       
+       #LEAVE ME
+        #timeWindowsToAdd.append(timeWindowsPerTask)
+       
+    #for each task, add the list of timewindow dimensions
+    #LEAVE ME
+    #timeWindowRects.append(timeWindowsToAdd)
+   
+    
     #taskRects is a list of lists of the task rectangle's dimensions
-    timeWindowRects.append(timeWindowsToAdd)
     taskRects.append(dayToAdd)
     taskMapDots.append(mapLocationsToAdd)
 
