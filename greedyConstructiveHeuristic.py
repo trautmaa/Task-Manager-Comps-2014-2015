@@ -10,21 +10,39 @@ import helperFunctions
 
 from Objects import Schedule, Route
 
+
+'''
+
+
+@param: schedule, current task 
+@return: list containing score, best schedule, and task
+'''
 def getBestInsertionOfTaskByTime(schedule, task):
     bestScore = 0
     bestSchedule = schedule
+    #for each route in the scheudle 
     for r in range(len(schedule.routeList)):
         route = schedule[r]
+        # position relative to tasks that are already in the route...
         for position in range(len(route) + 1):
+            # inserts task into route. Returns None if task insertion was infeasible
             newRoute = insertTask(route, task, position, r)
             if newRoute == None: 
                 pass
+            # if task insertion was GRrreeaaattt then calculates the score of the schedule 
             else:
                 newSchedule = copy.deepcopy(schedule)
-                newSchedule exchangeRoute(newSchedule,newRoute, r)
+                #inserting new route into the position of the old route
+                newSchedule = exchangeRoute(newSchedule,newRoute, r)
+                #calculates waiting time of the schedule (with the addition of new route)
                 waitingTime = getWaitingTimeOfSchedule(newSchedule)  #Maybe this should be just route???
+                # calculates distance values for the new schedule
                 extraDist = getExtraDistanceFromInsertion(route, position):
+                #score 
                 score = getScore(task.priority, waitingTime, extraDist)
+                
+                # if the score with the new route is greater than the old score, then 
+                # we have a new best schedule and best score
                 if score >= bestScore:
                     bestSchedule = newSchedule
                     bestScore = score
