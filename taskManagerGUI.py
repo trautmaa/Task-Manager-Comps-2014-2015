@@ -181,7 +181,7 @@ def highlight(whichTask, whichDay):
         taskMapDots.pop()
     
     #empty the timeWindowRects list
-    for i in range(len(taskWindowRects)):
+    for i in range(len(timeWindowRects)):
     	timeWindowRects.pop()
     
     #redraw all the tasks
