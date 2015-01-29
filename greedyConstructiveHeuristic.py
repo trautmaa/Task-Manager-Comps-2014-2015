@@ -13,10 +13,15 @@ from Objects import Schedule, Route
 def getBestInsertionOfTaskByTime(schedule, task):
     bestScore = 0
     bestSchedule = schedule
-    for route in schedule.routeList:
+    for r in range(len(schedule.routeList)):
+        route = schedule[r]
         for position in range(len(route) + 1):
-            if isTaskInsertableAtPosition(route, position, task):
-                newSchedule = schedule.copy().insertTask(route, position, task)
+            newRoute = insertTask(route, task, position, r)
+            if newRoute == None: 
+                pass
+            else:
+                newSchedule = copy.deepcopy(schedule)
+                newSchedule exchangeRoute(newSchedule,newRoute, r)
                 waitingTime = getWaitingTimeOfSchedule(newSchedule)  #Maybe this should be just route???
                 extraDist = getExtraDistanceFromInsertion(route, position):
                 score = getScore(task.priority, waitingTime, extraDist)
@@ -26,15 +31,31 @@ def getBestInsertionOfTaskByTime(schedule, task):
                         
     return [score, bestSchedule, task]
           
+def insertTask(route, task, position, routeIndex): 
+    newRoute = copy.deepcopy(route)
+    newRoute.taskList.insert(task, position)
+    newRoute.endingTimes.insert(None, position)
+    if isRouteFeasible(newRoute, routeIndex):
+        return newRoute
+    else: 
+        return None 
+    
+def exchangeRoute(schedule,route, routeIndex): 
+    schedule[routeIndex] = route
+    return schedule
+    
+
 def getScore(priority, waitingTime, extraDist):
     return float(priority)/(waitingTime * extraDist) # For now, we can talk to DLN
     
     
 def getExtraDistanceFromInsertion(route, position):
-    if position == (len(route) + 1):
-        extraDist = 0.1
+    if len(route) == 0:
+        extraDist = 1
     elif position == 0:
         extraDist = getDistanceBetweenTasks(route[0], route[1])
+    elif position == len(route):
+        extraDist = getDistanceBetweenTasks(route[position-1], route[position])
     else: 
         extraDist = getDistanceBetweenTasks(route[postion-1], route[position + 1])
         extraDist -= getDistanceBetweenTasks(route[postion], route[position + 1])   
