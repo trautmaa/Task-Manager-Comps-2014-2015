@@ -67,8 +67,6 @@ def solve(csvFile):
     print "Profit of VNS Schedule is: "
     print currSchedule.getProfit()
     
-    for x in schedSteps:
-        print x[0]
 
 #     helperFunctions.writeTasks("testReturn.csv", currSchedule)
     return currSchedule, schedSteps
@@ -909,6 +907,7 @@ def minRoute(taskList, currSchedule):
         # update the schedule to have this route
         bestSchedule[d] = bestRoute
     
+    schedSteps.append(["Sched at end of minRoute, before task revert", bestSchedule])
 
     # Set bestSchedule tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
