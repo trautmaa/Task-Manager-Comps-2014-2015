@@ -180,6 +180,10 @@ def highlight(whichTask, whichDay):
     for i in range(len(taskMapDots)):
         taskMapDots.pop()
     
+    #empty the timeWindowRects list
+    for i in range(len(taskWindowRects)):
+    	timeWindowRects.pop()
+    
     #redraw all the tasks
     for d in range(len(schedule)):
         day = schedule[d]
@@ -282,6 +286,9 @@ def drawDays():
     for i in range(len(taskMapDots)):
     	taskMapDots.pop()
 
+	for i in range(len(timeWindowRects)):
+		timeWindowRects.pop()
+
     for d in range(0,len(schedule)):
         #new for loop index from 0
         dayX = dayWidth * d + sideBarWidth
@@ -304,6 +311,7 @@ def drawTasks(route, leftX):
     #get dayNum from leftX:
     dayNum = (leftX - sideBarWidth) / dayWidth
     
+    timeWindowsToAdd = []
     dayToAdd = []
     mapLocationsToAdd = []
     for t in range(len(route)):
@@ -328,11 +336,16 @@ def drawTasks(route, leftX):
         
         #draw the rectangle for each task
         rect(leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight )
+        
+        #populate the timeWindowRects list
+        for tw in range(len(task.timeWindows[dayNum])):
+        	timeWindow = task.timeWindows[dayNum][tw]
+        	timeWindowsToAdd.append(timeWindow)       	
        
     #taskRects is a list of lists of the task rectangle's dimensions
+    timeWindowRects.append(timeWindowsToAdd)
     taskRects.append(dayToAdd)
     taskMapDots.append(mapLocationsToAdd)
-    #print len(taskRects), len(taskMapDots)
 
     popStyle()
 
