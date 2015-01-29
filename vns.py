@@ -599,7 +599,6 @@ def isRouteFeasible(currRoute, routeIndex):
     
     if currRoute != None:
 #         print "********** Exiting isRouteFeasible1 **********"
-        schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
         return currRoute, 0
     
     infeas = 0
@@ -631,7 +630,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    schedSteps.append(["Route %d is not feasible after TTWS. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
+    schedSteps.append(["Route %d is not feasible after tightening. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
     return None, infeas
                     
 
@@ -716,8 +715,11 @@ def tightenTWStarts(currRoute, routeIndex):
     # print "any empty TWListst", anyEmptyTWLists(currRoute, routeIndex)
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
         # print "********** Exiting tightenTWStarts 2 **********"
+        
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
+    
+    schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
     return currRoute
 
 '''
@@ -811,6 +813,7 @@ def tightenTWEnds(currRoute, routeIndex):
         return None
     
     # print "********** Exiting tightenTWEnds3 **********"
+    schedSteps.append(["Route %d is feasible after TTWE" %(routeIndex), currRoute, routeIndex])
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):

@@ -153,7 +153,7 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
         taskHeight = task.duration * scale
         if ends:
             taskEnd = (route.endingTimes[t] - routeIndex * 100) * scale
-            rect(taskX, taskEnd - taskHeight, taskWidth, taskHeight)
+            rect(taskX, headerHeight + taskEnd - taskHeight, taskWidth, taskHeight)
         else:
             pass
             
