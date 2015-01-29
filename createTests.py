@@ -4,7 +4,9 @@
 
 import csv
 
-from random import randint, random
+from copy import deepcopy
+
+import random
 
 
 '''
@@ -21,12 +23,14 @@ deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later 
 priorityRange = 3 # optional tasks assigned priority between 1 and this
 likelyhoodOfMandatory = .1 # between 0 and 1, chance a task is generated as mandatory
 maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
+numDependencies = 15
+assert(numDependencies <= numberOfTasks/2)
 
-taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
+taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']
 
 def setPriorityOfTask(task, priority):
-    if random() >= likelyhoodOfMandatory:
-        task.append(randint(1, priority))
+    if random.random() >= likelyhoodOfMandatory:
+        task.append(random.randint(1, priority))
     else:
         task.append(-1)
                    
@@ -35,6 +39,24 @@ def setRequiredOfTask(task):
         task.append(1)
     else:
         task.append(0)
+        
+
+def setDependencies(taskList, numDependencies):
+    changingTaskList = deepcopy(taskList)
+    dependencies = []
+    for i in range(numDependencies):
+        dependency = []
+        dependency = random.sample(changingTaskList, 2)
+        for task in dependency:
+            changingTaskList.remove(task)
+        dependencies.append(dependency)
+    for dependency in dependencies:
+        taskList[taskList.index(dependency[0])].append([taskList.index(dependency[1])])
+    for task in taskList:
+        if len(task) == 8:
+            task.append([])
+        print len(task)
+    
         
 def setTimeWindowsOfTask(task, numDays):
     timeWindows = []
@@ -55,8 +77,8 @@ def setTimeWindowsOfTask(task, numDays):
                 if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
                     break
                 else:
-                    startingWindowTime = randint(max(endingWindowTime, releaseTime, day * dayLength), min(deadline, (day + 1) * dayLength - 1) - duration)
-                    endingWindowTime = randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
+                    startingWindowTime = random.randint(max(endingWindowTime, releaseTime, day * dayLength), min(deadline, (day + 1) * dayLength - 1) - duration)
+                    endingWindowTime = random.randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
                     dayTimeWindow = (startingWindowTime, endingWindowTime)
                     assert(startingWindowTime >= releaseTime)
                     assert(endingWindowTime <= deadline)
@@ -84,9 +106,9 @@ def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, p
     task = []
     
     for feature in [xConstraint, yConstraint, releaseTime]:
-        task.append(randint(0, feature)) 
-    task.append(randint(1, maxDuration))
-    task.append(randint(task[2] + task[3], deadline))
+        task.append(random.randint(0, feature)) 
+    task.append(random.randint(1, maxDuration))
+    task.append(random.randint(task[2] + task[3], deadline))
     setPriorityOfTask(task, priority)
     setRequiredOfTask(task)
     setTimeWindowsOfTask(task, numDays)
@@ -113,6 +135,7 @@ def writeNTasks(n, csvFile):
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
         maxSumProfit = (n + 1) * priorityRange + 1
         process(taskList, maxSumProfit)
+        setDependencies(taskList, numDependencies)
         for task in taskList:
             writer.writerow(task)
     return csvFile
