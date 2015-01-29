@@ -1,4 +1,4 @@
-import vns, Objects
+import vns, Objects, copy
 
 # PROCESSING DELETE
 def setup():
@@ -7,7 +7,9 @@ def setup():
     
     global sideBarWidth, headerHeight, schedSteps, currStep, sched
     
-    global dayColor, twColor, headerColor, sideBarColor, textColor
+    global dayColor, twColor, headerColor, sideBarColor, textColor, keyPressed
+    
+    keyPressed = [False, False]
     
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
              color(150, 170, 213), color(200, 212, 238)]
@@ -32,7 +34,7 @@ def setup():
     sched = []
     
     sideBarWidth = 75
-    headerHeight = 30
+    headerHeight = 60
     currStep = [-1]
         
     currSchedule, schedSteps = vns.solve(pwd("test50.csv"))
@@ -40,7 +42,6 @@ def setup():
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
     
-    frameRate(5)
     
 
 def draw():
@@ -48,26 +49,47 @@ def draw():
         currStep[0] = 0
         sched.append(schedSteps[currStep[0]])
         drawRoute()
+        return
     
-    if keyPressed and keyCode == RIGHT:
+    if keyPressed[0]:
+        keyPressed[0] = False
         currStep[0] += 1
         newSched = schedSteps[currStep[0]]
+        
         if isinstance(newSched[1], Objects.Route):
+            print "ROUTE"
+            print newSched
             routeIndex = newSched[2]
+            sched[0] = copy.deepcopy(sched[0])
             sched[0][1][routeIndex] = newSched[1]
+            sched[0][0] = newSched[0]
+            schedSteps[currStep[0]] = copy.deepcopy(sched[0])
         else:
+            print "SCHED"
             sched.pop()
             sched.append(newSched)
         
         drawRoute()
-        
+    elif keyPressed[1]:
+        keyPressed[1] = False
+        if currStep[0] > 1:
+            currStep[0] -= 1
+            newSched = schedSteps[currStep[0]]
+            sched.pop()
+            sched.append(newSched)
+        drawRoute()
+    
+def keyPressed():
+    if keyCode == RIGHT:
+        keyPressed[0] = True
+    elif keyCode == LEFT:
+        keyPressed[1] = True
     
 
 # maybe have global step variable.
 # Every time a new step happens in vns, increment it
 # In draw, wait
 
-# PROCESSING DELETE
 def drawRoute():
     pushStyle()
     
@@ -88,19 +110,17 @@ def drawRoute():
         routeIndex = (x - sideBarWidth) / routeWidth
         if routeIndex < len(currSchedule):
             drawRouteTimeWindows(x, currSchedule[routeIndex], routeWidth, routeIndex)
-    print stringInfo
+    print currStep[0], stringInfo
     
     fill(textColor, 255)
     text(stringInfo, width/2 - 200, 10, 400, headerHeight)
     popStyle()
     
 
-
-# PROCESSING DELETE
 def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
     pushStyle()
     stroke(50)
-    fill(twColor, 150)
+    
     for t in range(len(route)):
         task = route[t]
         taskWidth = routeWidth / len(route)
@@ -111,5 +131,11 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             scale = float(height - headerHeight) / 100.0
             twStart = (timeWindow[0] - routeIndex * 100) * scale
             twEnd = (timeWindow[1] - routeIndex * 100) * scale
+            fill(twColor, 150)
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
+            fill(textColor, 255)
+            text(task.id, taskX + taskWidth/2 - 5 , 45) 
+
+            
+            
     popStyle()

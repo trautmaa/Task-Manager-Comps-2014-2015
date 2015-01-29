@@ -46,7 +46,7 @@ def solve(csvFile):
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
 
-    schedSteps.append(("greedySched", bestGreedy))
+    schedSteps.append(["greedySched", bestGreedy])
             
     assert(isFeasible(taskList, bestGreedy))
 
@@ -67,6 +67,8 @@ def solve(csvFile):
     print "Profit of VNS Schedule is: "
     print currSchedule.getProfit()
     
+    for x in schedSteps:
+        print x[0]
 
 #     helperFunctions.writeTasks("testReturn.csv", currSchedule)
     return currSchedule, schedSteps
@@ -118,15 +120,15 @@ def vns(taskList, currSchedule):
             
             iterCount += 1
             
-            schedSteps.append(("Sched before anything, nHood %d" %(nHood), currSchedule))
+            schedSteps.append(["Sched before anything, nHood %d" %(nHood), currSchedule])
             
             shakeSolution = shaking(currSchedule, nHood)
             
-            schedSteps.append(("Sched after shaking, nHood %d" %(nHood), shakeSolution))
+            schedSteps.append(["Sched after shaking, nHood %d" %(nHood), shakeSolution])
             
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
             
-            schedSteps.append(("Sched after iterativeImprovent, nHood %d" %(nHood), iterSolution))
+            schedSteps.append(["Sched after iterativeImprovent, nHood %d" %(nHood), iterSolution])
             
 
             # make sure the modified solution is still feasible. 
@@ -134,7 +136,7 @@ def vns(taskList, currSchedule):
             # If it is, and it is a better solution, update bestSolution
             feasibleSchedule = isFeasible(taskList, iterSolution)
             if feasibleSchedule != None:
-                schedSteps.append(("Sched after isFeasible", feasibleSchedule))
+                schedSteps.append(["Sched after isFeasible", feasibleSchedule])
             
             
             # if feasible and better
@@ -200,7 +202,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
-    schedSteps.append(("At the end of shaking, nHood %d" %(nHood), newSchedule))
+    schedSteps.append(["At the end of shaking, nHood %d" %(nHood), newSchedule])
 #     print "********** Exiting shaking **********"
     return newSchedule
 
@@ -426,7 +428,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
         newSchedule = bestInsertion(taskList, currSchedule)
 
 #     print "********** Exiting iterativeImprovement **********"
-    schedSteps.append(("At the end of iterativeImprovement at nHood %d" %(nHood), newSchedule))
+    schedSteps.append(["At the end of iterativeImprovement at nHood %d" %(nHood), newSchedule])
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
@@ -450,9 +452,11 @@ def threeOPT(taskList, currSchedule):
         topRange = min(k + 4, currLength - 2)
         for j in range(k + 1, topRange):
             route, currFeasibility = isRouteFeasible(currRoute, day)
+            schedSteps.append(["Within threeOPT1", route])
             newRoute = switchChains(k, j, currRoute)
             newLength = len(newRoute)
             route, newFeasibility = isRouteFeasible(currRoute, day)
+            schedSteps.append(["Within threeOPT2", route])
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
                     currSchedule[day] = newRoute
@@ -561,11 +565,11 @@ def isFeasible(taskList, currSchedule):
         else:
             newSchedule[r] = newRoute
 #     print "********** Exiting isFeasible **********"
-    schedSteps.append(("Before minRoute:", newSchedule))
+    schedSteps.append(["Before minRoute:", newSchedule])
 
     newSchedule = minRoute(taskList, newSchedule)
     
-    schedSteps.append(("At the end of isFeasible", newSchedule))
+    schedSteps.append(["At the end of isFeasible", newSchedule])
     return newSchedule
 
 def isRouteFeasible(currRoute, routeIndex):
@@ -597,7 +601,7 @@ def isRouteFeasible(currRoute, routeIndex):
     
     if currRoute != None:
 #         print "********** Exiting isRouteFeasible1 **********"
-        schedSteps.append(("Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex))
+        schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
         return currRoute, 0
     
     infeas = 0
@@ -629,7 +633,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    schedSteps.append(("Route %d is not feasible after TTWS. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex))
+    schedSteps.append(["Route %d is not feasible after TTWS. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
     return None, infeas
                     
 
