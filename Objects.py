@@ -51,10 +51,14 @@ class Task:
     def setRequired(self, required):
         self.required = required
         
+    #   This is a list of task IDs that this task would be dependent on.  
+    #   Ie, this task cannot be completed until all dependent tasks have been completed.    
+    def setTaskDependency(self, taskIds):
+        self.dependencyTasks = taskIds
     
     #   This is a list of days. Each day has a list of time windows
-    #    they will come in as a string: "[[(twStart1, twEnd1),(twStart2, twEnd2)], [day2..], etc.]
-    #    do a regex to read it in. List of lists (days) of tuples (tw starts and ends)
+    #   they will come in as a string: "[[(twStart1, twEnd1),(twStart2, twEnd2)], [day2..], etc.]
+    #   do a regex to read it in. List of lists (days) of tuples (tw starts and ends)
     def setTimeWindows(self, timeWindows):
         self.timeWindows = timeWindows
         
