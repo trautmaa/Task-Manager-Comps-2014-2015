@@ -161,6 +161,20 @@ def draw():
     
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
 def update(x, y, whichTask, whichDay):
+    
+    #if cursor is in the map
+    if x >= mapX and x <= mapX + mapDimension and y >= mapY and y <= mapY + mapDimension:
+        coordPlay = 7
+        matchingCoordsX = []
+        for d in range(len(taskMapDots)):
+            for t in range(len(taskMapDots[d])):
+                coordinates = taskMapDots[d][t]
+                if x >= (coordinates[0] - coordPlay) and x <= (coordinates[0] + coordPlay):
+                    if (y >= coordinates[1] - coordPlay) and y <= (coordinates[1] + coordPlay):
+                        #if x and y are within the coordinate bounds, return the task # and day #
+                        return t, d
+                            
+    #else cursor could be on the schedule
     #find out which day
     for d in range(len(dayRects)):
         day = dayRects[d]
@@ -175,24 +189,8 @@ def update(x, y, whichTask, whichDay):
         if x >= task[0] and x <= task[0] + task[2] and y >= task[1] and y <= task[1] + task[3]:
             whichTask = t
             return whichTask, whichDay
-    #find out which map x
-    coordPlay = 50
-    matchingCoordsX = []
-    matchingCoords = []
-    for d in range(len(taskMapDots)):
-        for t in range(len(taskMapDots[d])):
-            coordinates = taskMapDots[d][t]
-            if x >= ((coordinates[0] - coordPlay) and x <= (coordinates[0] + coordPlay)):
-                matchingCoordsX.append([coordinates[0], coordinates[1], d, t])
-    #print "matching coords x", matchingCoordsX
-    for i in range(len(matchingCoordsX)):
-        tempCoords = matchingCoordsX[i]
-        if ((y >= (tempCoords[1] - coordPlay)) and (y <= (tempCoords[1] + coordPlay))):
-            matchingCoords.append(tempCoords)
-            #print "BINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOO"
-    #print "matching coords", matchingCoords
+    
                 
-    #find out which map y
     return -1, whichDay
 
 #Highlight the correct day and task
