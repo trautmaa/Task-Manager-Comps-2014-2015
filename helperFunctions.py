@@ -11,14 +11,14 @@ A function given two task objects will return the euclidean distance
 between them. I should check if **.5 is faster than math.sqrt()?
 '''
 def getDistanceBetweenTasks(taskA, taskB):
-    return int(math.ceil(getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))))
+    return getDistanceBetweenCoords(getCoords(taskA), getCoords(taskB))
 
 
 '''
 A function that returns the distance between 2 tuple coordinates.
 '''
 def getDistanceBetweenCoords(locationA, locationB):
-    return ((locationA[0] - locationB[0]) ** 2 + (locationA[1] - locationB[1]) ** 2) ** 0.5
+    return int(math.ceil(((locationA[0] - locationB[0]) ** 2 + (locationA[1] - locationB[1]) ** 2) ** 0.5))
 
 '''
 A function that returns a tuple of a task's coordinates.

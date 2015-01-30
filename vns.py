@@ -630,7 +630,11 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    schedSteps.append(["Route %d is not feasible after tightening. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
+    # we should fix this so these functions can be called from other places without having to catch NameError
+    try:
+        schedSteps.append(["Route %d is not feasible after tightening. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
+    except NameError:
+        pass
     return None, infeas
                     
 
@@ -718,8 +722,12 @@ def tightenTWStarts(currRoute, routeIndex):
         
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
-    
-    schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
+        # we should fix this so these functions can be called from other places without having to catch NameError
+    try:
+        schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
+    except NameError:
+        pass
+
     return currRoute
 
 '''
@@ -813,7 +821,11 @@ def tightenTWEnds(currRoute, routeIndex):
         return None
     
     # print "********** Exiting tightenTWEnds3 **********"
-    schedSteps.append(["Route %d is feasible after TTWE" %(routeIndex), currRoute, routeIndex])
+    try:
+        schedSteps.append(["Route %d is feasible after TTWE" %(routeIndex), currRoute, routeIndex])
+    except NameError:
+        pass
+        
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
