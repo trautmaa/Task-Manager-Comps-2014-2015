@@ -24,7 +24,7 @@ def setup():
     dayLength = float(100)
     
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, blues, minWidth, timeList, timeWindowRects
+    global schedule, blues, minWidth, timeList, timeWindowRects, maxNumTimeWindows
 
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
@@ -102,6 +102,7 @@ def setup():
     #determine maximum coordinate values
     maxX = 0
     maxY = 0
+    maxNumTimeWindows = 0
     for day in range(len(schedule)):
         for t in range(len(schedule[day])):
             task = schedule[day][t]
@@ -111,6 +112,12 @@ def setup():
                 maxX = taskX
             if taskY > maxY:
                 maxY = taskY
+            
+            #get maxNumTimeWindows so we can make ghost time windows appropriate width in highlight()
+            for j in range(len(schedule[day][t].timeWindows)):
+                if len(schedule[day][t].timeWindows[j]) > maxNumTimeWindows:
+                    maxNumTimeWindows = len(schedule[day][t].timeWindows[j])
+                
     
     size(w, h)
     setupScreen()
@@ -154,6 +161,7 @@ def draw():
     
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
 def update(x, y, whichTask, whichDay):
+    #find out which day
     for d in range(len(dayRects)):
         day = dayRects[d]
         if x >= day[0] and x <= day[0] + day[2] and y >= day[1] and y <= day[1] + day[3]:
@@ -161,12 +169,30 @@ def update(x, y, whichTask, whichDay):
             break
     if whichDay == -1:
         return -1, -1
+    #find out which task
     for t in range(len(taskRects[whichDay])):
         task = taskRects[whichDay][t]
         if x >= task[0] and x <= task[0] + task[2] and y >= task[1] and y <= task[1] + task[3]:
-            
             whichTask = t
             return whichTask, whichDay
+    #find out which map x
+    coordPlay = 50
+    matchingCoordsX = []
+    matchingCoords = []
+    for d in range(len(taskMapDots)):
+        for t in range(len(taskMapDots[d])):
+            coordinates = taskMapDots[d][t]
+            if x >= ((coordinates[0] - coordPlay) and x <= (coordinates[0] + coordPlay)):
+                matchingCoordsX.append([coordinates[0], coordinates[1], d, t])
+    #print "matching coords x", matchingCoordsX
+    for i in range(len(matchingCoordsX)):
+        tempCoords = matchingCoordsX[i]
+        if ((y >= (tempCoords[1] - coordPlay)) and (y <= (tempCoords[1] + coordPlay))):
+            matchingCoords.append(tempCoords)
+            #print "BINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOOBINGOOOOOOOOOOOOOO"
+    #print "matching coords", matchingCoords
+                
+    #find out which map y
     return -1, whichDay
 
 #Highlight the correct day and task
@@ -357,8 +383,9 @@ def drawTasks(route, leftX):
             percentOfDay = int(twStart) / int(dayLength)
             startTime = ((float(twStart) / float(dayLength)) - percentOfDay) * dayHeight
             
-            numTimeWindowsForTask = len(task.timeWindows[dayNum])
-            widths = dayWidth/numTimeWindowsForTask
+            #numTimeWindowsForTask = len(task.timeWindows[dayNum])
+            #widths = dayWidth/numTimeWindowsForTask
+            widths = dayWidth/maxNumTimeWindows
             xStart = leftX + tw * widths
             
             #add rect dimensions for each time window            
@@ -371,6 +398,7 @@ def drawTasks(route, leftX):
     #taskRects is a list of lists of the task rectangle's dimensions
     timeWindowRects.append(timeWindowsToAdd)
     taskRects.append(dayToAdd)
+    #taskMapDots is a list days, each of which is a list of coordinates of points on the map for that day
     taskMapDots.append(mapLocationsToAdd)
 
     popStyle()
