@@ -5,8 +5,9 @@
 '''
 To do:
 
-Make highlighting go the other way too
-
+Label days
+Make it clearer what the ghost time windows are
+Add a menu to choose algorithm and task input file, AND be able to manually input tasks
 
 '''
 
