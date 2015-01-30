@@ -46,7 +46,7 @@ def solve(csvFile):
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
 
-    schedSteps.append(["greedySched", bestGreedy])
+    schedSteps.append(["greedySched", copy.deepcopy(bestGreedy)])
             
     assert(isFeasible(taskList, bestGreedy))
 
@@ -134,7 +134,7 @@ def vns(taskList, currSchedule):
             # If it is, and it is a better solution, update bestSolution
             feasibleSchedule = isFeasible(taskList, iterSolution)
             if feasibleSchedule != None:
-                schedSteps.append(["Sched after isFeasible", feasibleSchedule])
+                schedSteps.append(["Sched after isFeasible", copy.deepcopy(feasibleSchedule)])
             
             
             # if feasible and better
@@ -450,11 +450,11 @@ def threeOPT(taskList, currSchedule):
         topRange = min(k + 4, currLength - 2)
         for j in range(k + 1, topRange):
             route, currFeasibility = isRouteFeasible(currRoute, day)
-            schedSteps.append(["Within threeOPT1", route])
+            schedSteps.append(["Within threeOPT1", copy.deepcopy(route)])
             newRoute = switchChains(k, j, currRoute)
             newLength = len(newRoute)
             route, newFeasibility = isRouteFeasible(currRoute, day)
-            schedSteps.append(["Within threeOPT2", route])
+            schedSteps.append(["Within threeOPT2", copy.deepcopy(route)])
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
                     currSchedule[day] = newRoute
@@ -563,11 +563,11 @@ def isFeasible(taskList, currSchedule):
         else:
             newSchedule[r] = newRoute
 #     print "********** Exiting isFeasible **********"
-    schedSteps.append(["Before minRoute:", newSchedule])
+    schedSteps.append(["Before minRoute:", copy.deepcopy(newSchedule)])
 
     newSchedule = minRoute(taskList, newSchedule)
     
-    schedSteps.append(["At the end of isFeasible", newSchedule])
+    schedSteps.append(["At the end of isFeasible", copy.deepcopy(newSchedule)])
     return newSchedule
 
 def isRouteFeasible(currRoute, routeIndex):
@@ -922,7 +922,7 @@ def minRoute(taskList, currSchedule):
         # update the schedule to have this route
         bestSchedule[d] = bestRoute
     
-    schedSteps.append(["Sched at end of minRoute, before task revert", bestSchedule])
+    schedSteps.append(["Sched at end of minRoute, before task revert", copy.deepcopy(bestSchedule)])
 
     # Set bestSchedule tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
