@@ -14,6 +14,13 @@ figure out
     - soft dominance
     - parallel python
 '''
+'''
+Global variables needed(?):
+-array of visited nodes (172)
+-primal bound information
+
+'''
+
 
 
 '''
@@ -52,10 +59,12 @@ def isFeasible(node, currTime, currPath):
 
 def notSoftDominated(currPath):
     currTime = time of currPath
-    for each ordering where we swap the last node with each other node (v1,v2,v3|v3,v2,v1|v1,v3,v2):
+    for each ordering where we swap the last added node with each other previous node (exluding vs) (Vs,v1,v2,v3,vi|Vs,v3,v2,v1,vi|Vs,v1,v3,v2,vi):
         if the newPath is feasible:
             if the newTime < currTime:
+            	prune this path because we will find a better one
                 return False
+    keep this path because it's the best with these nodes
     return True
 
 def inBounds(node, currTime):
