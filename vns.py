@@ -12,12 +12,9 @@ import math
 import random
 import copy
 import csv
+from createTests import dayLength
 from collections import deque
 
-
-# AVERY connect this to actual dayLength
-global timeLimit
-timeLimit = 5000
 
 # Number of seconds VNS is allowed to run
 stoppingCondition = 3
@@ -49,11 +46,11 @@ def solve(csvFile):
     schedSteps.append(["greedySched", copy.deepcopy(bestGreedy)])
             
     assert(isFeasible(taskList, bestGreedy))
-
     # print bestGreedy
     
     modTasks = bestGreedy[:]
     currSchedule = createSchedule(copy.deepcopy(bestGreedy))
+    bestGreedy.resetEndingTimes()
     # Modify the greedy algorithm
     currSchedule = vns(taskList, currSchedule)
     assert(isFeasible(taskList, currSchedule)) 
@@ -69,6 +66,7 @@ def solve(csvFile):
     
 
 #     helperFunctions.writeTasks("testReturn.csv", currSchedule)
+
     return currSchedule, schedSteps
 
 '''
@@ -100,6 +98,7 @@ def vns(taskList, currSchedule):
     if currSchedule == None:
         print "Your incumbent solution is infeasible, try again"
         exit(1)
+    currSchedule.resetEndingTimes
     bestSchedule = currSchedule
     
     initTime = time.time()
@@ -110,6 +109,7 @@ def vns(taskList, currSchedule):
     while time.time() - initTime < stoppingCondition:
         # If we have gone through all neighborhood structures, start again
         nHood = 1
+        schedSteps.append(["OUTSIDE vns little while loop", copy.deepcopy(currSchedule)])
         
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
             currSchedule = copy.deepcopy(currSchedule)
@@ -118,23 +118,24 @@ def vns(taskList, currSchedule):
             
             iterCount += 1
             
-            schedSteps.append(["Sched before anything, nHood %d" %(nHood), currSchedule])
+            schedSteps.append(["Sched before anything, nHood %d" %(nHood), copy.deepcopy(currSchedule)])
             
             shakeSolution = shaking(currSchedule, nHood)
             
-            schedSteps.append(["Sched after shaking, nHood %d" %(nHood), shakeSolution])
+            schedSteps.append(["Sched after shaking, nHood %d" %(nHood), copy.deepcopy(shakeSolution)])
             
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
             
-            schedSteps.append(["Sched after iterativeImprovent, nHood %d" %(nHood), iterSolution])
+            schedSteps.append(["Sched after iterativeImprovent, nHood %d" %(nHood), copy.deepcopy(iterSolution)])
             
 
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
+            
+            schedSteps.append(["Sched before isFeasible, nHood %d" %(nHood), copy.deepcopy(iterSolution)])
             feasibleSchedule = isFeasible(taskList, iterSolution)
-            if feasibleSchedule != None:
-                schedSteps.append(["Sched after isFeasible", copy.deepcopy(feasibleSchedule)])
+            schedSteps.append(["Sched after isFeasible", copy.deepcopy(feasibleSchedule)])
             
             
             # if feasible and better
@@ -145,9 +146,11 @@ def vns(taskList, currSchedule):
                 # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
                     currSchedule = feasibleSchedule
+                    schedSteps.append(["Sched is BETTER!!!", copy.deepcopy(currSchedule)])
                     nHood = 1
                 # Otherwise, increment nHood
                 else:
+                    schedSteps.append(["Sched is not better :( ", copy.deepcopy(currSchedule)])
                     nHood += 1
                 
                 # If our solution is better than the best solution so far, update.
@@ -161,6 +164,7 @@ def vns(taskList, currSchedule):
                     numIterations = 0
                     
                     if nHood > 8:
+                        schedSteps.append(["sched is not better but 8000", copy.deepcopy(feasibleSchedule)])
                         currSchedule = feasibleSchedule
                         nHood = 1
                         unplannedTasks = prevUnplanned
@@ -169,8 +173,10 @@ def vns(taskList, currSchedule):
                     # If the new solution is not more than .5% longer (distance), accept
                     elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSchedule):
                         currSchedule = feasibleSchedule
+                        schedSteps.append(["sched is not better but 8000 and other stuff", copy.deepcopy(currSchedule)])
                         unplannedTasks = prevUnplanned
                 else:
+                    schedSteps.append(["sched was NONE", copy.deepcopy(feasibleSchedule)])
                     numIterations += 1 
                     unplannedTasks = prevUnplanned
             else:
@@ -200,7 +206,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
-    schedSteps.append(["At the end of shaking, nHood %d" %(nHood), newSchedule])
+    schedSteps.append(["At the end of shaking, nHood %d" %(nHood), copy.deepcopy(newSchedule)])
 #     print "********** Exiting shaking **********"
     return newSchedule
 
@@ -386,27 +392,41 @@ Removes tasks from a random day/position and adds removed tasks to unplanned tas
 def optionalExchange2(currSchedule, nHood):
 #     print "********** Entering optExchange2 **********"
 
-    # calculate number to remove (nHood-12)
-    numToRemove = nHood - 12
+    currSchedule = copy.deepcopy(currSchedule)
+    
     # pick a random day and position
     
     # pick a random day and starting time to exchange customers
     day = random.randint(0, len(currSchedule) - 1)
-    pos = random.randint(0, len(currSchedule[day]))
     
-    # using the numToRemove and numToAdd values, add and remove however many customers you need to
+    # calculate number to remove (nHood-12)
+    numToRemove = min(nHood - 12, len(currSchedule[day])-1)
+    
+    if len(currSchedule[day]) - numToRemove - 1 == 0:
+        pos = 0
+    else:
+        pos = random.randint(0, len(currSchedule[day]) - numToRemove - 1)
+    
+    
+    required = []
+    # using the numToRemove value, remove however many customers you need to
     for task in currSchedule[day][pos:pos + numToRemove]:
         if task.required == 0:
             unplannedTasks.append(task)
+        else:
+            required.append(task)
 
-    newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
+    newDay = currSchedule[day][:pos] + required + currSchedule[day][pos + numToRemove:]
 
     newRoute = Objects.Route()
     for task in newDay:
         newRoute.append(task, None)
 
     currSchedule[day] = newRoute
+    
 #     print "********** Exiting optExchange2 **********"
+    
+    schedSteps.append(["At the end of optExchange2 at nHood %d" %(nHood), copy.deepcopy(currSchedule)])
     return currSchedule
 
 
@@ -426,7 +446,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
         newSchedule = bestInsertion(taskList, currSchedule)
 
 #     print "********** Exiting iterativeImprovement **********"
-    schedSteps.append(["At the end of iterativeImprovement at nHood %d" %(nHood), newSchedule])
+    schedSteps.append(["At the end of iterativeImprovement at nHood %d" %(nHood), copy.deepcopy(newSchedule)])
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
@@ -444,17 +464,18 @@ def threeOPT(taskList, currSchedule):
     if currLength > 3:
         maxM = math.factorial(currLength) / (6 * math.factorial(currLength - 3))
     else:
+        schedSteps.append(["sched too short in threeOPT", copy.deepcopy(currSchedule)])
         return currSchedule
     
     for k in range(len(currRoute) - 2):
         topRange = min(k + 4, currLength - 2)
         for j in range(k + 1, topRange):
             route, currFeasibility = isRouteFeasible(currRoute, day)
-            schedSteps.append(["Within threeOPT1", copy.deepcopy(route)])
+            schedSteps.append(["Within threeOPT1", copy.deepcopy(route), day])
             newRoute = switchChains(k, j, currRoute)
             newLength = len(newRoute)
             route, newFeasibility = isRouteFeasible(currRoute, day)
-            schedSteps.append(["Within threeOPT2", copy.deepcopy(route)])
+            schedSteps.append(["Within threeOPT2", copy.deepcopy(route), day])
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
                     currSchedule[day] = newRoute
@@ -483,11 +504,13 @@ def bestInsertion(taskList, currSchedule):
     # Sequentially consider tasks from unplannedTasks
     # For each day, if that task:
         # has a time window in that day
-        # and the duration of that day + that task's duration <= timeLimit
+        # and the duration of that day + that task's duration <= dayLength
     # find the additional distance of adding that task in that location
     # if that is smaller than the smallest so far, update smallest
     
     # otherwise, enqueue it and go to the next task
+
+    currSchedule = copy.deepcopy(currSchedule)
 
     tasksSinceLastInsertion = 0
     # while we have not explored all of the unplanned tasks
@@ -510,7 +533,7 @@ def bestInsertion(taskList, currSchedule):
             # if the duration of the task under consideration added to the current day 
             # is less than the time limit then accept it as valid
             if len(currTask.timeWindows[day]) > 0 and \
-            getRouteDuration(currSchedule[day]) + currTask.duration < timeLimit:
+            getRouteDuration(currSchedule[day]) + currTask.duration < dayLength:
                 isValid = True
                 
                 # for each position within the day 
@@ -579,7 +602,7 @@ def isRouteFeasible(currRoute, routeIndex):
     # start, and from release time.
     for t in range(1, len(currRoute)):
         task = currRoute[t]
-        
+
         # include travel time in these duplicate tasks. (added to duration of task,
         # subtract from release time and time window starts)
         travelTime = helperFunctions.getDistanceBetweenTasks(task, currRoute[t - 1])
@@ -592,10 +615,9 @@ def isRouteFeasible(currRoute, routeIndex):
             task.timeWindows[routeIndex][tw] = newTW
             
     oldRoute = copy.deepcopy(currRoute)
-        
+    
     currRoute = tightenTWStarts(currRoute, routeIndex)
     currRoute = tightenTWEnds(currRoute, routeIndex)
-
     
     if currRoute != None:
 #         print "********** Exiting isRouteFeasible1 **********"
@@ -632,7 +654,7 @@ def isRouteFeasible(currRoute, routeIndex):
 #     print "********** Exiting isRouteFeasible2 **********"
     # we should fix this so these functions can be called from other places without having to catch NameError
     try:
-        schedSteps.append(["Route %d is not feasible after tightening. Infeasibility: %f" %(routeIndex, infeas), currRoute, routeIndex])
+        schedSteps.append(["Route %d is not feasible after tightening. Infeasibility: %.2f" %(routeIndex, infeas), copy.deepcopy(currRoute), routeIndex])
     except NameError:
         pass
     return None, infeas
@@ -724,7 +746,7 @@ def tightenTWStarts(currRoute, routeIndex):
     # print "********** Exiting tightenTWStarts 3 **********"
         # we should fix this so these functions can be called from other places without having to catch NameError
     try:
-        schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex])
+        schedSteps.append(["Route %d is feasible after TTWS" %(routeIndex), copy.deepcopy(currRoute), routeIndex])
     except NameError:
         pass
 
@@ -822,7 +844,7 @@ def tightenTWEnds(currRoute, routeIndex):
     
     # print "********** Exiting tightenTWEnds3 **********"
     try:
-        schedSteps.append(["Route %d is feasible after TTWE" %(routeIndex), currRoute, routeIndex])
+        schedSteps.append(["Route %d is feasible after TTWE" %(routeIndex), copy.deepcopy(currRoute),routeIndex])
     except NameError:
         pass
         

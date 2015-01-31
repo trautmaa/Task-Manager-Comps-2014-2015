@@ -42,7 +42,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("test50.csv"))
+    currSchedule, schedSteps = vns.solve(pwd("test1000.csv"))
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -57,6 +57,7 @@ def draw():
         return
     
     if keyPressed[0]:
+        
         keyPressed[0] = False
         currStep[0] += 1
         newSched = schedSteps[currStep[0]]
@@ -64,12 +65,14 @@ def draw():
         if isinstance(newSched[1], Objects.Route):
             routeIndex = newSched[2]
             sched[0] = copy.deepcopy(sched[0])
-            sched[0][1][routeIndex] = newSched[1]
+            if sched[0][1] != None:
+                sched[0][1][routeIndex] = newSched[1]
             sched[0][0] = newSched[0]
             schedSteps[currStep[0]] = copy.deepcopy(sched[0])
         else:
             sched.pop()
             sched.append(newSched)
+        
         
         drawRoute()
     elif keyPressed[1]:
@@ -95,6 +98,7 @@ def keyPressed():
 def drawRoute():
     pushStyle()
     
+
     
     fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
@@ -104,16 +108,21 @@ def drawRoute():
     currSchedule = sched[0][1]
 
     stringInfo = sched[0][0]
-    
-    routeWidth = (width - sideBarWidth) / len(currSchedule)
-    fill(dayColor, 255)
-    stroke(150)
-    for x in range(sideBarWidth, width, routeWidth):
-        rect(x, headerHeight, routeWidth, height - headerHeight)
-        routeIndex = (x - sideBarWidth) / routeWidth
-        if routeIndex < len(currSchedule):
-            drawRouteTimeWindows(x, currSchedule[routeIndex], routeWidth, routeIndex)
     print currStep[0], stringInfo
+    if currSchedule == None:
+        fill(dayColor)
+        rect(sideBarWidth, headerHeight, width - sideBarWidth, height - headerHeight)
+        stringInfo = stringInfo + " IT WAS NONE"
+    else:
+        routeWidth = (width - sideBarWidth) / len(currSchedule)
+        fill(dayColor, 255)
+        stroke(150)
+        for x in range(sideBarWidth, width, routeWidth):
+            rect(x, headerHeight, routeWidth, height - headerHeight)
+            routeIndex = (x - sideBarWidth) / routeWidth
+            if routeIndex < len(currSchedule):
+                drawRouteTimeWindows(x, currSchedule[routeIndex], routeWidth, routeIndex)
+        
     
     fill(textColor, 255)
     text(stringInfo, width/2 - 200, 10, 400, headerHeight)

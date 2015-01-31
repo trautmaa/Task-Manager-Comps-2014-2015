@@ -25,7 +25,7 @@ priority, waiting time, and added distance.
 def getBestInsertionOfTaskByTime(schedule, task):
     bestScore = 0
     bestSchedule = schedule
-    # for each route in the scheudle 
+    # for each route in the schedule 
     for index, route in enumerate(schedule.routeList):
         # position relative to tasks that are already in the route...
         for position in range(len(route) + 1):
@@ -44,7 +44,7 @@ def getBestInsertionOfTaskByTime(schedule, task):
                     bestSchedule = newSchedule
                     bestScore = score
 
-    return (score, bestSchedule, task)
+    return (bestScore, bestSchedule, task)
           
 '''
 Attempts to insert a task between two other tasks in a schedule.
