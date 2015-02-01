@@ -17,7 +17,7 @@ from collections import deque
 
 
 # Number of seconds VNS is allowed to run
-stoppingCondition = 3
+stoppingCondition = 5
 
 random.seed(211680280677)
 
@@ -200,7 +200,7 @@ def shaking(currSchedule, nHood):
     if nHood < 8:
         newSchedule = crossExchange(currSchedule, nHood)
         
-    elif nHood >= 8 and nHood < 12:
+    elif nHood >= 8 and nHood <= 12:
         newSchedule = optionalExchange1(currSchedule, nHood)
         
     else:
@@ -217,6 +217,8 @@ def shaking(currSchedule, nHood):
 def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
         
+    currSchedule = copy.deepcopy(currSchedule)
+    
     if len(currSchedule) <= 1:
 #         print "Not doing cross exchange"
 #         print "********** Exiting crossExchange **********"
@@ -242,24 +244,29 @@ def crossExchange(currSchedule, nHood):
         route2Len = 0
     else:
         route2Len = random.randint(0, min(len2, nHood))
+    
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
     routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
 
     route1Start, route1End = routeSegment1[0], routeSegment1[1]
     route2Start, route2End = routeSegment2[0], routeSegment2[1]
 
-    # setting route and  new day to be what they should be
     route1 = currSchedule[day1][route1Start : route1End]
+    route2 = currSchedule[day2][route2Start : route2End]
+
+    tasks1 = currSchedule[day1][:route1Start] + route2 +currSchedule[day1][route1End:]
+    tasks2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2End:]
+
+    # setting route and  new day to be what they should be
     newDay1 = Objects.Route()
-    tasks1 = currSchedule[day1][:route1Start] + currSchedule[day1][route1End:]
     newDay1.setTaskList(tasks1, [None] * len(tasks1))
     
     
     # starting index of the sub-route we will be removing
-    route2 = currSchedule[day2][route2Start:route2End]
     newDay2 = Objects.Route()
-    tasks2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2End:]
     newDay2.setTaskList(tasks2, [None] * len(tasks2))
+    
+    
     
     for task in route2:
         unplannedTasks.append(task)
@@ -341,6 +348,7 @@ def optionalExchange1(currSchedule, nHood):
     # select the number of tasks to remove and add from unplanned according to nHood Index
     numToRemove = nHood - 9
     numToAdd = 1
+    
     if nHood == 12:
         numToRemove = 0
         numToAdd = 2
@@ -351,22 +359,33 @@ def optionalExchange1(currSchedule, nHood):
     pos = random.randint(0, len(currSchedule[day]))
     
     if numToRemove > 0:
+        required = []
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSchedule[day][pos:pos + numToRemove]:
             if task.required == 0:
                 unplannedTasks.append(task)
-        newDay = currSchedule[day][:pos] + currSchedule[day][pos + numToRemove:]
+            else:
+                required.append(task)
+        newDay = currSchedule[day][:pos] + required + currSchedule[day][pos + numToRemove:]
         
     else:
         newDay = currSchedule[day][:]
 
     # selecting which unplanned tasks to add
     addingTasks = []
-    for t in range(numToAdd):
-        if len(unplannedTasks) > 0:
-            popped = unplannedTasks.popleft()
+    t=0
+    firstNotAdded = -1
+    if len(unplannedTasks) > 0:
+        popped = unplannedTasks.popleft()
+    while t < numToAdd and len(unplannedTasks) > 0 and firstNotAdded != popped.id:
+        firstNotAdded = popped.id
+        if len(popped.timeWindows[day]) > 0:
             addingTasks.append(popped)
-            updatePrevUnplanned(popped)
+            popped = unplannedTasks.popleft()
+            t += 1
+        else:
+            unplannedTasks.append(popped)
+        updatePrevUnplanned(popped)
           
     # adding new tasks to day 
     newDay = newDay[:pos] + addingTasks + newDay[pos:]
@@ -501,78 +520,129 @@ def switchChains(k, j, currRoute):
 def bestInsertion(taskList, currSchedule):
 #     print "********** Entering bestInsertion **********"
 
-    # Sequentially consider tasks from unplannedTasks
-    # For each day, if that task:
-        # has a time window in that day
-        # and the duration of that day + that task's duration <= dayLength
-    # find the additional distance of adding that task in that location
-    # if that is smaller than the smallest so far, update smallest
-    
-    # otherwise, enqueue it and go to the next task
+#     print "current schedule:"
+#     print currSchedule
+#     print
 
     currSchedule = copy.deepcopy(currSchedule)
 
-    tasksSinceLastInsertion = 0
-    # while we have not explored all of the unplanned tasks
-    while tasksSinceLastInsertion < len(unplannedTasks):
+    # while we haven't broken the time-limit and we haven't looked at every unplanned task
+        # find the best spot to insert the current task within this route (distance)
+        # insert it there
         
-        # shortestDistance set to infinity 
-        shortestDistance = float("inf")
-        # keeps track of the day and position within the day at which to insert task
-        insertLocation = (0, 0)
+    #Keep track of the first task we try to add, stop if we try to add it again
+    currTask = unplannedTasks.popleft()
+    firstTaskID = currTask.id
+    firstTime = True
+    
+    #While this is or our first iteration or the current task isn't the first one we tried to add
+    while firstTime or firstTaskID != currTask.id:
         
-        # bool that keeps track of whether a give task is valid 
-        isValid = False
-        
-        currTask = unplannedTasks.popleft()
+        #It's no longer the first time and update prevUnplanned
+        firstTime = False
         updatePrevUnplanned(currTask)
-
-        # looping through each day in the current solution list 
-        for day in range(len(currSchedule)):
-            
-            # if the duration of the task under consideration added to the current day 
-            # is less than the time limit then accept it as valid
-            if len(currTask.timeWindows[day]) > 0 and \
-            getRouteDuration(currSchedule[day]) + currTask.duration < dayLength:
-                isValid = True
-                
-                # for each position within the day 
-                for pos in range(len(currSchedule[day]) - 1):
-                    
-                    task1 = currSchedule[day][pos]
-                    task2 = currSchedule[day][pos + 1]
-                   
-                    # calculates what the distance would be if the task under consideration were to be added between task1 and task2
-                    addedDist = helperFunctions.getDistanceBetweenTasks(task1, currTask) + \
-                    helperFunctions.getDistanceBetweenTasks(currTask, task2) - \
-                    helperFunctions.getDistanceBetweenTasks(task1, task2)
-                    
-                    # if the calculated distance is less than the shortestDistance value then reset shortestDistance and save the day and pos
-                    if addedDist < shortestDistance:
-                        shortestDistance = addedDist
-                        insertLocation = (day, pos)
-    
-        # adding the 'valid' task to the day at the specified position 
-        if isValid:
-            newRoute = Objects.Route()
-            day = insertLocation[0]
-            pos = insertLocation[1]
-            newRoute.taskList = currSchedule[day][:pos]
-            newRoute.endingTimes = [None] * len(newRoute.taskList)
-            newRoute.append(currTask, None)
-            for t in currSchedule[day][pos:]:
-                newRoute.append(t, None)
-            currSchedule[day] = newRoute
-            tasksSinceLastInsertion = 0
         
-        # if not valid then increment and add the task that was being evaluated back into the unplannedTasks list     
+        #Initialize the bestAdditionalDistance and bestSpot
+        #This is the smallest added distance the current task can add
+        bestAdditionalDistance = float("inf")
+        #This is the best spot for the current task to be added (route, spot in route)
+        bestSpot = [-1, -1]
+        foundSpot = False
+        
+        #For each route in the schedule
+        for routeIndex in range(len(currSchedule)):
+            
+            #Set the current route
+            route = currSchedule[routeIndex]
+            
+            if len(currTask.timeWindows[routeIndex]) == 0:
+                break
+            
+            
+            #Try adding the current unplanned task at location 0
+            #Get the distance from current unplanned to the original first task
+            dist = helperFunctions.getDistanceBetweenTasks(currTask, route[0])
+            #If this distance is better than what we have found before, update our variables
+            if dist < bestAdditionalDistance:
+                bestAdditionalDistance = dist
+                bestSpot = [routeIndex, 0]
+                foundSpot = True
+            
+            #For each additional spot in the route calculate the distance added from adding that task
+            for t in range(1, len(route)):
+                #Get the next task
+                task = route[t]
+                
+                #Calculate the additional distance needed by adding in the task at this location
+                
+                #Get the distance from the original task to the new unplanned task
+                dist = helperFunctions.getDistanceBetweenTasks(currTask, task)
+                
+                #Add the distance from the current unplanned task to the next planned task
+                dist += helperFunctions.getDistanceBetweenTasks(currTask, route[t-1])
+                
+                #Subtract the distance from the original two tasks
+                dist -= helperFunctions.getDistanceBetweenTasks(task, route[t-1])
+                
+                #If we have found a better distance and thus spot, update
+                if dist < bestAdditionalDistance:
+                    bestAdditionalDistance = dist
+                    bestSpot = [routeIndex, t]
+            
+            #Check the distance of adding the unplanned task to the end
+            dist = helperFunctions.getDistanceBetweenTasks(currTask, route[-1])
+            
+            #If we have found a better distance and thus spot, update
+            if dist < bestAdditionalDistance:
+                bestAdditionalDistance = dist
+                bestSpot = [routeIndex, len(route)]
+                foundSpot = True
+        
+#         print "best spot for task", currTask.id, "is", bestSpot
+        
+        #Create the new route with the added unplanned task
+        newRoute = copy.deepcopy(currSchedule[bestSpot[0]])
+        newRoute.taskList = newRoute.taskList[:bestSpot[1]] + [currTask] + newRoute.taskList[bestSpot[1]:]
+        newRoute.resetEndingTimes()
+#         print "newRoute"
+#         for task in newRoute.taskList:
+#             print task.id
+#         print
+#         print newRoute
+#         print
+        
+        #If that new route is under the dayLength, put it back in the schedule
+        if isRouteUnderTimeLimit(newRoute) and foundSpot:
+            currSchedule[bestSpot[0]] = newRoute
+            currTask = unplannedTasks.popleft()
+            firstTaskID = currTask.id
+            
+        
+        #If we did not find a place for this unplannedTask, increment counter and add it back to unplanned
         else:
-            tasksSinceLastInsertion += 1
             unplannedTasks.append(currTask)
-    
-    # after all that, add the task to the solution in the time with smallest added distance.
+            currTask = unplannedTasks.popleft()
+
+            
+        #Get the next unplanned task
+    appendToSchedSteps("Just finished bestInsertion", currSchedule)
 #     print "********** Exiting bestInsertion **********"
     return currSchedule
+
+def isRouteUnderTimeLimit(route):
+    totalTime = 0
+    
+    if len(route) == 0:
+        return True
+    
+    for t in range(len(route)-1):
+        task = route[t]
+        totalTime += task.duration
+        totalTime += helperFunctions.getDistanceBetweenTasks(task, route[t+1])
+    
+    totalTime += route[-1].duration    
+    
+    return totalTime < dayLength
 
 def isFeasible(taskList, currSchedule):
 #     print "********** Entering isFeasible **********"
@@ -1294,7 +1364,7 @@ def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
             
 def main():
     # print "********** Main **********"
-    result = solve("test1000.csv")
+    result = solve("test50.csv")
     print
     print result[0]
     print

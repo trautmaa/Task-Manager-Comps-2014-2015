@@ -98,7 +98,7 @@ def keyPressed():
 def drawRoute():
     pushStyle()
     
-
+    
     
     fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
@@ -109,6 +109,7 @@ def drawRoute():
 
     stringInfo = sched[0][0]
     print currStep[0], stringInfo
+    print currSchedule
     if currSchedule == None:
         fill(dayColor)
         rect(sideBarWidth, headerHeight, width - sideBarWidth, height - headerHeight)
@@ -141,11 +142,20 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
     scale = float(height - headerHeight) / 100.0
     
     for t in range(len(route)):
+        
         task = route[t]
+        
+        
+        print "TASK", task
+        
         taskWidth = routeWidth / len(route)
         taskX = routeX + t * taskWidth
         stroke(50, alpha = 100)
         strokeWeight(1)
+        
+        fill(textColor, 255)
+        text(task.id, taskX + taskWidth/2 - 5 , 45) 
+        
         for tw in range(len(task.timeWindows[routeIndex])):
             
             timeWindow = task.timeWindows[routeIndex][tw]
@@ -154,8 +164,7 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             twEnd = (timeWindow[1] - routeIndex * 100) * scale
             fill(twColor, 150)
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
-            fill(textColor, 255)
-            text(task.id, taskX + taskWidth/2 - 5 , 45) 
+            
         
         fill(taskColor, 50)
         noStroke()
@@ -165,5 +174,5 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             rect(taskX, headerHeight + taskEnd - taskHeight, taskWidth, taskHeight)
         else:
             pass
-            
+    print
     popStyle()
