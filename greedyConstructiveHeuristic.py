@@ -65,6 +65,29 @@ def insertTask(route, task, position, routeIndex):
     print newRoute
     return newRoute
 
+def createRouteWithTaskAtPosition(route, task, position, routeIndex):
+    newRoute = Route()
+    beginningRoute, beginningEndingTimes = route[:position], route.endingTimes[:position]
+    endingRoute = route[position:]
+    for i in range(len(beginningRoute)):
+        newRoute.append(beginningRoute[i])
+        newRoute.endingTimes.append(beginningRoute.endingTimes[i])
+    isFeasible, endingTime = isFeasibleTaskAppend(task, newRoute, routeIndex)
+    if isFeasible:
+        newRoute.append()
+        newRoute.append(endingTime)
+    else:
+        return False, None
+    for endingTask in endingRoute:
+        isFeasible, endingTime = isFeasibleTaskAppend(endingTask, newRoute, routeIndex)
+        if isFeasible:
+            newRoute.append(endingTask)
+            newRoute.append(endingTime)
+        else:
+            return False, None
+    return True, newRoute
+        
+
 '''
 Returns the score by which potential task insertions are compared.
 
