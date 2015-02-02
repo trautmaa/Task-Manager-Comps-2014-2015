@@ -8,8 +8,8 @@ import itertools
 import createTasksFromCsv
 import helperFunctions
 import copy
+import vns
 from Objects import Schedule, Route
-from vns import *
 
 
 '''
@@ -18,6 +18,7 @@ how beneficial inserting that task would be in each position in the schedule. Sc
 priority, waiting time, and added distance.
 
 @param schedule: current partially created schedule
+@param taskList: the full taskList containing all tasks
 @param task: the task being checked
 @return: tuple containing score, new schedule with insertion, and task
 '''
@@ -31,16 +32,18 @@ def getBestInsertionOfTaskByTime(schedule, taskList, task):
             # inserts task into route. Returns None if task insertion was infeasible
             newRoute = insertTask(route, task, position, index)
             if newRoute != None:
+                newRoute.resetEndingTimes()
                 newSchedule = copy.deepcopy(schedule)
                 # inserting new route into the position of the old route
                 newSchedule[index] = newRoute
-                print "newSchedule before calling minRoute: ", newSchedule
-                adjustedSchedule = minRoute(taskList, newSchedule)
-                print adjustedSchedule
+                # print "newSchedule before calling minRoute: ", newSchedule
+                adjustedSchedule = vns.minRoute(taskList, newSchedule)
+                adjustedRoute = adjustedSchedule[index]
+                # print adjustedSchedule
                 # calculates waiting time of the schedule (with the addition of new route)
                 waitingTime = getWaitingTimeOfSchedule(adjustedSchedule)  # Maybe this should be just route???
                 # calculates distance values for the new schedule
-                extraDist = getExtraDistanceFromInsertion(newRoute, position)
+                extraDist = getExtraDistanceFromInsertion(adjustedRoute, position)
                 score = getScore(task.priority, waitingTime, extraDist)
                 if score >= bestScore:
                     bestSchedule = adjustedSchedule
@@ -60,10 +63,10 @@ Attempts to insert a task between two other tasks in a schedule.
 def insertTask(route, task, position, routeIndex): 
     newRoute = copy.deepcopy(route)
     newRoute.taskList.insert(position, task)
-    # running isFeasible will set the ending time
+    # running minRoute will set the ending time
     newRoute.endingTimes.insert(position, None)
     # checks the feasibility of the task insertion. Returns None if route with new insertion is infeasible 
-    newRoute = isRouteFeasible(newRoute, routeIndex)[0]
+    newRoute = vns.isRouteFeasible(newRoute, routeIndex)[0]
     return newRoute
 
 def createRouteWithTaskAtPosition(route, task, position, routeIndex):
@@ -115,11 +118,11 @@ def getExtraDistanceFromInsertion(route, position):
     elif position == 0:    
         if len(route) > 1:
             extraDist = helperFunctions.getDistanceBetweenTasks(route[0], route[1])
-        #takes care of case in which the route only has one task scheduled
+        # takes care of case in which the route only has one task scheduled
         else:  
-            extraDist = route[0].duration
-    elif position == len(route):
-        # after last task
+            extraDist = 0
+    elif position == len(route) - 1:
+        # last task in the route
         extraDist = helperFunctions.getDistanceBetweenTasks(route[position - 1], route[position])
     else:
         # triangle inequality
@@ -158,7 +161,7 @@ def getWaitingTimeOfRoute(route):
             endingTimeOfFirstTask = route.endingTimes[i]
             secondTask = route[i + 1]
             startingTimeOfSecondTask = route.endingTimes[i + 1] - secondTask.duration
-            distanceBetweenTasks = getDistanceBetweenTasks(route[i], route[i + 1])
+            distanceBetweenTasks = helperFunctions.getDistanceBetweenTasks(route[i], route[i + 1])
             taskWaitTime = startingTimeOfSecondTask - endingTimeOfFirstTask - distanceBetweenTasks
             totalWaitingTime += taskWaitTime
         return totalWaitingTime
@@ -168,14 +171,15 @@ Iterates over each possible task and evaluates the best possible location to
 insert each one, then returns the schedule and task that are the best of those.
 
 @param schedule: the partially created schedule
-@param taskList: the list of unscheduled tasks
+@param unscheduledTaskList: the list of unscheduled tasks
+@param fullTaskList: the list of all tasks, scheduled or not
 @return: tuple (schedule, task) of the new schedule with the given task inserted
 '''
-def returnScheduleInsertedWithBestTask(schedule, taskList):
+def returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList):
     whichTaskToInsert = []
-    for task in taskList:
+    for task in unscheduledTaskList:
         # appends a tuple of form (score, schedule, task)
-        whichTaskToInsert.append(getBestInsertionOfTaskByTime(schedule,taskList, task))
+        whichTaskToInsert.append(getBestInsertionOfTaskByTime(schedule, fullTaskList, task))
     whichTaskToInsert = sorted(whichTaskToInsert, key = lambda scoreTuple: scoreTuple[0], reverse = True)
     bestSchedule, bestTask = whichTaskToInsert[0][1], whichTaskToInsert[0][2]
     return bestSchedule, bestTask
@@ -188,25 +192,33 @@ schedule.
 @return: the completed schedule
 '''
 def runGreedyConstructiveHeuristic(csvFile):
-    taskList = createTasksFromCsv.getTaskList(csvFile)
-    helperFunctions.preprocessTimeWindows(taskList) 
+    unscheduledTaskList = createTasksFromCsv.getTaskList(csvFile)
+    helperFunctions.preprocessTimeWindows(unscheduledTaskList) 
+    fullTaskList = copy.deepcopy(unscheduledTaskList)
      
     schedule = Schedule()
-    numDays = len(taskList[0].timeWindows)
+    numDays = len(fullTaskList[0].timeWindows)
     for day in range(numDays):
         route = Route()
         schedule.append(route)
     
-    for task in taskList:
-        schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, taskList)
-        taskList.remove(taskToRemove) # I don't know if I can actually do this....
+    for task in unscheduledTaskList:
+        schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList)
+        # print schedule
+        # we have to do this because remove doesn't use equality testing,
+        # so it doesn't know tasks in the deepcopy are the same
+        for task in unscheduledTaskList:
+            if task == taskToRemove:
+                unscheduledTaskList.remove(task)
+                break
+        # taskList.remove(taskToRemove) # I don't know if I can actually do this....
     return schedule
         
 '''
 Runs the constructive heuristic and prints the schedule.
 '''
 def main():
-    schedule = runGreedyConstructiveHeuristic("test50.csv")
+    schedule = runGreedyConstructiveHeuristic("test.csv")
     print
     print schedule
     print

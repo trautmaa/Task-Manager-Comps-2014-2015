@@ -373,7 +373,7 @@ def optionalExchange1(currSchedule, nHood):
 
     # selecting which unplanned tasks to add
     addingTasks = []
-    t=0
+    t = 0
     firstNotAdded = -1
     if len(unplannedTasks) > 0:
         popped = unplannedTasks.popleft()
@@ -722,11 +722,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    # we should fix this so these functions can be called from other places without having to catch NameError
-    try:
-        appendToSchedSteps("Route %d is not feasible after tightening. Infeasibility: %.2f" %(routeIndex, infeas), currRoute, routeIndex)
-    except NameError:
-        pass
+    appendToSchedSteps("Route %d is not feasible after tightening. Infeasibility: %.2f" %(routeIndex, infeas), currRoute, routeIndex)
     return None, infeas
                     
 
@@ -814,12 +810,7 @@ def tightenTWStarts(currRoute, routeIndex):
         
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
-        # we should fix this so these functions can be called from other places without having to catch NameError
-    try:
         appendToSchedSteps("Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex)
-    except NameError:
-        pass
-
     return currRoute
 
 '''
@@ -913,11 +904,7 @@ def tightenTWEnds(currRoute, routeIndex):
         return None
     
     # print "********** Exiting tightenTWEnds3 **********"
-    try:
-        appendToSchedSteps("Route %d is feasible after TTWE" %(routeIndex), currRoute,routeIndex)
-    except NameError:
-        pass
-        
+    appendToSchedSteps("Route %d is feasible after TTWE" %(routeIndex), currRoute,routeIndex)
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
@@ -1355,12 +1342,20 @@ def changedTimeWindowsInSchedule(route, r, taskList):
                 print "Error: task", task.id, "timewindow", timeWindow, "does not match", taskListTW
                 exit()
             
-         
+'''
+Tries to add the current scedule information to the global list of schedSteps
+used by the visualizer.
+
+@param stringInfo: A string describing the step of the algorithm which just completed
+@param schedOrRoute: The schedule or route object being added to the list
+@param routeIndex: The index of the route in the schedule, or None if schedOrRoute
+    is a full schedule
+'''
 def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
     try:
         schedSteps.append([stringInfo, copy.deepcopy(schedOrRoute), routeIndex])
     except NameError:
-        return;
+        pass
             
 def main():
     # print "********** Main **********"
