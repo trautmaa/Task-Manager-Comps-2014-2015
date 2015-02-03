@@ -55,7 +55,6 @@ def setDependencies(taskList, numDependencies):
     for task in taskList:
         if len(task) == 8:
             task.append([])
-        print len(task)
     
         
 def setTimeWindowsOfTask(task, numDays):

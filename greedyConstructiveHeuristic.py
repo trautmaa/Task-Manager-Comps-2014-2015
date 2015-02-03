@@ -23,7 +23,7 @@ priority, waiting time, and added distance.
 @return: tuple containing score, new schedule with insertion, and task
 '''
 def getBestInsertionOfTaskByTime(schedule, taskList, task):
-    bestScore = 0
+    bestScore = None
     bestSchedule = schedule
     # for each route in the schedule 
     for index, route in enumerate(schedule.routeList):
@@ -32,20 +32,20 @@ def getBestInsertionOfTaskByTime(schedule, taskList, task):
             # inserts task into route. Returns None if task insertion was infeasible
             newRoute = insertTask(route, task, position, index)
             if newRoute != None:
-                newRoute.resetEndingTimes()
                 newSchedule = copy.deepcopy(schedule)
                 # inserting new route into the position of the old route
                 newSchedule[index] = newRoute
-                # print "newSchedule before calling minRoute: ", newSchedule
-                adjustedSchedule = vns.minRoute(taskList, newSchedule)
+                newSchedule.resetEndingTimes()
+                print newSchedule
+                adjustedSchedule = vns.isFeasible(taskList, newSchedule)
+                print adjustedSchedule
                 adjustedRoute = adjustedSchedule[index]
-                # print adjustedSchedule
                 # calculates waiting time of the schedule (with the addition of new route)
                 waitingTime = getWaitingTimeOfSchedule(adjustedSchedule)  # Maybe this should be just route???
                 # calculates distance values for the new schedule
                 extraDist = getExtraDistanceFromInsertion(adjustedRoute, position)
                 score = getScore(task.priority, waitingTime, extraDist)
-                if score >= bestScore:
+                if bestScore == None or score >= bestScore:
                     bestSchedule = adjustedSchedule
                     bestScore = score
 
@@ -101,7 +101,7 @@ Returns the score by which potential task insertions are compared.
 @return: the (float) score of the insertion
 '''
 def getScore(priority, waitingTime, extraDist):
-    priorityWeighting = .05 # placeholder, should compute based on priority per time unit of available tasks or something
+    priorityWeighting = .01 # placeholder, should compute based on priority per time unit of available tasks or something
     return float(priority) - (priorityWeighting * (waitingTime + extraDist)) # For now, we can talk to DLN  
     
 '''
@@ -204,7 +204,6 @@ def runGreedyConstructiveHeuristic(csvFile):
     
     for task in unscheduledTaskList:
         schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList)
-        # print schedule
         # we have to do this because remove doesn't use equality testing,
         # so it doesn't know tasks in the deepcopy are the same
         for task in unscheduledTaskList:
