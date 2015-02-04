@@ -16,17 +16,60 @@ To run this properly, drag and drop the file onto processing-py, available at
 
 https://github.com/jdf/processing.py
 '''
-import vns, greedyByOrder, greedyByPresentChoice
+
+import greedyByOrder, greedyByPresentChoice
 from math import floor
+from createTests import dayLength
+import os
+
 
 def setup():
-    #PLEASE LINK DAYLENGTH TO SCHEDULE SET DAY LENGTH
-    global dayLength
-    dayLength = float(100)
     
-    global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, blues, minWidth, timeList, timeWindowRects, maxNumTimeWindows
+    initialize()
+    
+    global buttonList, buttonRects, buttonFunctions
+    #actually do math bro
+    buttonRects = [[100, 100]]
+    buttonFunctions = ["vns.py"]
+    buttonList = len(buttonFunctions) * [False]  
+    
+    drawButtons()
+    
+    menuSetup()
+    #calendarSetup()
+    size(displayWidth, displayHeight)    
 
+def draw():
+    #FIX MEEEE
+    if mousePressed == True:
+        if mouseX >= 100 and mouseX <= 100+textWidth("vns.py"):
+            if mouseY >= 100 and mouseY <= 100+100: #EEWWWWW
+                clickedOkay[0] = True
+    if clickedOkay[0]:
+        drawCalendar()
+    
+    else:
+        drawMenu()
+
+def sketchFullScreen():
+    return True
+
+def drawMenu():
+    drawButtons()
+
+def drawCalendar():
+    calendarSetup()
+
+def initialize():
+    
+    global dayWidth, dayHeight, headerHeight, sideBarWidth, mapDimension, mapX, mapY, maxX, maxY
+    global textX, textY, textDimensionX, textDimensionY, clickedOkay
+    global taskRects, taskMapDots, dayRects, colorList, rectColors
+    global schedule, minWidth, timeList, timeWindowRects, maxNumTimeWindows
+    global blues, greens, oranges, yellows
+    
+    clickedOkay = [False]    
+    
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
                         color(150, 170, 213), color(200, 212, 238)]
@@ -47,6 +90,31 @@ def setup():
     #what times we see on the sidebar
     timeList = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6]
     
+    
+    smooth()
+    background(blues[3])
+    
+    
+def drawButton(x, y, buttonText, buttonHeight):
+    pushStyle()
+    noStroke()
+    textSize(32)
+    fill(yellows[4], alpha = 255)
+    rect(x, y, 10 + textWidth(buttonText), buttonHeight, 7)
+    fill(blues[0])
+    text(buttonText, x + 5, y + 50)
+    popStyle()
+
+def drawButtons():
+    for b in range(len(buttonList)):
+        buttonRect = buttonRects[b]
+        drawButton(buttonRect[0], buttonRect[1], buttonFunctions[b], 100)
+
+def menuSetup():
+    pass
+
+def calendarSetup():
+    
     #initialize global lists to empty
     taskRects = []
     timeWindowRects = []
@@ -54,22 +122,67 @@ def setup():
     taskMapDots = []
     dayRects = []
     
-    csvFile = pwd("test1000.csv")
+    #do stuff so that we can call different algorithms depending on user's selection
+    vns = pwd("vns.py")
+    file = pwd("newTest.csv")
+    print os.system("python " + vns + " " + file)
+    
+    csvFile = pwd("newTest.csv")
+    
     #vns schedule:
-    schedule, useless = vns.solve(csvFile)
-#     schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-#     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-#     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
-#     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
-#     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-#     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
-# 
-#     schedule = bestGreedy
+#     schedule, useless = vns.solve(csvFile)
+    schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
+    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
+    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
+    bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
+ 
+    schedule = bestGreedy
     print schedule
     #Globals for reference later
-    global dayWidth, dayHeight, headerHeight, sideBarWidth, mapDimension, mapX, mapY, maxX, maxY
-    global textX, textY, textDimensionX, textDimensionY
+    
+    setupScreen()
+
+def setColors():
+    for d in range(len(schedule)):
         
+        scaleFactor = float(d+1)/float(len(schedule)) * (len(colorList) - 1)
+        baseColor = int(floor(scaleFactor))
+        percentBetweenColors = scaleFactor - baseColor
+        #find new r, g and b where its scaled according to the percentBetweenColors
+        oldC = [red(colorList[baseColor - 1]), green(colorList[baseColor - 1]), blue(colorList[baseColor - 1])]
+        oldNextC = [red(colorList[baseColor]), green(colorList[baseColor]), blue(colorList[baseColor])] 
+        
+        
+        newC = [abs(oldC[c] - oldNextC[c]) for c in range(len(oldC))]
+        
+        for c in range(len(newC)):
+            if oldC[c] == 0:
+                newC[c] = oldC[c] + (oldNextC[c] - oldC[c]) * percentBetweenColors
+            else:
+                newC[c] = oldC[c] - (oldC[c] - oldNextC[c]) * percentBetweenColors
+        
+        newColor = color(newC[0], newC[1], newC[2])
+        
+        
+#         newColor = blendColor(colorList[baseColor-1],colorList[baseColor],0)
+        #newColor = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
+        rectColors.append(newColor)
+
+
+def calendarDraw():
+    #NEED TO CALL setupScreen() IF IT IS THE FIRST TIME
+    calendarDrawInit()
+    whichTask = -1
+    whichDay = -1
+    whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
+    drawScreen()
+    drawMap(whichDay, whichTask)
+    drawTextBox(whichDay, whichTask)
+    highlight(whichTask, whichDay)
+
+def calendarDrawInit():
     headerHeight = 50
     sideBarWidth = 75
     dayWidth = min(200, (displayWidth - sideBarWidth)/len(schedule))
@@ -80,7 +193,6 @@ def setup():
     w = max(len(schedule) * dayWidth + sideBarWidth, minWidth)
     h = min(900, displayHeight)
     dayHeight = h/2 - headerHeight
-
 
 
     #Set dimension and coordinates for map and text box
@@ -120,44 +232,7 @@ def setup():
                     maxNumTimeWindows = len(schedule[day][t].timeWindows[j])
                 
     
-    size(w, h)
-    setupScreen()
 
-def setColors():
-    for d in range(len(schedule)):
-        
-        scaleFactor = float(d+1)/float(len(schedule)) * (len(colorList) - 1)
-        baseColor = int(floor(scaleFactor))
-        percentBetweenColors = scaleFactor - baseColor
-        #find new r, g and b where its scaled according to the percentBetweenColors
-        oldC = [red(colorList[baseColor - 1]), green(colorList[baseColor - 1]), blue(colorList[baseColor - 1])]
-        oldNextC = [red(colorList[baseColor]), green(colorList[baseColor]), blue(colorList[baseColor])] 
-        
-        
-        newC = [abs(oldC[c] - oldNextC[c]) for c in range(len(oldC))]
-        
-        for c in range(len(newC)):
-            if oldC[c] == 0:
-                newC[c] = oldC[c] + (oldNextC[c] - oldC[c]) * percentBetweenColors
-            else:
-                newC[c] = oldC[c] - (oldC[c] - oldNextC[c]) * percentBetweenColors
-        
-        newColor = color(newC[0], newC[1], newC[2])
-        
-        
-#         newColor = blendColor(colorList[baseColor-1],colorList[baseColor],0)
-        #newColor = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
-        rectColors.append(newColor)
-
-def draw():
-    whichTask = -1
-    whichDay = -1
-    whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
-    drawScreen()
-    drawMap(whichDay, whichTask)
-    drawTextBox(whichDay, whichTask)
-    highlight(whichTask, whichDay)
-    
     
     
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
@@ -276,7 +351,6 @@ def setupScreen():
     
     noStroke()
     
-    background(blues[3])
     
     drawSchedule()
     
@@ -350,9 +424,9 @@ def drawTasks(route, leftX):
         task = route[t]
         
         #scale tasks so dimensions fit within day
-        #WTF DOES THIS DO v
-        percentOfDay = int(route.endingTimes[t] - task.duration)/int(dayLength)
-        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - percentOfDay) * dayHeight
+        routeIndex = int(route.endingTimes[t] - task.duration)/int(dayLength)
+        
+        startTime = ((float(route.endingTimes[t] - task.duration)/float(dayLength)) - routeIndex) * dayHeight
         #set color of our unhighlighted tasks - depends on the day
         fill(rectColors[dayNum], 50)
         
@@ -379,8 +453,8 @@ def drawTasks(route, leftX):
             twStart = task.timeWindows[dayNum][tw][0]
             twEnd = task.timeWindows[dayNum][tw][1]
             
-            percentOfDay = int(twStart) / int(dayLength)
-            startTime = ((float(twStart) / float(dayLength)) - percentOfDay) * dayHeight
+            routeIndex = int(twStart) / int(dayLength)
+            startTime = ((float(twStart) / float(dayLength)) - routeIndex) * dayHeight
             
             #numTimeWindowsForTask = len(task.timeWindows[dayNum])
             #widths = dayWidth/numTimeWindowsForTask
