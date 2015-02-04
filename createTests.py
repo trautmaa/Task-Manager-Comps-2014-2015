@@ -14,7 +14,7 @@ Make sure your input variables make sense!!!!!!!!!
 '''
 numberOfTasks = 30
 dayLength = 1440
-numDays = 2
+numDays = 5
 xRange = 60
 yRange = 60
 durationRange = 200 # tasks will receive durations no longer than this
@@ -55,7 +55,6 @@ def setDependencies(taskList, numDependencies):
     for task in taskList:
         if len(task) == 8:
             task.append([])
-        print len(task)
     
         
 def setTimeWindowsOfTask(task, numDays):
@@ -141,7 +140,7 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(numberOfTasks, "test.csv")
+    writeNTasks(numberOfTasks, "newTest.csv")
 
 
 if __name__ == '__main__':

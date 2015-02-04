@@ -10,7 +10,29 @@ import helperFunctions
 import copy
 import vns
 from Objects import Schedule, Route
+import greedyByOrder 
 
+def findAvgDuration(taskList):
+    duration = 0.0
+    for task in taskList:
+        duration += task.duration
+    return duration/len(taskList)
+
+
+def findAvgPriority(taskList):
+    priority = 0.0
+    for task in taskList:
+        priority += priority
+    return priority/len(taskList)
+
+def findAvgDistance(taskList):
+    distance = 0.0
+    for task in taskList:
+        for task2 in taskList:
+            distance += helperFunctions.getDistanceBetweenTasks(task, task2)     
+    return distance/(len(taskList) * (len(taskList)-1))
+
+    
 
 '''
 For a particular unscheduled task, attempts to calculate a score measuring
@@ -22,8 +44,8 @@ priority, waiting time, and added distance.
 @param task: the task being checked
 @return: tuple containing score, new schedule with insertion, and task
 '''
-def getBestInsertionOfTaskByTime(schedule, taskList, task):
-    bestScore = 0
+def getBestInsertionOfTaskByTime(schedule, taskList, task, priorityWeight):
+    bestScore = None
     bestSchedule = schedule
     # for each route in the schedule 
     for index, route in enumerate(schedule.routeList):
@@ -31,21 +53,19 @@ def getBestInsertionOfTaskByTime(schedule, taskList, task):
         for position in range(len(route) + 1):
             # inserts task into route. Returns None if task insertion was infeasible
             newRoute = insertTask(route, task, position, index)
-            if newRoute != None:
-                newRoute.resetEndingTimes()
-                newSchedule = copy.deepcopy(schedule)
-                # inserting new route into the position of the old route
-                newSchedule[index] = newRoute
-                # print "newSchedule before calling minRoute: ", newSchedule
-                adjustedSchedule = vns.minRoute(taskList, newSchedule)
+            newSchedule = copy.deepcopy(schedule)
+            # inserting new route into the position of the old route
+            newSchedule[index] = newRoute
+            newSchedule.resetEndingTimes()
+            adjustedSchedule = vns.isFeasible(taskList, newSchedule)
+            if adjustedSchedule != None:
                 adjustedRoute = adjustedSchedule[index]
-                # print adjustedSchedule
                 # calculates waiting time of the schedule (with the addition of new route)
                 waitingTime = getWaitingTimeOfSchedule(adjustedSchedule)  # Maybe this should be just route???
                 # calculates distance values for the new schedule
                 extraDist = getExtraDistanceFromInsertion(adjustedRoute, position)
-                score = getScore(task.priority, waitingTime, extraDist)
-                if score >= bestScore:
+                score = getScore(task.priority, waitingTime, extraDist, priorityWeight)
+                if bestScore == None or score >= bestScore:
                     bestSchedule = adjustedSchedule
                     bestScore = score
 
@@ -66,7 +86,7 @@ def insertTask(route, task, position, routeIndex):
     # running minRoute will set the ending time
     newRoute.endingTimes.insert(position, None)
     # checks the feasibility of the task insertion. Returns None if route with new insertion is infeasible 
-    newRoute = vns.isRouteFeasible(newRoute, routeIndex)[0]
+
     return newRoute
 
 def createRouteWithTaskAtPosition(route, task, position, routeIndex):
@@ -100,9 +120,8 @@ Returns the score by which potential task insertions are compared.
 @param extraDist: the extra distance the insertion causes
 @return: the (float) score of the insertion
 '''
-def getScore(priority, waitingTime, extraDist):
-    priorityWeighting = .05 # placeholder, should compute based on priority per time unit of available tasks or something
-    return float(priority) - (priorityWeighting * (waitingTime + extraDist)) # For now, we can talk to DLN  
+def getScore(priority, waitingTime, extraDist, priorityWeight):
+    return float(priority) - (priorityWeight * (waitingTime + extraDist)) # For now, we can talk to DLN  
     
 '''
 Calculates the extra distance inserting a task will incur relative to the
@@ -175,11 +194,11 @@ insert each one, then returns the schedule and task that are the best of those.
 @param fullTaskList: the list of all tasks, scheduled or not
 @return: tuple (schedule, task) of the new schedule with the given task inserted
 '''
-def returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList):
+def returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList, priorityWeight):
     whichTaskToInsert = []
     for task in unscheduledTaskList:
         # appends a tuple of form (score, schedule, task)
-        whichTaskToInsert.append(getBestInsertionOfTaskByTime(schedule, fullTaskList, task))
+        whichTaskToInsert.append(getBestInsertionOfTaskByTime(schedule, fullTaskList, task, priorityWeight))
     whichTaskToInsert = sorted(whichTaskToInsert, key = lambda scoreTuple: scoreTuple[0], reverse = True)
     bestSchedule, bestTask = whichTaskToInsert[0][1], whichTaskToInsert[0][2]
     return bestSchedule, bestTask
@@ -195,6 +214,12 @@ def runGreedyConstructiveHeuristic(csvFile):
     unscheduledTaskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(unscheduledTaskList) 
     fullTaskList = copy.deepcopy(unscheduledTaskList)
+    
+    avgDistance = findAvgDistance(fullTaskList)
+    avgPriority = findAvgPriority(fullTaskList)
+    avgDuration = findAvgDuration(fullTaskList)
+    
+    priorityWeight = avgPriority/(avgDistance + avgDuration)
      
     schedule = Schedule()
     numDays = len(fullTaskList[0].timeWindows)
@@ -203,8 +228,8 @@ def runGreedyConstructiveHeuristic(csvFile):
         schedule.append(route)
     
     for task in unscheduledTaskList:
-        schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList)
-        # print schedule
+        print "one task down!"
+        schedule, taskToRemove = returnScheduleInsertedWithBestTask(schedule, unscheduledTaskList, fullTaskList, priorityWeight)
         # we have to do this because remove doesn't use equality testing,
         # so it doesn't know tasks in the deepcopy are the same
         for task in unscheduledTaskList:
@@ -218,13 +243,17 @@ def runGreedyConstructiveHeuristic(csvFile):
 Runs the constructive heuristic and prints the schedule.
 '''
 def main():
-    schedule = runGreedyConstructiveHeuristic("test.csv")
+    schedule = runGreedyConstructiveHeuristic("test50.csv")
+   
     print
     print schedule
-    print
+    for route in schedule:
+        print vns.isRouteActuallyFeasible(route)
+    print  
     print "priority is: ", schedule.getProfit()
-    print
-
+    print 
+    greedySched1 = greedyByOrder.main()
+    
 if __name__ == '__main__':
     main()
 

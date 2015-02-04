@@ -17,6 +17,7 @@ To run this properly, drag and drop the file onto processing-py, available at
 https://github.com/jdf/processing.py
 '''
 import vns, greedyByOrder, greedyByPresentChoice
+import greedyConstructiveHeuristic
 from math import floor
 
 def setup():
@@ -56,6 +57,7 @@ def setup():
     
     csvFile = pwd("test1000.csv")
     #vns schedule:
+#     schedule = greedyConstructiveHeuristic.runGreedyConstructiveHeuristic(csvFile)
     schedule, useless = vns.solve(csvFile)
 #     schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
 #     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
@@ -63,7 +65,7 @@ def setup():
 #     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
 #     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
 #     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
-# 
+        
 #     schedule = bestGreedy
     print schedule
     #Globals for reference later
@@ -207,7 +209,7 @@ def highlight(whichTask, whichDay):
     
     #empty the timeWindowRects list
     for i in range(len(timeWindowRects)):
-    	timeWindowRects.pop()
+        timeWindowRects.pop()
     
     #redraw all the tasks
     for d in range(len(schedule)):
@@ -316,10 +318,10 @@ def drawDays():
         taskRects.pop()
 
     for i in range(len(taskMapDots)):
-    	taskMapDots.pop()
+        taskMapDots.pop()
 
-	for i in range(len(timeWindowRects)):
-		timeWindowRects.pop()
+    for i in range(len(timeWindowRects)):
+        timeWindowRects.pop()
 
     for d in range(0,len(schedule)):
         #new for loop index from 0
@@ -388,7 +390,7 @@ def drawTasks(route, leftX):
             xStart = leftX + tw * widths
             
             #add rect dimensions for each time window            
-            timeWindowsPerTask.append([xStart, headerHeight + startTime, widths, (float(twEnd - twStart)/float(dayLength)) * dayHeight])       	
+            timeWindowsPerTask.append([xStart, headerHeight + startTime, widths, (float(twEnd - twStart)/float(dayLength)) * dayHeight])           
        
        #add the timewindow rects for each task
         timeWindowsToAdd.append(timeWindowsPerTask)
@@ -417,10 +419,10 @@ def drawMap(whichDay, whichTask):
         for t in range(len(taskMapDots[day])):
             strokeWeight(10)
 
-        	#set the stroke depending on whichDay and whichTask are selected
+            #set the stroke depending on whichDay and whichTask are selected
             if day == whichDay:
 
-            	#selected task gets a bigger dot
+                #selected task gets a bigger dot
                 if t == whichTask: 
                     stroke(rectColors[day])
                     strokeWeight(15)
