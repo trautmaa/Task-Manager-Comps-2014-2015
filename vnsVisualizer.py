@@ -77,7 +77,7 @@ def draw():
         drawRoute()
     elif keyPressed[1]:
         keyPressed[1] = False
-        if currStep[0] > 1:
+        if currStep[0] > 0:
             currStep[0] -= 1
             newSched = schedSteps[currStep[0]]
             sched.pop()
@@ -98,8 +98,6 @@ def keyPressed():
 def drawRoute():
     pushStyle()
     
-    
-    
     fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
 
@@ -109,7 +107,6 @@ def drawRoute():
 
     stringInfo = sched[0][0]
     print currStep[0], stringInfo
-    print currSchedule
     if currSchedule == None:
         fill(dayColor)
         rect(sideBarWidth, headerHeight, width - sideBarWidth, height - headerHeight)
@@ -146,8 +143,6 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
         task = route[t]
         
         
-        print "TASK", task
-        
         taskWidth = routeWidth / len(route)
         taskX = routeX + t * taskWidth
         stroke(50, alpha = 100)
@@ -174,5 +169,4 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             rect(taskX, headerHeight + taskEnd - taskHeight, taskWidth, taskHeight)
         else:
             pass
-    print
     popStyle()

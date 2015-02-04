@@ -30,7 +30,7 @@ def solve(csvFile):
     global schedSteps
     
     # keep track of the schedules as vns progresses
-    schedSteps =[]
+    schedSteps = []
     
     # Get a greedy algorithm to then modify with VNS
     taskList = createTasksFromCsv.getTaskList(csvFile)
@@ -41,7 +41,7 @@ def solve(csvFile):
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
+    bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
 
     appendToSchedSteps("greedySched", bestGreedy)
             
@@ -53,6 +53,7 @@ def solve(csvFile):
     bestGreedy.resetEndingTimes()
     # Modify the greedy algorithm
     currSchedule = vns(taskList, currSchedule)
+    print currSchedule
     assert(isFeasible(taskList, currSchedule)) 
 
     # print "vns journey"
@@ -118,22 +119,22 @@ def vns(taskList, currSchedule):
             
             iterCount += 1
             
-            appendToSchedSteps("Sched before anything, nHood %d" %(nHood), currSchedule)
+            appendToSchedSteps("Sched before anything, nHood %d" % (nHood), currSchedule)
             
             shakeSolution = shaking(currSchedule, nHood)
             
-            appendToSchedSteps("Sched after shaking, nHood %d" %(nHood), shakeSolution)
+            appendToSchedSteps("Sched after shaking, nHood %d" % (nHood), shakeSolution)
             
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
             
-            appendToSchedSteps("Sched after iterativeImprovent, nHood %d" %(nHood),iterSolution)
+            appendToSchedSteps("Sched after iterativeImprovent, nHood %d" % (nHood), iterSolution)
             
 
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
             
-            appendToSchedSteps("Sched before isFeasible, nHood %d" %(nHood), iterSolution)
+            appendToSchedSteps("Sched before isFeasible, nHood %d" % (nHood), iterSolution)
             feasibleSchedule = isFeasible(taskList, iterSolution)
             appendToSchedSteps("Sched after isFeasible", feasibleSchedule)
             
@@ -206,7 +207,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
-    appendToSchedSteps("At the end of shaking, nHood %d" %(nHood), newSchedule)
+    appendToSchedSteps("At the end of shaking, nHood %d" % (nHood), newSchedule)
 #     print "********** Exiting shaking **********"
     return newSchedule
 
@@ -246,15 +247,18 @@ def crossExchange(currSchedule, nHood):
         route2Len = random.randint(0, min(len2, nHood))
     
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
-    routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
+    routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)    
 
     route1Start, route1End = routeSegment1[0], routeSegment1[1]
     route2Start, route2End = routeSegment2[0], routeSegment2[1]
 
+    if route1End - route1Start == 0 or route2End - route2Start == 0:
+        return currSchedule 
+
     route1 = currSchedule[day1][route1Start : route1End]
     route2 = currSchedule[day2][route2Start : route2End]
 
-    tasks1 = currSchedule[day1][:route1Start] + route2 +currSchedule[day1][route1End:]
+    tasks1 = currSchedule[day1][:route1Start] + route2 + currSchedule[day1][route1End:]
     tasks2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2End:]
 
     # setting route and  new day to be what they should be
@@ -265,7 +269,6 @@ def crossExchange(currSchedule, nHood):
     # starting index of the sub-route we will be removing
     newDay2 = Objects.Route()
     newDay2.setTaskList(tasks2, [None] * len(tasks2))
-    
     
     
     for task in route2:
@@ -311,8 +314,8 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         # if task n has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
         
-        if(len(origRoute[n].timeWindows[newDay]) > 0):
-            if n - currRouteStart == segmentLength - 1:
+        if len(origRoute[n].timeWindows[newDay]) > 0:
+            if n - currRouteStart == segmentLength:
                 possRoutes.append(currRouteStart)
                 currRouteStart += 1
         
@@ -331,7 +334,7 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     else:
         route1Start = longestRouteStart
         segmentLength = longestRouteLen
-        
+    
     return (route1Start, route1Start + segmentLength)
     
     
@@ -419,7 +422,7 @@ def optionalExchange2(currSchedule, nHood):
     day = random.randint(0, len(currSchedule) - 1)
     
     # calculate number to remove (nHood-12)
-    numToRemove = min(nHood - 12, len(currSchedule[day])-1)
+    numToRemove = min(nHood - 12, len(currSchedule[day]) - 1)
     
     if len(currSchedule[day]) - numToRemove - 1 == 0:
         pos = 0
@@ -445,7 +448,7 @@ def optionalExchange2(currSchedule, nHood):
     
 #     print "********** Exiting optExchange2 **********"
     
-    appendToSchedSteps("At the end of optExchange2 at nHood %d" %(nHood), currSchedule)
+    appendToSchedSteps("At the end of optExchange2 at nHood %d" % (nHood), currSchedule)
     return currSchedule
 
 
@@ -465,42 +468,53 @@ def iterativeImprovement(taskList, currSchedule, nHood):
         newSchedule = bestInsertion(taskList, currSchedule)
 
 #     print "********** Exiting iterativeImprovement **********"
-    appendToSchedSteps("At the end of iterativeImprovement at nHood %d" %(nHood), newSchedule)
+    appendToSchedSteps("At the end of iterativeImprovement at nHood %d" % (nHood), newSchedule)
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
+    appendToSchedSteps("sched at start of threeOPT", currSchedule)
     
     currSchedule = copy.deepcopy(currSchedule)
-    # pick a random day to optimize
-    day = random.randint(0, len(currSchedule) - 1)
-    currRoute = currSchedule[day]
-    currLength = len(currRoute)
-
-    # 2
-    if currLength > 3:
-        maxM = math.factorial(currLength) / (6 * math.factorial(currLength - 3))
-    else:
+    possRoutes = []
+    for r in range(len(currSchedule)):
+        if len(currSchedule[r]) > 3:
+            possRoutes.append(r)
+    
+    if len(possRoutes) == 0:
         appendToSchedSteps("sched too short in threeOPT", currSchedule)
         return currSchedule
     
-    for k in range(len(currRoute) - 2):
-        topRange = min(k + 4, currLength - 2)
+    # pick a random day to optimize
+    day = possRoutes[random.randint(0, len(possRoutes) - 1)]
+    currRoute = currSchedule[day]
+    currLength, currFeasibility = getRouteDurationWithFeasibility(currRoute, day, taskList)
+    numTasks = len(currRoute)
+    # 2
+    maxM = math.factorial(numTasks) / (6 * math.factorial(numTasks) - 3)
+    
+    appendToSchedSteps("Working with route %d in 3OPT, numTasks %d" %(day, numTasks), currRoute, day)
+    for k in range(numTasks - 2):
+        topRange = min(k + 4, numTasks - 2)
         for j in range(k + 1, topRange):
-            route, currFeasibility = isRouteFeasible(currRoute, day)
-            appendToSchedSteps("Within threeOPT1", route, day)
+            appendToSchedSteps("3OPT k = %d, j = %d " %(k, j), currRoute, day)
+            appendToSchedSteps("ThreeOPT currRoute", currRoute, day)
+            currLength, currFeasibility = getRouteDurationWithFeasibility(currRoute, day, taskList)
+            
             newRoute = switchChains(k, j, currRoute)
-            newLength = len(newRoute)
-            route, newFeasibility = isRouteFeasible(currRoute, day)
-            appendToSchedSteps("Within threeOPT2", route, day)
+            appendToSchedSteps("ThreeOPT newRoute", newRoute, day)
+            newLength, newFeasibility = getRouteDurationWithFeasibility(newRoute, day, taskList)
+            appendToSchedSteps("ThreeOPT currLen %d currFeas %d" %(currLength, currFeasibility), currRoute, day)
+            appendToSchedSteps("ThreeOPT newLen %d newFeas %d" %(newLength, newFeasibility), newRoute, day)
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
+                    appendToSchedSteps("ThreeOPT found better route******************", newRoute, day)
                     currSchedule[day] = newRoute
 #                     print "********** Exiting threeOPT ***************"       
                     return currSchedule
-
+    appendToSchedSteps("no better sched found in threeOpt", currSchedule)
 #     print currSchedule
 #     print "********** Exiting threeOPT ***************"       
     return currSchedule
@@ -530,69 +544,69 @@ def bestInsertion(taskList, currSchedule):
         # find the best spot to insert the current task within this route (distance)
         # insert it there
         
-    #Keep track of the first task we try to add, stop if we try to add it again
+    # Keep track of the first task we try to add, stop if we try to add it again
     currTask = unplannedTasks.popleft()
     firstTaskID = currTask.id
     firstTime = True
     
-    #While this is or our first iteration or the current task isn't the first one we tried to add
+    # While this is or our first iteration or the current task isn't the first one we tried to add
     while firstTime or firstTaskID != currTask.id:
         
-        #It's no longer the first time and update prevUnplanned
+        # It's no longer the first time and update prevUnplanned
         firstTime = False
         updatePrevUnplanned(currTask)
         
-        #Initialize the bestAdditionalDistance and bestSpot
-        #This is the smallest added distance the current task can add
+        # Initialize the bestAdditionalDistance and bestSpot
+        # This is the smallest added distance the current task can add
         bestAdditionalDistance = float("inf")
-        #This is the best spot for the current task to be added (route, spot in route)
+        # This is the best spot for the current task to be added (route, spot in route)
         bestSpot = [-1, -1]
         foundSpot = False
         
-        #For each route in the schedule
+        # For each route in the schedule
         for routeIndex in range(len(currSchedule)):
             
-            #Set the current route
+            # Set the current route
             route = currSchedule[routeIndex]
             
             if len(currTask.timeWindows[routeIndex]) == 0:
                 break
             
             
-            #Try adding the current unplanned task at location 0
-            #Get the distance from current unplanned to the original first task
+            # Try adding the current unplanned task at location 0
+            # Get the distance from current unplanned to the original first task
             dist = helperFunctions.getDistanceBetweenTasks(currTask, route[0])
-            #If this distance is better than what we have found before, update our variables
+            # If this distance is better than what we have found before, update our variables
             if dist < bestAdditionalDistance:
                 bestAdditionalDistance = dist
                 bestSpot = [routeIndex, 0]
                 foundSpot = True
             
-            #For each additional spot in the route calculate the distance added from adding that task
+            # For each additional spot in the route calculate the distance added from adding that task
             for t in range(1, len(route)):
-                #Get the next task
+                # Get the next task
                 task = route[t]
                 
-                #Calculate the additional distance needed by adding in the task at this location
+                # Calculate the additional distance needed by adding in the task at this location
                 
-                #Get the distance from the original task to the new unplanned task
+                # Get the distance from the original task to the new unplanned task
                 dist = helperFunctions.getDistanceBetweenTasks(currTask, task)
                 
-                #Add the distance from the current unplanned task to the next planned task
-                dist += helperFunctions.getDistanceBetweenTasks(currTask, route[t-1])
+                # Add the distance from the current unplanned task to the next planned task
+                dist += helperFunctions.getDistanceBetweenTasks(currTask, route[t - 1])
                 
-                #Subtract the distance from the original two tasks
-                dist -= helperFunctions.getDistanceBetweenTasks(task, route[t-1])
+                # Subtract the distance from the original two tasks
+                dist -= helperFunctions.getDistanceBetweenTasks(task, route[t - 1])
                 
-                #If we have found a better distance and thus spot, update
+                # If we have found a better distance and thus spot, update
                 if dist < bestAdditionalDistance:
                     bestAdditionalDistance = dist
                     bestSpot = [routeIndex, t]
             
-            #Check the distance of adding the unplanned task to the end
+            # Check the distance of adding the unplanned task to the end
             dist = helperFunctions.getDistanceBetweenTasks(currTask, route[-1])
             
-            #If we have found a better distance and thus spot, update
+            # If we have found a better distance and thus spot, update
             if dist < bestAdditionalDistance:
                 bestAdditionalDistance = dist
                 bestSpot = [routeIndex, len(route)]
@@ -600,7 +614,7 @@ def bestInsertion(taskList, currSchedule):
         
 #         print "best spot for task", currTask.id, "is", bestSpot
         
-        #Create the new route with the added unplanned task
+        # Create the new route with the added unplanned task
         newRoute = copy.deepcopy(currSchedule[bestSpot[0]])
         newRoute.taskList = newRoute.taskList[:bestSpot[1]] + [currTask] + newRoute.taskList[bestSpot[1]:]
         newRoute.resetEndingTimes()
@@ -611,20 +625,20 @@ def bestInsertion(taskList, currSchedule):
 #         print newRoute
 #         print
         
-        #If that new route is under the dayLength, put it back in the schedule
+        # If that new route is under the dayLength, put it back in the schedule
         if isRouteUnderTimeLimit(newRoute) and foundSpot:
             currSchedule[bestSpot[0]] = newRoute
             currTask = unplannedTasks.popleft()
             firstTaskID = currTask.id
             
         
-        #If we did not find a place for this unplannedTask, increment counter and add it back to unplanned
+        # If we did not find a place for this unplannedTask, increment counter and add it back to unplanned
         else:
             unplannedTasks.append(currTask)
             currTask = unplannedTasks.popleft()
 
             
-        #Get the next unplanned task
+        # Get the next unplanned task
     appendToSchedSteps("Just finished bestInsertion", currSchedule)
 #     print "********** Exiting bestInsertion **********"
     return currSchedule
@@ -635,10 +649,10 @@ def isRouteUnderTimeLimit(route):
     if len(route) == 0:
         return True
     
-    for t in range(len(route)-1):
+    for t in range(len(route) - 1):
         task = route[t]
         totalTime += task.duration
-        totalTime += helperFunctions.getDistanceBetweenTasks(task, route[t+1])
+        totalTime += helperFunctions.getDistanceBetweenTasks(task, route[t + 1])
     
     totalTime += route[-1].duration    
     
@@ -656,10 +670,11 @@ def isFeasible(taskList, currSchedule):
         else:
             newSchedule[r] = newRoute
 #     print "********** Exiting isFeasible **********"
-    appendToSchedSteps("Before minRoute:", newSchedule)
+    appendToSchedSteps("Before minRoute", newSchedule)
 
-    newSchedule = minRoute(taskList, newSchedule)
-    
+    for r in range(len(newSchedule)):
+        newSchedule[r] = minRoute(taskList, newSchedule[r], r)
+
     appendToSchedSteps("At the end of isFeasible", newSchedule)
     return newSchedule
 
@@ -683,7 +698,7 @@ def isRouteFeasible(currRoute, routeIndex):
             oldTW = task.timeWindows[routeIndex][tw]
             newTW = (int(math.floor(oldTW[0] - travelTime)), oldTW[1])
             task.timeWindows[routeIndex][tw] = newTW
-            
+    appendToSchedSteps("Added travel time to route %d" % (routeIndex), currRoute, routeIndex)
     oldRoute = copy.deepcopy(currRoute)
     
     currRoute = tightenTWStarts(currRoute, routeIndex)
@@ -693,45 +708,80 @@ def isRouteFeasible(currRoute, routeIndex):
 #         print "********** Exiting isRouteFeasible1 **********"
         return currRoute, 0
     
-    infeas = 0
     currRoute = oldRoute
-    lastTaskEnd = currRoute[0].releaseTime
     
+    routeLen, infeas = calcLengthOfInfeasibleRoute(currRoute, routeIndex)
+
+
+#     print "********** Exiting isRouteFeasible2 **********"
+    appendToSchedSteps("Route %d is not feasible after tightening. Infeasibility: %.2f" % (routeIndex, infeas), currRoute, routeIndex)
+    return None, infeas
+                    
+'''
+This function, used by threeOPT, calculates the best length of this
+schedule, even if it is infeasible, and returns both the length and
+the infeasibility.
+'''
+def getRouteDurationWithFeasibility(route, routeIndex, taskList):
+    currRoute = copy.deepcopy(route)
+    
+    currRoute = isRouteFeasible(currRoute, routeIndex)[0]
+    if currRoute == None:
+        currRoute = copy.deepcopy(route)
+        appendToSchedSteps("getting length of infeasible route", currRoute, routeIndex)
+        return calcLengthOfInfeasibleRoute(currRoute, routeIndex)
+    
+    currRoute = minRoute(taskList, currRoute, routeIndex)
+    
+    routeLen = currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
+    
+    currRoute.resetEndingTimes
+    return routeLen, 0
+
+                    
+                    
+def calcLengthOfInfeasibleRoute(route, routeIndex):
+    infeas = 0
+    lastTaskEnd = route[0].releaseTime
     
     # find proper time window for this task (after end of last task)
     # if not available, add all of duration to infeas
     # if available but it doesn't fit, put the task as early as possible within tw,
     # add any duration spent outside of tw to infeas
-    
-    for t in range(len(currRoute)):
-        task = currRoute[t]
+    first = True
+    start = lastTaskEnd
+    for t in range(len(route)):
+        task = route[t]
         timeWindows = task.timeWindows[routeIndex]
-        selectedTW = None
-        for i in range(len(timeWindows)):
-            tw = timeWindows[i]
-            if tw[1] > lastTaskEnd:
-                selectedTW = tw
+        selectedIndex = None
+        for tw in range(len(timeWindows)):
+            if timeWindows[tw][1] > lastTaskEnd:
+                selectedIndex = tw
                 break
-        if selectedTW == None:
+        if selectedIndex == None:
             infeas += task.duration
             lastTaskEnd = lastTaskEnd + task.duration
+            route.endingTimes[t] = lastTaskEnd
+            first = False
         else:
+            selectedTW = timeWindows[selectedIndex]
             if max(lastTaskEnd, selectedTW[0]) + task.duration > selectedTW[1]:
                 infeas += max(lastTaskEnd, selectedTW[0]) + task.duration - selectedTW[1]
             lastTaskEnd = max(lastTaskEnd, selectedTW[0]) + task.duration
-
-
-#     print "********** Exiting isRouteFeasible2 **********"
-    appendToSchedSteps("Route %d is not feasible after tightening. Infeasibility: %.2f" %(routeIndex, infeas), currRoute, routeIndex)
-    return None, infeas
-                    
-
+            route.endingTimes[t] = lastTaskEnd
+        if first:
+            start = lastTaskEnd - task.duration
+            first = False
+    return lastTaskEnd - start, infeas
+            
+    
 '''
 @return: modified schedule with tightened tw starts
 '''
 def tightenTWStarts(currRoute, routeIndex):
 #     print "********** Entering tightenTWStarts **********"
-
+    currRoute = copy.deepcopy(currRoute)
+    
     if currRoute == None:
 #         print "********** Exiting tightenTWStarts 1 **********"
         return None
@@ -779,20 +829,7 @@ def tightenTWStarts(currRoute, routeIndex):
             task.timeWindows[routeIndex] = tw
             currRoute.taskList[taskIndex + 1].timeWindows[routeIndex] = twNext
             
-            # print "Incrementing task index from", taskIndex, "to", taskIndex + 1
             taskIndex += 1
-    
-                    
-        # print "routeIndex", routeIndex
-        # print "taskIndex + 1 = ", taskIndex + 1
-        
-        
-        
-        # print "End of while:"
-        # print "End tw", tw
-        # print "tasks[" + str(taskIndex) + "] =", currRoute.taskList[taskIndex].id, "tw:", twNext
-        # print 
-        
     
     task = currRoute.taskList[taskIndex]
     tw = task.timeWindows[routeIndex] 
@@ -802,24 +839,24 @@ def tightenTWStarts(currRoute, routeIndex):
             tw = tw[1:]
             task.timeWindows[routeIndex] = tw
     
-    # print "taskIndex", taskIndex
-    # print "len of taskList", len(currRoute.taskList) - 1  
-    # print "any empty TWListst", anyEmptyTWLists(currRoute, routeIndex)
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
         # print "********** Exiting tightenTWStarts 2 **********"
         
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
-        appendToSchedSteps("Route %d is feasible after TTWS" %(routeIndex), currRoute, routeIndex)
+    appendToSchedSteps("Route %d is feasible after TTWS" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 '''
 @return: modified schedule with tightened tw ends
 '''
 def tightenTWEnds(currRoute, routeIndex):
-    # print "********** Entering tightenTWEnds **********"
+#     print "********** Entering tightenTWEnds **********"
+    currRoute = copy.deepcopy(currRoute)
+
+
     if currRoute == None:
-        # print "********** Exiting tightenTWEnds1 **********"
+#         print "********** Exiting tightenTWEnds1 **********"
         return None
     if len(currRoute) == 0:
         return currRoute
@@ -843,8 +880,6 @@ def tightenTWEnds(currRoute, routeIndex):
         #  and the end of the previous task's last tw:
         
         if (task.duration > tw[-1][1] - tw[-1][0]) or (len(tw) > 1 and task.duration + tw[-2][0] < twPrev[-1][0]):
-            # print "\tRemoving last tw"
-            # print "tw before remove:", tw
             tw = tw[:-1]
             # print "tw after remove:", tw
             task.timeWindows[routeIndex] = tw
@@ -857,36 +892,31 @@ def tightenTWEnds(currRoute, routeIndex):
             
         else:
             # if duration of task i at the end of its last tw starts before the end of the previous task's last tw
-            if len(tw) > 0 and len(twPrev) > 0 and tw[-1][1] - task.duration < twPrev[-1][1]:
-                # print "\tresetting tw end: no overlap"
-                
+            if len(tw) > 0 and len(twPrev) > 0 and tw[-1][1] - task.duration > twPrev[-1][1]:
+                # resetting twPrev ends: no overlap
                 # set the end of that tw to be the maximum of the the starting time of task i's last time w
                 # and the end of task i-1's last time w
-                tw[-1] = (tw[-1][0], max(twPrev[-1][1], tw[-1][0] + task.duration))
-            
+                oldTW = (tw[-1][0], tw[-1][1])
+                tw[-1] = (tw[-1][0], max(twPrev[-1][1], tw[-1][0]) + task.duration)
+                task.timeWindows[routeIndex] = tw
+                currRoute.taskList[taskIndex - 1].timeWindows[routeIndex] = twPrev
             # if the duration of task i set at the end of its last tw overlaps any tws for the previous customer
             elif len(tw) > 0 and len(twPrev) > 0 and tw[-1][1] - task.duration < twPrev[-1][1]:
-                # print "\tresetting twPrev ends: overlap"
+                # resetting twPrev ends: overlap"
                 # reset the endings of all time windows to be as late as possible
                 # before the beginning of task i (with i scheduled as late as possible)
-                for w in range(len(twPrev)):
-                    # print "\t\tend of tw", tw[-1][1], "- duration", task.duration, "=", tw[-1][1] - task.duration
-                    # print "\t\tend of next task's tw", twPrev[w][1]
+                w = 0
+                while w < len(twPrev):
                     twPrev[w] = (twPrev[w][0], min(tw[-1][1] - task.duration, twPrev[w][1]))
-            
+                    if twPrev[w][1] < twPrev[w][0]:
+                        twPrev = twPrev[:w] + twPrev[w+1:]
+                    else:
+                        w += 1
+
             task.timeWindows[routeIndex] = tw
             currRoute.taskList[taskIndex - 1].timeWindows[routeIndex] = twPrev
             taskIndex -= 1
         
-            
-        
-        # print "End of while:"
-        # print tw
-        # print taskIndex, "prev task", twPrev
-        # print "actual task info:", task.timeWindows[routeIndex]
-        # print "actual prevTaskInfo: ", currRoute.taskList[taskIndex].timeWindows[routeIndex]
-        # print
-    
     task = currRoute.taskList[taskIndex]
     tw = task.timeWindows[routeIndex]
     twIndex = 0
@@ -896,15 +926,12 @@ def tightenTWEnds(currRoute, routeIndex):
            tw = tw[1:]
            task.timeWindows[routeIndex] = tw
             
-    # for task in currRoute:
-    #     print task.id, task.timeWindows[routeIndex]
-    
     if taskIndex > 0 or anyEmptyTWLists(currRoute, routeIndex):
-        # print "********** Exiting tightenTWEnds2 **********"
+#         print "********** Exiting tightenTWEnds2 **********"
         return None
     
-    # print "********** Exiting tightenTWEnds3 **********"
-    appendToSchedSteps("Route %d is feasible after TTWE" %(routeIndex), currRoute,routeIndex)
+#     print "********** Exiting tightenTWEnds3 **********"
+    appendToSchedSteps("Route %d is feasible after TTWE" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
@@ -918,103 +945,72 @@ def anyEmptyTWLists(route, routeIndex):
 '''
 @return: shortest duration of this schedule ordering
 '''
-def minRoute(taskList, currSchedule):
-    # print "********** Entering minRoute **********"
-    bestSchedule = copy.deepcopy(currSchedule)
-#     print currSchedule
+def minRoute(taskList, currRoute, routeIndex):
+#     print "********** Entering minRoute **********"
+    appendToSchedSteps("Entering minRoute on route %d"%(routeIndex), currRoute, routeIndex)
+
+    bestRoute = copy.deepcopy(currRoute)
     
     # Minimize each route
-    for d in range(len(currSchedule)):
-        day = currSchedule[d]
-        
-        # print "start of minRouteLoop", d
-        # print day
-        isRouteActuallyFeasible(day)
-        
-        if len(day) == 0:
-            continue
-        
-        # print "\nstart of minRoute"
-        # print day
-        isRouteActuallyFeasible(day)
-        
-        # keep track of what tw index each task has been assigned
-        assignedTWs = [0] * len(day)        
-        
-        
-        # set the ending times for each task in the route by scheduling
-        # all tasks as early as possible (start at the beginning of the
-        # first time window. This is feasible because of preprocessing
-        for t in range(len(day)):
-            task = day[t]
-            
-            day.endingTimes[t] = task.duration + task.timeWindows[d][0][0]
-            
-#             print "new ending time:"
-#             print task
-#             print day.endingTimes[t]
-#         print 
-        # Find the dominant version of this route (shortest possible route
-        # with this ending time.
-        
-
-        
-        # print "checking initRoute"
-        isRouteActuallyFeasible(day)
-        
-        latestWaitingTask = getLatestWaitingTask(day)
-        if latestWaitingTask == -1:
-            bestSchedule[d] = day
-            continue
-        bestRoute = dominantRoute(day, assignedTWs, d)
-        
-        
-        # print " after dominantRoute 0"
-        isRouteActuallyFeasible(bestRoute)
-        
-        latestWaitingTask = getLatestWaitingTask(bestRoute)
-        
-        
-        # While this there are still tasks with waiting time and the latest
-        # waiting task has time windows to switch to
-        while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(day[latestWaitingTask].timeWindows[d]) - 1:
-            
-            # move the latest waiting task to its next time window.
-            newRoute = switchTimeWindows(bestRoute, latestWaitingTask, d, assignedTWs)
-            if newRoute == None:
-                break
-            # find the shortest route with that ending time
-            newRoute = dominantRoute(newRoute, assignedTWs, d)
-            
-            # if it's better than the best so far, update the best.
-            if(getMinRouteDuration(newRoute) < getMinRouteDuration(bestRoute)):
-                bestRoute = newRoute
-            latestWaitingTask = getLatestWaitingTask(newRoute)
-            
-        # print "after dom and switch loop"
-        isRouteActuallyFeasible(bestRoute)
-        
-        if bestRoute == None:
-            # print "WHAT"
-            exit()
-        
-        # update the schedule to have this route
-        bestSchedule[d] = bestRoute
+    if len(currRoute) == 0:
+        return resetTasks(currRoute, taskList)
     
-    appendToSchedSteps("Sched at end of minRoute, before task revert", bestSchedule)
+    # keep track of what tw index each task has been assigned
+    assignedTWs = [0] * len(currRoute)        
+    
+    # set the ending times for each task in the route by scheduling
+    # all tasks as early as possible (start at the beginning of the
+    # first time window. This is feasible because of preprocessing
+    for t in range(len(currRoute)):
+        task = currRoute[t]
+        
+        currRoute.endingTimes[t] = task.duration + task.timeWindows[routeIndex][0][0]
+ 
+    # Find the dominant version of this route (shortest possible route
+    # with this ending time.
+    
+    latestWaitingTask = getLatestWaitingTask(currRoute)
+    if latestWaitingTask == -1:
+        return resetTasks(currRoute, taskList)
+        
+    bestRoute = dominantRoute(currRoute, assignedTWs, routeIndex)
 
-    # Set bestSchedule tasks to be the original tasks from the tasklist
+    latestWaitingTask = getLatestWaitingTask(bestRoute)
+    
+    # While this there are still tasks with waiting time and the latest
+    # waiting task has time windows to switch to
+    while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(currRoute[latestWaitingTask].timeWindows[routeIndex]) - 1:
+        
+        # move the latest waiting task to its next time window.
+        newRoute = switchTimeWindows(bestRoute, latestWaitingTask, routeIndex, assignedTWs)
+
+        if newRoute == None:
+            break
+        # find the shortest route with that ending time
+        newRoute = dominantRoute(newRoute, assignedTWs, routeIndex)
+
+        # if it's better than the best so far, update the best.
+        if(getMinRouteDuration(newRoute) < getMinRouteDuration(bestRoute)):
+            bestRoute = newRoute
+        latestWaitingTask = getLatestWaitingTask(newRoute)
+        
+    appendToSchedSteps("Route at end of minRoute, before task revert", bestRoute, routeIndex)
+
+    # Set bestRoute tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
     # preprocessing steps
-    for r in range(len(bestSchedule)):
-        for t in range(len(bestSchedule[r])):
 
-            bestSchedule[r][t] = taskList[bestSchedule[r][t].id]
+    bestRoute = resetTasks(bestRoute, taskList)
+    appendToSchedSteps("Route at end of minRoute after task revert", bestRoute, routeIndex)
+
     # print "********** Exiting minRoute **********"
+    return bestRoute
 
-    return bestSchedule
-
-
+def resetTasks(route, taskList):
+    route = copy.deepcopy(route)
+    for t in range(len(route)):
+        route[t] = taskList[route[t].id]
+    return route
 
 '''
 @return: the index for the last task with waiting time in the route
@@ -1196,9 +1192,6 @@ def createSchedule(solution):
 
 def getRouteDuration(currRoute):
     # TODO: put this in Object.Route instead 
-#     if currRoute.endingTimes[-1] == None or currRoute.endingTimes[0] == None:
-#         return None
-    
     routeDuration = 0
     # for each task in the route, calculate the duration by traveling time and the duration of the task
     # add the total duration calculation to the overall routeDuration 
@@ -1209,7 +1202,6 @@ def getRouteDuration(currRoute):
         routeDuration += taskDuration
     
     return routeDuration
-#     return currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
 
 '''
 @return: the length of a schedule from the start of the first 
@@ -1252,8 +1244,13 @@ def calcTotalDistance(currSolution):
 # take the last tasks ending time - first tasks ending time + first tasks duration 
 def getMinRouteDuration(currRoute): 
     
+    print currRoute.taskList
+    print currRoute.endingTimes
+    
     totalDuration = currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
     return totalDuration    
+
+
 
 
 def updatePrevUnplanned(task):
@@ -1351,7 +1348,7 @@ used by the visualizer.
 @param routeIndex: The index of the route in the schedule, or None if schedOrRoute
     is a full schedule
 '''
-def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
+def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex=None):
     try:
         schedSteps.append([stringInfo, copy.deepcopy(schedOrRoute), routeIndex])
     except NameError:
@@ -1369,4 +1366,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    pass
