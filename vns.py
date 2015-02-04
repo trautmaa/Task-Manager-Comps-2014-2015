@@ -14,7 +14,7 @@ import copy
 import csv
 from createTests import dayLength
 from collections import deque
-
+import sys, os
 
 # Number of seconds VNS is allowed to run
 stoppingCondition = 5
@@ -1360,7 +1360,12 @@ def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
             
 def main():
     # print "********** Main **********"
-    result = solve("test50.csv")
+    
+    #run vns on file specified in user input
+    f = sys.argv[1]
+    f = os.path.realpath(f)
+    
+    result = solve(f)
     print
     print result[0]
     print
