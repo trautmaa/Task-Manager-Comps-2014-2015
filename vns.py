@@ -1308,6 +1308,7 @@ def findNoneRoutes(currSchedule):
             print "IT WAS NONE"
             exit(1)
 
+#checking to see if tasks that have been scheduled are overlapping
 def isRouteActuallyFeasible(currRoute):
     if len(currRoute) == 0:
         return

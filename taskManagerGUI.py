@@ -17,6 +17,7 @@ To run this properly, drag and drop the file onto processing-py, available at
 https://github.com/jdf/processing.py
 '''
 import vns, greedyByOrder, greedyByPresentChoice
+import greedyConstructiveHeuristic
 from math import floor
 
 def setup():
@@ -56,6 +57,7 @@ def setup():
     
     csvFile = pwd("test1000.csv")
     #vns schedule:
+#     schedule = greedyConstructiveHeuristic.runGreedyConstructiveHeuristic(csvFile)
     schedule, useless = vns.solve(csvFile)
 #     schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
 #     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
@@ -63,7 +65,7 @@ def setup():
 #     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
 #     solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
 #     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
-# 
+        
 #     schedule = bestGreedy
     print schedule
     #Globals for reference later
