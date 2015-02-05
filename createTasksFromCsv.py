@@ -71,11 +71,24 @@ def makeObjects(attributeList):
                 taskList[i].setTimeWindows(getTimeWindows(attributeList[i][7]))
                 
             if (j == 8):
-                taskList[i].setTaskDependency(attributeList[i][8])
+                taskList[i].setTaskDependency(getDependencyTasks(attributeList[i][8]))
                 
             # With added features, we must add statements here.
     return taskList
 
+
+def getDependencyTasks(dependencyTaskString):
+    dependencyTaskString = dependencyTaskString[1:-1]
+    dependencyTaskList = dependencyTaskString.split(",")
+    for task in dependencyTaskList:
+        if task == "":
+            return []
+        task = int(task)
+    return dependencyTaskList
+    
+    
+    
+    
 '''
 Takes in all the time windows and puts them into a form that VNS can use 
 (distinguishing between days).
