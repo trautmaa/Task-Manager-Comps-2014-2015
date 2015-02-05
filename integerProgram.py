@@ -113,13 +113,6 @@ def makeXihtAndXhitVariables(numTasks, numDays):
             xhitVariables[i][t] = pulp.LpVariable(("x,H," + str(i) + "," + str(t)), 0, 1, pulp.LpBinary)
     return xihtVariables, xhitVariables
 
-'''
-We need to add:
-    Rule (4) ktSum of yitk = y1
-    Changing Connectivity...
-    Rule (9) making sure ai fits in its time windows  --> (aitk + si) * yitk <= ait <= bitk(endingOfThatTimeWindow) + B(1-yitk)
-    Rule (7)??? kSum of yitk = sum xijt where i != j
-'''
 
 '''
 Add constraints to the problem that ensure each scheduled job appears in at most
@@ -172,6 +165,12 @@ def addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants,
                 prob += aitVariables[i][t] <= fitkConstants[i][t][k] + latestTimeWindowEnd * (1 - yitkVariables[i][t][k]) # ait <= B(1 - yitk)
 
 
+def addReleaseTaskConstraints(prob, yiVariables, aiVariables, taskList):
+    for i in range(len(taskList)):
+        for taskId in taskList[i].dependencyTasks:
+            assert(taskId != i)
+            prob += yiVariables[i] <= yiVariables[taskId]
+            prob += aiVariables[i] > aiVariables[taskId]
 
 '''
 A function that adds constraints to the problem.  This constraint is
