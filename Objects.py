@@ -51,6 +51,9 @@ class Task:
     def setRequired(self, required):
         self.required = required
         
+    def setName(self, name):
+        self.name = name
+        
     #   This is a list of task IDs that this task would be dependent on.  
     #   Ie, this task cannot be completed until all dependent tasks have been completed.    
     def setTaskDependency(self, taskIds):
@@ -74,7 +77,7 @@ class Task:
 
 
     def __str__(self):
-        stringRepresentation = "(ID: " + str(self.id) + ", Location: (" + str(self.x) + ", "\
+        stringRepresentation = "(Name: " + str(self.name) + " ID: " + str(self.id) + ", Location: (" + str(self.x) + ", "\
         + str(self.y) + "), Release Time: " + str(self.releaseTime) \
         + ", Duration: " + str(self.duration) + ", Deadline: " \
         + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required)\

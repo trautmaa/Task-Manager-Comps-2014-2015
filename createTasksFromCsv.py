@@ -72,6 +72,8 @@ def makeObjects(attributeList):
                 
             if (j == 8):
                 taskList[i].setTaskDependency(getDependencyTasks(attributeList[i][8]))
+            if (j == 9):
+                taskList[i].setName(attributeList[i][9])
                 
             # With added features, we must add statements here.
     return taskList
@@ -115,7 +117,8 @@ def getTimeWindows(timeWindowString):
 
 
 def main():
-    for task in makeObjects(readInTask("newTest.csv")):
+    for task in makeObjects(readInTask("willSchedule.csv")):
+        print "",
         print task
         
 if __name__ == '__main__':
