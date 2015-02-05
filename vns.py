@@ -44,7 +44,7 @@ def solve(csvFile):
     bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
 
     appendToSchedSteps("greedySched", bestGreedy)
-            
+    print bestGreedy     
     assert(isFeasible(taskList, bestGreedy))
     # print bestGreedy
     

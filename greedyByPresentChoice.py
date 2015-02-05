@@ -37,7 +37,7 @@ Refer to runGreedyByPresentChoice.
 Given a task list, returns a greedily selected schedule.
 '''
 def makeSchedule(taskList):
-    taskList = copy.deepcopy(taskList)
+    fullTaskList = copy.deepcopy(taskList)
     helperFunctions.preprocessTimeWindows(taskList)
     schedule = Schedule()
     lastDay = len(taskList[0].timeWindows)
@@ -57,7 +57,7 @@ def makeSchedule(taskList):
         bestTaskInfo = (None, None, None, None)
         bestTask = None
         for task in taskList:
-            taskInfo = helperFunctions.isTaskInsertable(schedule, task, lastTimeWindowEndings)
+            taskInfo = helperFunctions.isTaskInsertable(schedule, task, lastTimeWindowEndings, fullTaskList)
             # if task can be finished earliest
             if (taskInfo[2] != None and (bestTaskInfo[2] == None or taskInfo[2] < bestTaskInfo[2])):
                 bestTaskInfo = taskInfo
@@ -74,7 +74,7 @@ def makeSchedule(taskList):
 
 def main():
     print
-    printGreedyByPresentChoice("test.csv")
+    printGreedyByPresentChoice("newTest.csv")
     
 
 

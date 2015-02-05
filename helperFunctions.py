@@ -152,7 +152,7 @@ def createOptimalSchedule(taskList, taskOrdering):
     while (timeWindowIndex < len(taskList)):
         currentTask = taskList[taskOrdering[timeWindowIndex]]
 
-        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings)     
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings, taskList)     
         if (isInsertable):
             schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
             schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
@@ -160,15 +160,41 @@ def createOptimalSchedule(taskList, taskOrdering):
 
     return schedule
 
+
+def areDependencyTasksInSchedule(schedule, task, taskList):
+    latestRoute, latestPosition = 0, 0
+    for taskId in task.dependencyTasks:
+        task = taskList[int(taskId)]
+        included = False
+        for i in range(len(schedule)):
+            if task in schedule[i]:
+                included = True
+                if i > latestRoute:
+                    latestRoute = i
+                    if schedule[i].taskList.index(task) > latestPosition:
+                        latestPosition = schedule[i].taskList.index(task)
+        if not included:
+            return False, None, None
+    return True, latestRoute, latestPosition
+
+    
+
+
 ''' Given a partial schedule, a task, and a list containing the endings of
 the latest time windows for each day,
 returns False if the task is not insertable, and if it is returns
 True, the (earliest) ending time of that task, the (earliest) day on which it can be scheduled,
 and the position in the schedule it should be inserted.'''
-def isTaskInsertable(schedule, task, dayEndings):
-    for dayIndex, day in enumerate(task.timeWindows):
+def isTaskInsertable(schedule, task, dayEndings, taskList):
+    dependenciesInSchedule, startingRoute, startingPosition = areDependencyTasksInSchedule(schedule, task, taskList)
+    if not dependenciesInSchedule:
+        return False, None, None, None
+    for dayIndex in range(startingRoute, len(schedule)):
+        if not dayIndex == startingRoute:
+            startingPosition = -1
+        dayTimeWindows = task.timeWindows[dayIndex]
         currentRoute = schedule.routeList[dayIndex]
-        for taskIndex in range(-1, len(currentRoute.taskList)):
+        for taskIndex in range(startingPosition, len(currentRoute.taskList)):
             if (len(currentRoute.taskList) == 0): # no tasks scheduled on that day
                 earliestPotentialStart = 0
                 latestPotentialEnd = dayEndings[dayIndex]
@@ -192,7 +218,7 @@ def isTaskInsertable(schedule, task, dayEndings):
                 latestPotentialEnd = nextScheduledTaskEnding - nextScheduledTask.duration - \
                 getDistanceBetweenTasks(task, nextScheduledTask)
 
-            for timeWindow in day:
+            for timeWindow in dayTimeWindows:
                 startTime = max(timeWindow[0], earliestPotentialStart)
                 endTime = min(timeWindow[1], latestPotentialEnd)
                 if (task.duration <= endTime - startTime):

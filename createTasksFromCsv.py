@@ -70,9 +70,25 @@ def makeObjects(attributeList):
             if (j == 7): # time windows
                 taskList[i].setTimeWindows(getTimeWindows(attributeList[i][7]))
                 
+            if (j == 8):
+                taskList[i].setTaskDependency(getDependencyTasks(attributeList[i][8]))
+                
             # With added features, we must add statements here.
     return taskList
 
+
+def getDependencyTasks(dependencyTaskString):
+    dependencyTaskString = dependencyTaskString[1:-1]
+    dependencyTaskList = dependencyTaskString.split(",")
+    for task in dependencyTaskList:
+        if task == "":
+            return []
+        task = int(task)
+    return dependencyTaskList
+    
+    
+    
+    
 '''
 Takes in all the time windows and puts them into a form that VNS can use 
 (distinguishing between days).
@@ -96,3 +112,11 @@ def getTimeWindows(timeWindowString):
             timeWindows.append((int(twStart.group()), int(twEnd.group())))
         days.append(timeWindows)
     return days
+
+
+def main():
+    for task in makeObjects(readInTask("newTest.csv")):
+        print task
+        
+if __name__ == '__main__':
+    main()

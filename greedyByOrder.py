@@ -15,7 +15,7 @@ in a more detailed format.
 '''
 def printGreedyByOrder(csvFile, orderMethod):
     schedule = runGreedyByOrder(csvFile, orderMethod)
-    #print schedule
+    print schedule
     print "The", str(orderMethod), "gave a profit of", str(schedule.getProfit())
 
 def orderByPriorityOverAvailability(timeWindowsAndPriorities):
@@ -76,11 +76,11 @@ def runGreedyByOrder(csvFile,orderMethod):
 
 def main():
     print "priority"
-    printGreedyByOrder("test50.csv", orderByPriority)
+    printGreedyByOrder("newTest.csv", orderByPriority)
     print "deadline"
-    printGreedyByOrder("test50.csv", orderOptionalByDeadline)
+    printGreedyByOrder("newTest.csv", orderOptionalByDeadline)
     print "priority/availability"
-    printGreedyByOrder("test50.csv", orderByPriorityOverAvailability)
+    printGreedyByOrder("newTest.csv", orderByPriorityOverAvailability)
     
     
 
