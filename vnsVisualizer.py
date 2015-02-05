@@ -42,7 +42,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("test1000.csv"))
+    currSchedule, schedSteps = vns.solve(pwd("newTest.csv"))
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
