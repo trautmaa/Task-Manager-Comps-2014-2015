@@ -247,8 +247,9 @@ def main():
    
     print
     print schedule
-    for route in schedule:
-        print vns.isRouteActuallyFeasible(route)
+    for r in range(len(schedule)):
+        route = schedule[r]
+        print vns.isRouteActuallyFeasible(route,r)
     print  
     print "priority is: ", schedule.getProfit()
     print 
