@@ -6,7 +6,15 @@
 To do:
 Label days
 Make it clearer what the ghost time windows are
-Add a menu to choose algorithm and task input file, AND be able to manually input tasks
+
+More Alg buttons
+Choose test file
+
+Improve:
+-loading screen
+-okay button
+
+Highlight selected buttons
 '''
 
 '''
@@ -22,40 +30,45 @@ import os
 
 def setup():
     
+    size(displayWidth, displayHeight)
+    
     initialize()
     
-    global buttonList, buttonRects, buttonFunctions
+    global buttonList, buttonRects, buttonFunctions, buttonWidth, buttonHeight
+    global firstCalDraw
+    firstCalDraw = [True]
+    
+    
+    
     #actually do math bro
-    buttonRects = [[100, 100]]
-    buttonFunctions = ["vns.py"]
+    buttonRects = [[width/2, height * 2 / 3], [100, 100]]
+    buttonFunctions = ["Okay!", "vns.py"]
     buttonList = len(buttonFunctions) * [False]  
+    
+    buttonWidth = 10
+    buttonHeight = (height - 7 * height / 8) / len(buttonList)
     
     drawButtons()
     
     menuSetup()
-    #calendarSetup()
-    size(displayWidth, displayHeight)    
+    
+    
 
 def draw():
-    #FIX MEEEE
-    if mousePressed == True:
-        if mouseX >= 100 and mouseX <= 100+textWidth("vns.py"):
-            if mouseY >= 100 and mouseY <= 100+100: #EEWWWWW
-                clickedOkay[0] = True
-    if clickedOkay[0]:
-        drawCalendar()
-    
-    else:
+    if not clickedOkay[0]:
         drawMenu()
+        updateButtons() 
+    else:
+        if firstCalDraw[0]:
+            calendarDrawInit()
+            setupScreen()
+            firstCalDraw[0] = False
+        calendarDraw()
 
-def sketchFullScreen():
-    return True
+
 
 def drawMenu():
     drawButtons()
-
-def drawCalendar():
-    calendarSetup()
 
 def initialize():
     
@@ -63,9 +76,15 @@ def initialize():
     global textX, textY, textDimensionX, textDimensionY, clickedOkay
     global taskRects, taskMapDots, dayRects, colorList, rectColors
     global schedule, minWidth, timeList, timeWindowRects, maxNumTimeWindows
-    global blues, greens, oranges, yellows
+    global blues, greens, oranges, yellows, bgColor
     
     clickedOkay = [False]    
+    
+    #initialize our lists - we have to do this because of processing
+    dayWidth = [0]
+    maxX, maxY = [0], [0]
+    maxNumTimeWindows = [0]
+    schedule = []
     
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
@@ -89,62 +108,65 @@ def initialize():
     
     
     smooth()
-    background(blues[3])
+    bgColor = blues[3]
+    background(bgColor)
     
+    headerHeight = 50
+    sideBarWidth = 75
+
+    #Set global minimum screen width
+    minWidth = 1000
+        
+    #width = max(len(schedule) * dayWidth + sideBarWidth, minWidth)
+    #height = min(900, displayHeight)
+    dayHeight = height/2 - headerHeight
+
+
+    #Set dimension and coordinates for map and text box
+    mapDimension = height - dayHeight - 2 * headerHeight
     
-def drawButton(x, y, buttonText, buttonHeight):
-    pushStyle()
-    noStroke()
-    textSize(32)
-    fill(yellows[4], alpha = 255)
-    rect(x, y, 10 + textWidth(buttonText), buttonHeight, 7)
-    fill(blues[0])
-    text(buttonText, x + 5, y + 50)
-    popStyle()
-
-def drawButtons():
-    for b in range(len(buttonList)):
-        buttonRect = buttonRects[b]
-        drawButton(buttonRect[0], buttonRect[1], buttonFunctions[b], 100)
-
-def menuSetup():
-    pass
-
-def calendarSetup():
+    textDimensionX = mapDimension
+    textDimensionY = mapDimension / 2
     
-    #initialize global lists to empty
+    mapX = (width - mapDimension - textDimensionX) * 2 / 3 + textDimensionX
+    mapY = dayHeight + headerHeight + ((height - (dayHeight + headerHeight) - mapDimension)/2)
+
+    #set X and Y for our text box
+    textX = (width - mapDimension - textDimensionX) * 1/3
+    textY = mapY + mapDimension * 1 / 16
+    
     taskRects = []
     timeWindowRects = []
     rectColors = []
     taskMapDots = []
     dayRects = []
+
     
-    #do stuff so that we can call different algorithms depending on user's selection
-    vns = pwd("vns.py")
-    file = pwd("newTest.csv")
-    print os.system("python " + vns + " " + file)
     
-    csvFile = pwd("newTest.csv")
-    
-    #vns schedule:
-#     schedule, useless = vns.solve(csvFile)
-    schedule = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
-    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
-    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key = lambda schedule : schedule.getProfit())
- 
-    schedule = bestGreedy
-    print schedule
-    #Globals for reference later
-    
-    setupScreen()
+def drawButtons():
+    for b in range(len(buttonList)):
+        buttonRect = buttonRects[b]
+        drawButton(buttonRect[0], buttonRect[1], buttonFunctions[b], 100) 
+        
+def drawButton(x, y, buttonText, buttonHeight):
+    pushStyle()
+    noStroke()
+    textSize(32)
+    fill(yellows[4], alpha = 255)
+    rect(x, y, buttonWidth + textWidth(buttonText), buttonHeight, 7)
+    fill(blues[0])
+    text(buttonText, x + 5, y + 50)
+    popStyle()
+
+def menuSetup():
+    pass
+
+
 
 def setColors():
-    for d in range(len(schedule)):
+    for d in range(len(schedule[0])):
         
-        scaleFactor = float(d+1)/float(len(schedule)) * (len(colorList) - 1)
+        scaleFactor = float(d+1)/float(len(schedule[0])) * (len(colorList) - 1)
         baseColor = int(floor(scaleFactor))
         percentBetweenColors = scaleFactor - baseColor
         #find new r, g and b where its scaled according to the percentBetweenColors
@@ -169,8 +191,6 @@ def setColors():
 
 
 def calendarDraw():
-    #NEED TO CALL setupScreen() IF IT IS THE FIRST TIME
-    calendarDrawInit()
     whichTask = -1
     whichDay = -1
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
@@ -180,57 +200,71 @@ def calendarDraw():
     highlight(whichTask, whichDay)
 
 def calendarDrawInit():
-    headerHeight = 50
-    sideBarWidth = 75
-    dayWidth = min(200, (displayWidth - sideBarWidth)/len(schedule))
-
-    #Set global minimum screen width
-    minWidth = 1000
-        
-    w = max(len(schedule) * dayWidth + sideBarWidth, minWidth)
-    h = min(900, displayHeight)
-    dayHeight = h/2 - headerHeight
-
-
-    #Set dimension and coordinates for map and text box
-    mapDimension = h - dayHeight - 2 * headerHeight
+    #initialize global lists to empty
     
-    textDimensionX = mapDimension
-    textDimensionY = mapDimension / 2
     
-    mapX = (w - mapDimension - textDimensionX) * 2 / 3 + textDimensionX
-    mapY = dayHeight + headerHeight + ((h - (dayHeight + headerHeight) - mapDimension)/2)
-
-    #set X and Y for our text box
-    textX = (w - mapDimension - textDimensionX) * 1/3
-    textY = mapY + mapDimension * 1 / 16
-
+    #do stuff so that we can call different algorithms depending on user's selection
+    vns = pwd("vns.py")
+    file = pwd("newTest.csv")
+    print os.system("python " + vns + " " + file)
+    
+    csvFile = pwd("newTest.csv")
+    
+    #vns schedule:
+#     schedule, useless = vns.solve(csvFile)
+    sched = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
+    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
+    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
+    bestGreedy = max(solutionList, key = lambda sched : sched.getProfit())
+ 
+    schedule.append(bestGreedy)
+    print schedule[0]
+    #Globals for reference later
+    
+    dayWidth[0] = (width -sideBarWidth) /len(schedule[0])
 
     #populate the rectColors list with some rainbow colors
     setColors()
-
+    
     #determine maximum coordinate values
-    maxX = 0
-    maxY = 0
-    maxNumTimeWindows = 0
-    for day in range(len(schedule)):
-        for t in range(len(schedule[day])):
-            task = schedule[day][t]
+    maxX[0] = 0
+    maxY[0] = 0
+    maxNumTimeWindows[0] = 0
+    for day in range(len(schedule[0])):
+        for t in range(len(schedule[0][day])):
+            task = schedule[0][day][t]
             taskX = task.x
             taskY = task.y
-            if taskX > maxX:
-                maxX = taskX
-            if taskY > maxY:
-                maxY = taskY
+            if taskX > maxX[0]:
+                maxX[0] = taskX
+            if taskY > maxY[0]:
+                maxY[0] = taskY
             
             #get maxNumTimeWindows so we can make ghost time windows appropriate width in highlight()
-            for j in range(len(schedule[day][t].timeWindows)):
-                if len(schedule[day][t].timeWindows[j]) > maxNumTimeWindows:
-                    maxNumTimeWindows = len(schedule[day][t].timeWindows[j])
-                
-    
+            for j in range(len(schedule[0][day][t].timeWindows)):
+                if len(schedule[0][day][t].timeWindows[j]) > maxNumTimeWindows[0]:
+                    maxNumTimeWindows[0] = len(schedule[0][day][t].timeWindows[j])
+    background(bgColor)
 
-    
+def updateButtons():
+    if mousePressed:
+        for r in range(len(buttonRects)):
+            rect = buttonRects[r]
+            if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctions[r]):
+                if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
+                    
+                    #if it was the okay button, AND we have already selected an algorithm...
+                    #run the alg
+                    if r == 0:
+                        if True in buttonList[1:]:
+                            clickedOkay[0] = True
+                            textSize(100)
+                            fill(blues[0])
+                            text("Loading...", width/2,height/2)
+                            
+                    buttonList[r] = not buttonList[r]    
     
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
 def update(x, y, whichTask, whichDay):
@@ -282,9 +316,9 @@ def highlight(whichTask, whichDay):
         timeWindowRects.pop()
     
     #redraw all the tasks
-    for d in range(len(schedule)):
-        day = schedule[d]
-        drawTasks(day, sideBarWidth + (d * dayWidth))
+    for d in range(len(schedule[0])):
+        day = schedule[0][d]
+        drawTasks(day, sideBarWidth + (d * dayWidth[0]))
 
     #redraw all the window's lines and times
     for i in range(10, 110, 10):
@@ -292,7 +326,7 @@ def highlight(whichTask, whichDay):
         strokeWeight(1)
         stroke(0, 0, 0, 50)
         #text(str(i), 0, y)
-        line(sideBarWidth, int(y), sideBarWidth + (dayWidth * len(schedule)), int(y))
+        line(sideBarWidth, int(y), sideBarWidth + (dayWidth[0] * len(schedule[0])), int(y))
         
     if whichDay != -1 and whichTask != -1:
         #highlight the current task's rectangle
@@ -311,13 +345,13 @@ def highlight(whichTask, whichDay):
         textSize(20)
         fill(blues[3])
         textItemsList = []
-        task = schedule[whichDay][whichTask]
+        task = schedule[0][whichDay][whichTask]
         textStr = ""
         textStr = textStr + "ID: " + str(task.id) + "\n"
         textStr = textStr + "Release Time: " + str(task.releaseTime) + "\n"
         textStr = textStr + "X Coordinate: " + str(task.x) + "\n"
         textStr = textStr + "Y Coordinate: " + str(task.y) + "\n"
-        textStr = textStr + "Start Time: " + str(schedule[whichDay].endingTimes[whichTask] - task.duration) + "\n"
+        textStr = textStr + "Start Time: " + str(schedule[0][whichDay].endingTimes[whichTask] - task.duration) + "\n"
         
         
         text(textStr, textX + textDimensionX / 100, textY + textDimensionY / 10)
@@ -340,7 +374,7 @@ def drawScreen():
 #draw schedule...
 def drawSchedule():
     fill(255,255,255)
-    rect(sideBarWidth, headerHeight, dayWidth * len(schedule), dayHeight)
+    rect(sideBarWidth, headerHeight, dayWidth[0] * len(schedule[0]), dayHeight)
 
 #A function to set up the preliminary style details for the given schedule
 def setupScreen():
@@ -372,7 +406,7 @@ def setupScreen():
         text(timeText, 0, y)
 
         #limit line width to width of days
-        line(sideBarWidth, int(y), sideBarWidth + (dayWidth * len(schedule)), int(y))
+        line(sideBarWidth, int(y), sideBarWidth + (dayWidth[0] * len(schedule[0])), int(y))
     
     
     
@@ -392,12 +426,12 @@ def drawDays():
     for i in range(len(timeWindowRects)):
         timeWindowRects.pop()
 
-    for d in range(0,len(schedule)):
+    for d in range(0,len(schedule[0])):
         #new for loop index from 0
-        dayX = dayWidth * d + sideBarWidth
-        drawTasks(schedule[d], dayX)
+        dayX = dayWidth[0] * d + sideBarWidth
+        drawTasks(schedule[0][d], dayX)
         
-        dayRects.append([dayX, headerHeight, dayWidth, dayHeight])
+        dayRects.append([dayX, headerHeight, dayWidth[0], dayHeight])
         if(d > 0):
             
             line(dayX, headerHeight, dayX, dayHeight+headerHeight)
@@ -412,7 +446,7 @@ def drawTasks(route, leftX):
     noStroke()
     
     #get dayNum from leftX:
-    dayNum = (leftX - sideBarWidth) / dayWidth
+    dayNum = (leftX - sideBarWidth) / dayWidth[0]
     
     timeWindowsToAdd = []
     dayToAdd = []
@@ -428,19 +462,19 @@ def drawTasks(route, leftX):
         fill(rectColors[dayNum], 50)
         
         #for the MAP, scale our coordinates to values within the box
-        xToAdd = (float(task.x) / float(maxX) * \
+        xToAdd = (float(task.x) / float(maxX[0]) * \
                   (mapDimension - (float(mapDimension)/10.0)) + (mapX + float(mapDimension)/20.0))
-        yToAdd = (float(task.y) / float(maxY) * \
+        yToAdd = (float(task.y) / float(maxY[0]) * \
                   (mapDimension - (mapDimension/10)) + (mapY + mapDimension/20))
 
         #mapLocationsToAdd is a list of each task's coordinates
         mapLocationsToAdd.append([xToAdd, yToAdd])
         
         #dayToAdd is a list of each task's rectangle's dimensions for a given day
-        dayToAdd.append([leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight])
+        dayToAdd.append([leftX, headerHeight + startTime, dayWidth[0], (float(task.duration)/float(dayLength)) * dayHeight])
         
         #draw the rectangle for each task
-        rect(leftX, headerHeight + startTime, dayWidth, (float(task.duration)/float(dayLength)) * dayHeight )
+        rect(leftX, headerHeight + startTime, dayWidth[0], (float(task.duration)/float(dayLength)) * dayHeight )
         
         #initialize local helper list
         timeWindowsPerTask = []
@@ -455,7 +489,7 @@ def drawTasks(route, leftX):
             
             #numTimeWindowsForTask = len(task.timeWindows[dayNum])
             #widths = dayWidth/numTimeWindowsForTask
-            widths = dayWidth/maxNumTimeWindows
+            widths = dayWidth[0]/maxNumTimeWindows[0]
             xStart = leftX + tw * widths
             
             #add rect dimensions for each time window            
@@ -550,3 +584,6 @@ def drawDayMap(whichDay):
         #draw line
         line(x1, y1, x2, y2)
     popStyle()
+    
+def sketchFullScreen():
+    return True
