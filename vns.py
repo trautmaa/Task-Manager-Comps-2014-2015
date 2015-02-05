@@ -662,6 +662,11 @@ def isFeasible(taskList, currSchedule):
 #     print "********** Exiting isFeasible **********"
     appendToSchedSteps("Before minRoute:", newSchedule)
 
+    print "checking before calling minRoute"
+    for r in range(len(newSchedule)): 
+        route = newSchedule[r]
+        checkForProperTaskScheduling(route, r)
+
     newSchedule = minRoute(taskList, newSchedule)
     
     appendToSchedSteps("At the end of isFeasible", newSchedule)
@@ -933,6 +938,7 @@ def minRoute(taskList, currSchedule):
         
         # print "start of minRouteLoop", d
         # print day
+        print "Start of minRoute loop"
         isRouteActuallyFeasible(day, d)
         
         if len(day) == 0:
@@ -963,7 +969,7 @@ def minRoute(taskList, currSchedule):
         
 
         
-        # print "checking initRoute"
+        print "checking initRoute, after setting endingTimes"
         isRouteActuallyFeasible(day,d)
         
         latestWaitingTask = getLatestWaitingTask(day)
@@ -973,7 +979,7 @@ def minRoute(taskList, currSchedule):
         bestRoute = dominantRoute(day, assignedTWs, d)
         
         
-        # print " after dominantRoute 0"
+        print " after dominantRoute 0"
         isRouteActuallyFeasible(bestRoute, d)
         
         latestWaitingTask = getLatestWaitingTask(bestRoute)
@@ -995,7 +1001,7 @@ def minRoute(taskList, currSchedule):
                 bestRoute = newRoute
             latestWaitingTask = getLatestWaitingTask(newRoute)
             
-        # print "after dom and switch loop"
+        print "after dom and switch loop"
         isRouteActuallyFeasible(bestRoute, d)
         
         if bestRoute == None:
@@ -1038,7 +1044,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
 
     currRoute = copy.deepcopy(currRoute)
     
-    # print "Beginning of switchTimeWindows"
+    print "Beginning of switchTimeWindows"
     isRouteActuallyFeasible(currRoute, day)
     
     # print "Original Route:"
@@ -1124,7 +1130,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
             # print "********** Exiting switchTimeWindows **********"
             return None
     
-    # print "after all squidging"
+    print "after all squidging"
     # print currRoute
     isRouteActuallyFeasible(currRoute, day)
     # print "********** Exiting switchTimeWindows **********"
