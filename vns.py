@@ -183,7 +183,11 @@ def vns(taskList, currSchedule):
                 numIterations += 1
                 unplannedTasks = prevUnplanned
                 nHood += 1
-                
+    
+    for r in range(len(bestSchedule)):
+        route = bestSchedule[r]
+        print "Checking if VNS best schedule if tasks are scheduled within time windows"
+        checkForProperTaskScheduling(route, r)
 #     print "********** Exiting VNS **********"
     return bestSchedule
 
@@ -929,14 +933,14 @@ def minRoute(taskList, currSchedule):
         
         # print "start of minRouteLoop", d
         # print day
-        isRouteActuallyFeasible(day)
+        isRouteActuallyFeasible(day, d)
         
         if len(day) == 0:
             continue
         
         # print "\nstart of minRoute"
         # print day
-        isRouteActuallyFeasible(day)
+        isRouteActuallyFeasible(day, d)
         
         # keep track of what tw index each task has been assigned
         assignedTWs = [0] * len(day)        
@@ -960,7 +964,7 @@ def minRoute(taskList, currSchedule):
 
         
         # print "checking initRoute"
-        isRouteActuallyFeasible(day)
+        isRouteActuallyFeasible(day,d)
         
         latestWaitingTask = getLatestWaitingTask(day)
         if latestWaitingTask == -1:
@@ -970,7 +974,7 @@ def minRoute(taskList, currSchedule):
         
         
         # print " after dominantRoute 0"
-        isRouteActuallyFeasible(bestRoute)
+        isRouteActuallyFeasible(bestRoute, d)
         
         latestWaitingTask = getLatestWaitingTask(bestRoute)
         
@@ -992,7 +996,7 @@ def minRoute(taskList, currSchedule):
             latestWaitingTask = getLatestWaitingTask(newRoute)
             
         # print "after dom and switch loop"
-        isRouteActuallyFeasible(bestRoute)
+        isRouteActuallyFeasible(bestRoute, d)
         
         if bestRoute == None:
             # print "WHAT"
@@ -1035,7 +1039,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     currRoute = copy.deepcopy(currRoute)
     
     # print "Beginning of switchTimeWindows"
-    isRouteActuallyFeasible(currRoute)
+    isRouteActuallyFeasible(currRoute, day)
     
     # print "Original Route:"
     # print currRoute
@@ -1122,7 +1126,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
     
     # print "after all squidging"
     # print currRoute
-    isRouteActuallyFeasible(currRoute)
+    isRouteActuallyFeasible(currRoute, day)
     # print "********** Exiting switchTimeWindows **********"
     return currRoute
 
@@ -1308,8 +1312,12 @@ def findNoneRoutes(currSchedule):
             print "IT WAS NONE"
             exit(1)
 
-#checking to see if tasks that have been scheduled are overlapping
-def isRouteActuallyFeasible(currRoute):
+def isRouteActuallyFeasible(currRoute, routeIndex):
+    checkForOverlappingTasks(currRoute)
+    checkForProperTaskScheduling(currRoute, routeIndex)
+
+#checking to see if tasks that have been scheduled are overlapping        
+def checkForOverlappingTasks(currRoute):
     if len(currRoute) == 0:
         return
     task = currRoute[0]
@@ -1330,7 +1338,40 @@ def isRouteActuallyFeasible(currRoute):
             print "task", t, "overlaps task\a", t - 1
             exit()
         lastEndingTime = currRoute.endingTimes[t] - task.duration
+
+#checks to make sure that all taska are scheduled within a time window        
+def checkForProperTaskScheduling(currRoute, routeIndex):
+    for t in range(len(currRoute)): 
+        task = currRoute[t]
+        taskEndingTime = currRoute.endingTimes[t]
         
+        # if an ending time has been set for the task --> we need not check to see if task is 
+        # schduled within its time window if an ending time has not been set. 
+        if taskEndingTime != None: 
+            #calculate the start time
+            taskStartTime = taskEndingTime - task.duration
+            foundFeasibleTW = False
+            
+            # go through all the time windows for the task within a given time window
+            # if we find a tw start time that is less than the taskStartTime and a 
+            # tw ending time that is greater than or equal to the task end time then 
+            # set bool value to true
+            for tw in task.timeWindows[routeIndex]:
+                if tw[0] <= taskStartTime and tw[1] >= taskEndingTime:
+                    foundFeasibleTW = True
+                
+            # if we have made it through all the tws but haven't found a feasible one, 
+            # indicate that there is an error 
+            if foundFeasibleTW == False: 
+                print "******** Error in route ********"
+                print "task", task.id, "is not scheduled within its available TWs"
+                print currRoute 
+                print "task start time: ", taskStartTime
+                print "task ending time: ", taskEndingTime
+                print "*********************************"
+                print 
+            
+    
 def changedTimeWindowsInSchedule(route, r, taskList):
     for t in range(len(route)):
         task = route[t]
