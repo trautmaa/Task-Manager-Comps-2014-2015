@@ -3,6 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import vns, Objects, copy
+from createTests import dayLength
 
 def setup():
     
@@ -136,7 +137,7 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
     else:
         ends = False
     
-    scale = float(height - headerHeight) / 100.0
+    scale = float(height - headerHeight) / dayLength
     
     for t in range(len(route)):
         
@@ -155,8 +156,8 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             
             timeWindow = task.timeWindows[routeIndex][tw]
             
-            twStart = (timeWindow[0] - routeIndex * 100) * scale
-            twEnd = (timeWindow[1] - routeIndex * 100) * scale
+            twStart = (timeWindow[0] - routeIndex * dayLength) * scale
+            twEnd = (timeWindow[1] - routeIndex * dayLength) * scale
             fill(twColor, 150)
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
             

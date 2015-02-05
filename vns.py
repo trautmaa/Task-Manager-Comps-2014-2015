@@ -548,16 +548,8 @@ def switchChains(k, j, currRoute):
 def bestInsertion(taskList, currSchedule):
 #     print "********** Entering bestInsertion **********"
 
-#     print "current schedule:"
-#     print currSchedule
-#     print
-
     currSchedule = copy.deepcopy(currSchedule)
 
-    # while we haven't broken the time-limit and we haven't looked at every unplanned task
-        # find the best spot to insert the current task within this route (distance)
-        # insert it there
-        
     # Keep track of the first task we try to add, stop if we try to add it again
     currTask = unplannedTasks.popleft()
     firstTaskID = currTask.id
@@ -586,10 +578,14 @@ def bestInsertion(taskList, currSchedule):
             if len(currTask.timeWindows[routeIndex]) == 0:
                 break
             
+            if len(route) > 0:
+                # Try adding the current unplanned task at location 0
+                # Get the distance from current unplanned to the original first task
+                dist = helperFunctions.getDistanceBetweenTasks(currTask, route[0])
+
+            else:
+                dist = 0
             
-            # Try adding the current unplanned task at location 0
-            # Get the distance from current unplanned to the original first task
-            dist = helperFunctions.getDistanceBetweenTasks(currTask, route[0])
             # If this distance is better than what we have found before, update our variables
             if dist < bestAdditionalDistance:
                 bestAdditionalDistance = dist
@@ -617,14 +613,15 @@ def bestInsertion(taskList, currSchedule):
                     bestAdditionalDistance = dist
                     bestSpot = [routeIndex, t]
             
-            # Check the distance of adding the unplanned task to the end
-            dist = helperFunctions.getDistanceBetweenTasks(currTask, route[-1])
+            if len(route) >= 1:
+                # Check the distance of adding the unplanned task to the end
+                dist = helperFunctions.getDistanceBetweenTasks(currTask, route[-1])
             
-            # If we have found a better distance and thus spot, update
-            if dist < bestAdditionalDistance:
-                bestAdditionalDistance = dist
-                bestSpot = [routeIndex, len(route)]
-                foundSpot = True
+                # If we have found a better distance and thus spot, update
+                if dist < bestAdditionalDistance:
+                    bestAdditionalDistance = dist
+                    bestSpot = [routeIndex, len(route)]
+                    foundSpot = True
         
 #         print "best spot for task", currTask.id, "is", bestSpot
         
