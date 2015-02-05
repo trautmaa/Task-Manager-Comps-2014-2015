@@ -3,15 +3,17 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 from helperFunctions import *
-from greedyByOrder import runGreedyByOrder
+import greedyConstructiveHeuristic
+import greedyByOrder
+import createTests
 from greedyByPresentChoice import runGreedyByPresentChoice
 from bruteForce import runBruteForceAlg
 from writeToCsv import writeNTasks
 # from taskManagerIntProg import runIntegerProgram
-from time import time
 
-fileName = "test.csv"
-inputSize = 10
+
+fileName = "testing.csv"
+inputSize = 50
 
 '''
 Prints the total number of tasks the algorithm with a particular name
@@ -75,9 +77,45 @@ def comparisonLoop():
 			print "Integer program produced a non-optimal solution, halting comparison for debugging."
 			print
 
-def main():
-	comparisonLoop()
 
+def runNComparisons(n):
+    totalOrderedDeadlineProfit, totalOrderedDeadlineTime = 0, 0
+    
+    totalOrderedPriorityProfit, totalOrderedPriorityTime = 0, 0
+    
+    totalOrderedAvailabilityPriorityProfit, totalOrderedAvailabilityPriorityTime = 0, 0
+    for i in range(n):
+        createTests.writeNTasks(inputSize, fileName)
+        
+        
+        greedyByDeadlineOrderSchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderOptionalByDeadline)
+        greedyByPriorityOrderSchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderByPriority)
+        greedyByPriorityAvailabilitySchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderByPriorityOverAvailability)
+        print greedyByDeadlineOrderSchedule.getProfit()
+        totalOrderedDeadlineProfit += greedyByDeadlineOrderSchedule.getProfit()
+        totalOrderedPriorityProfit += greedyByPriorityOrderSchedule.getProfit()
+        totalOrderedAvailabilityPriorityProfit += greedyByPriorityAvailabilitySchedule.getProfit()
+        
+        
+    print "Average totalOrderedDeadlineProfit:" , str(totalOrderedDeadlineProfit/n)
+    print "Average totalOrderedPriorityProfit:" , str(totalOrderedPriorityProfit/n)
+    print "Average totalOrderedAvailabilityPriorityProfit:" , str(totalOrderedAvailabilityPriorityProfit/n)
+            
+            
+def getNumberOfRequiredAndOptionalTasks(schedule):
+    required, optional = 0, 0
+    for route in schedule:
+        for task in route:
+            if task.required == str(1):
+                required += 1
+            else:
+                optional += 1
+    return required, optional
+            
+            
+def main():
+	#comparisonLoop()
+    runNComparisons(1000)
 
 if __name__ == '__main__':
 	main()

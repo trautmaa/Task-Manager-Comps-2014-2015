@@ -153,7 +153,7 @@ def createOptimalSchedule(taskList, taskOrdering):
         currentTask = taskList[taskOrdering[timeWindowIndex]]
         
         isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings, taskList)
-        print currentTask, isInsertable
+        #print currentTask, isInsertable
         if (isInsertable):
             schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
             schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    

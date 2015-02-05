@@ -3,11 +3,10 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import csv
-
+import time
 from copy import deepcopy
 
 import random
-
 
 '''
 Make sure your input variables make sense!!!!!!!!!
@@ -126,6 +125,7 @@ constraints for generateTask are hard coded but that can
 be changed.  The name of the csv file is returned.
 '''
 def writeNTasks(n, csvFile):
+    random.seed(time.time())
     taskList = []
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
