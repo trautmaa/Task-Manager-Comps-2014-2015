@@ -312,10 +312,20 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         
         # if task n has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
-        
+        allHaveTimeWindows = True
+        foundEmptyTW = True
         if len(origRoute[n].timeWindows[newDay]) > 0:
             if n - currRouteStart == segmentLength:
-                possRoutes.append(currRouteStart)
+                #Check to make sure all task from currRouteStart to currRouteStart + segmentLength have tws in newDay
+                while allHaveTimeWindows:
+                    for i in range(segmentLength):
+                        if n + i < len(origRoute):
+                            if len(origRoute[n + i].timeWindows[newDay]) == 0:
+                                allHaveTimeWindows = False
+                                foundEmptyTW = False
+                    allHaveTimeWindows = False 
+                if not foundEmptyTW:
+                    possRoutes.append(currRouteStart)
                 currRouteStart += 1
         
         # move on to the next route if previous conditional statement was no satisfied 
@@ -502,30 +512,30 @@ def threeOPT(taskList, currSchedule):
     # AVERY WE NEVER USE THIS
     maxM = math.factorial(numTasks) / (6 * math.factorial(numTasks) - 3)
     
-    appendToSchedSteps("Working with route %d in 3OPT, numTasks %d" %(day, numTasks), currRoute, day)
+#     appendToSchedSteps("Working with route %d in 3OPT, numTasks %d" %(day, numTasks), currRoute, day)
     
     # swap sections of 3 or less from k to j with segments from j+1 to n
     for k in range(numTasks - 2):
         topRange = min(k + 4, numTasks - 2)
         for j in range(k + 1, topRange):
-            appendToSchedSteps("3OPT k = %d, j = %d " %(k, j), currRoute, day)
-            appendToSchedSteps("ThreeOPT currRoute", currRoute, day)
+#             appendToSchedSteps("3OPT k = %d, j = %d " %(k, j), currRoute, day)
+#             appendToSchedSteps("ThreeOPT currRoute", currRoute, day)
             
             #switch the segments to get the new route
             newRoute = switchChains(k, j, currRoute)
-            appendToSchedSteps("ThreeOPT newRoute", newRoute, day)
+#             appendToSchedSteps("ThreeOPT newRoute", newRoute, day)
             
             #calculate the duration and feasibility of the new route
             newLength, newFeasibility = getRouteDurationWithFeasibility(newRoute, day, taskList)
-            appendToSchedSteps("ThreeOPT currLen %d currFeas %d" %(currLength, currFeasibility), currRoute, day)
-            appendToSchedSteps("ThreeOPT newLen %d newFeas %d" %(newLength, newFeasibility), newRoute, day)
+#             appendToSchedSteps("ThreeOPT currLen %d currFeas %d" %(currLength, currFeasibility), currRoute, day)
+#             appendToSchedSteps("ThreeOPT newLen %d newFeas %d" %(newLength, newFeasibility), newRoute, day)
             
             if currLength >= newLength and newFeasibility <= currFeasibility:
                 if newLength < currLength or newFeasibility < currFeasibility:
                     
                     # If neither duration or feasibility got worse and one of those improved,
                     # accept the new route.
-                    appendToSchedSteps("ThreeOPT found better route******************", newRoute, day)
+#                     appendToSchedSteps("ThreeOPT found better route******************", newRoute, day)
                     currSchedule[day] = newRoute
 #                     print "********** Exiting threeOPT ***************"       
                     return currSchedule
