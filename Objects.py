@@ -28,6 +28,8 @@ task.required represents whether the task is required
 class Task:
     def __init__(self, id):
         self.id = id
+        self.name = "No Name"
+        self.dependencyTasks = []
         pass
     
     def setX(self, x):
