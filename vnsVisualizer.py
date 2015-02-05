@@ -3,6 +3,7 @@
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
 import vns, Objects, copy
+from createTests import dayLength
 
 def setup():
     
@@ -42,7 +43,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("test1000.csv"))
+    currSchedule, schedSteps = vns.solve(pwd("newTest.csv"))
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -77,7 +78,7 @@ def draw():
         drawRoute()
     elif keyPressed[1]:
         keyPressed[1] = False
-        if currStep[0] > 1:
+        if currStep[0] > 0:
             currStep[0] -= 1
             newSched = schedSteps[currStep[0]]
             sched.pop()
@@ -98,8 +99,6 @@ def keyPressed():
 def drawRoute():
     pushStyle()
     
-    
-    
     fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
 
@@ -109,7 +108,6 @@ def drawRoute():
 
     stringInfo = sched[0][0]
     print currStep[0], stringInfo
-    print currSchedule
     if currSchedule == None:
         fill(dayColor)
         rect(sideBarWidth, headerHeight, width - sideBarWidth, height - headerHeight)
@@ -139,14 +137,12 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
     else:
         ends = False
     
-    scale = float(height - headerHeight) / 100.0
+    scale = float(height - headerHeight) / dayLength
     
     for t in range(len(route)):
         
         task = route[t]
         
-        
-        print "TASK", task
         
         taskWidth = routeWidth / len(route)
         taskX = routeX + t * taskWidth
@@ -160,8 +156,8 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             
             timeWindow = task.timeWindows[routeIndex][tw]
             
-            twStart = (timeWindow[0] - routeIndex * 100) * scale
-            twEnd = (timeWindow[1] - routeIndex * 100) * scale
+            twStart = (timeWindow[0] - routeIndex * dayLength) * scale
+            twEnd = (timeWindow[1] - routeIndex * dayLength) * scale
             fill(twColor, 150)
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
             
@@ -174,5 +170,4 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             rect(taskX, headerHeight + taskEnd - taskHeight, taskWidth, taskHeight)
         else:
             pass
-    print
     popStyle()
