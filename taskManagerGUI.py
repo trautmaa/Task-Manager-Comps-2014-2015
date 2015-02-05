@@ -34,25 +34,52 @@ def setup():
     
     initialize()
     
-    global buttonList, buttonRects, buttonFunctions, buttonWidth, buttonHeight
-    global firstCalDraw
+    global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
+    global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight
+    global buttonTextSize, buttonFunctsBackEnd
+    
     firstCalDraw = [True]
     
-    
-    
-    #actually do math bro
-    buttonRects = [[width/2, height * 2 / 3], [100, 100]]
-    buttonFunctions = ["Okay!", "vns.py"]
-    buttonList = len(buttonFunctions) * [False]  
-    
+    buttonTextSize = 32
+    algButtonsHeight = 225
+    testButtonsHeight = 500
+    buttonFunctsFrontEnd = ["Okay!", "VNS", "IntProg", "Pulse"]
+    buttonFunctsBackEnd = ["DontMatta", "vns.py", "integerProgram.py", "pulseOPTW.py"]
+    buttonHighlightSize = 10
     buttonWidth = 10
-    buttonHeight = (height - 7 * height / 8) / len(buttonList)
+    buttonHeight = 80
+    
+    
+    #initialize empty list; leave room for OKAY button dimensions
+    buttonRects = [0] * (len(buttonFunctsFrontEnd))
+    textSize(buttonTextSize)
+    buttonRects[0] = [width/2 - textWidth(buttonFunctsFrontEnd[0])/2, height * 2 / 3]
+    
+    #math
+    totalFunctionButtonsWidth = 0
+    for i in range(1, len(buttonFunctsFrontEnd)):
+        #20 is the space between buttons
+        totalFunctionButtonsWidth +=  textWidth(buttonFunctsFrontEnd[i]) + 2 * buttonHighlightSize + 60
+    totalFunctionButtonsWidth -= 2 * buttonHighlightSize + 60
+    
+    #populate buttonRects list
+    for b in range(1, len(buttonFunctsFrontEnd)):
+        if b == 1:
+            startingX = width/2 - totalFunctionButtonsWidth/2
+            rectX = startingX
+        else:
+            startingX = buttonRects[b-1][0]
+            rectX = startingX + textWidth(buttonFunctsFrontEnd[b-1]) + 2 * buttonHighlightSize + 60
+        rectY = algButtonsHeight
+        buttonRects[b] = [rectX, rectY]
+    
+    #initialize buttonFunctsFrontEnd list to all False, since none are clicked to begin with
+    buttonList = len(buttonFunctsFrontEnd) * [False]  
     
     drawButtons()
     
     menuSetup()
-    
-    
+       
 
 def draw():
     if not clickedOkay[0]:
@@ -66,9 +93,11 @@ def draw():
         calendarDraw()
 
 
-
 def drawMenu():
+    background(bgColor)
+    highlightButtons()
     drawButtons()
+
 
 def initialize():
     
@@ -146,18 +175,57 @@ def initialize():
 def drawButtons():
     for b in range(len(buttonList)):
         buttonRect = buttonRects[b]
-        drawButton(buttonRect[0], buttonRect[1], buttonFunctions[b], 100) 
+        drawButton(buttonRect[0], buttonRect[1], buttonFunctsFrontEnd[b], buttonHeight) 
         
 def drawButton(x, y, buttonText, buttonHeight):
     pushStyle()
     noStroke()
-    textSize(32)
+    textSize(buttonTextSize)
     fill(yellows[4], alpha = 255)
     rect(x, y, buttonWidth + textWidth(buttonText), buttonHeight, 7)
     fill(blues[0])
     text(buttonText, x + 5, y + 50)
     popStyle()
 
+def highlightButtons():
+    for b in range(len(buttonList)):
+        
+        #if it has been selected, highlight it..
+        if buttonList[b] == True:
+            buttonRect = buttonRects[b]
+            fill(greens[3], alpha = 100)
+            rectX1 = buttonRect[0] - buttonHighlightSize
+            rectY1 = buttonRect[1] - buttonHighlightSize
+            rectX2 = buttonWidth + 2 * buttonHighlightSize + textWidth(buttonFunctsFrontEnd[b])
+            rectY2 = buttonHeight + 2 * buttonHighlightSize
+            rect(rectX1, rectY1, rectX2, rectY2, 15) #7 is the smoothed style 
+
+#change the booleans associated with clicked buttons
+def updateButtons():
+    if mouseClicked:
+        for r in range(len(buttonRects)):
+            rect = buttonRects[r]
+            if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctsFrontEnd[r]):
+                if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
+                    
+                    #if it was the okay button, AND we have already selected an algorithm...
+                    #run the algorithm
+                    if r == 0:
+                        if True in buttonList[1:]:
+                            clickedOkay[0] = True
+                            textSize(100)
+                            fill(blues[0])
+                            text("Loading...", width/2,height/2)
+                    
+                    #only change the button's boolean if it wasn't the okay button
+                    #AND if no other button was toggled
+                    else:
+                        if True in buttonList[1:]:
+                            for j in range(len(buttonRects)):
+                                if buttonList[j] == True:
+                                    buttonList[j] = False
+                        buttonList[r] = not buttonList[r]    
+    
 def menuSetup():
     pass
 
@@ -204,9 +272,13 @@ def calendarDrawInit():
     
     
     #do stuff so that we can call different algorithms depending on user's selection
+    
+    
+    
     vns = pwd("vns.py")
     file = pwd("newTest.csv")
-    print os.system("python " + vns + " " + file)
+    
+    #print os.system("python " + vns + " " + file)
     
     csvFile = pwd("newTest.csv")
     
@@ -248,24 +320,7 @@ def calendarDrawInit():
                     maxNumTimeWindows[0] = len(schedule[0][day][t].timeWindows[j])
     background(bgColor)
 
-def updateButtons():
-    if mousePressed:
-        for r in range(len(buttonRects)):
-            rect = buttonRects[r]
-            if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctions[r]):
-                if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
-                    
-                    #if it was the okay button, AND we have already selected an algorithm...
-                    #run the alg
-                    if r == 0:
-                        if True in buttonList[1:]:
-                            clickedOkay[0] = True
-                            textSize(100)
-                            fill(blues[0])
-                            text("Loading...", width/2,height/2)
-                            
-                    buttonList[r] = not buttonList[r]    
-    
+
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
 def update(x, y, whichTask, whichDay):
     
