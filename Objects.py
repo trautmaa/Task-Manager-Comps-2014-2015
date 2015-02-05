@@ -78,12 +78,13 @@ class Task:
         + str(self.y) + "), Release Time: " + str(self.releaseTime) \
         + ", Duration: " + str(self.duration) + ", Deadline: " \
         + str(self.deadline) + ", Priority: " + str(self.priority) + ", Required: " + str(self.required)\
+        + ", Tasks Depended On: " + str(self.dependencyTasks)\
         + ", Time Windows: ["
         
         for day in self.timeWindows:
             for tw in day:
                 stringRepresentation = stringRepresentation + "(" + str(tw[0]) + ", "  + str(tw[1]) + "), "
-        stringRepresentation += "])"
+        stringRepresentation += "])" 
         
         return stringRepresentation
     
