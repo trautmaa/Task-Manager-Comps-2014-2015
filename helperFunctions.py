@@ -151,8 +151,9 @@ def createOptimalSchedule(taskList, taskOrdering):
 
     while (timeWindowIndex < len(taskList)):
         currentTask = taskList[taskOrdering[timeWindowIndex]]
-
-        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings, taskList)     
+        
+        isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings, taskList)
+        print currentTask, isInsertable
         if (isInsertable):
             schedule.routeList[endingDay].taskList.insert(insertPosition, currentTask)
             schedule.routeList[endingDay].endingTimes.insert(insertPosition, endingTime)                    
@@ -162,7 +163,7 @@ def createOptimalSchedule(taskList, taskOrdering):
 
 
 def areDependencyTasksInSchedule(schedule, task, taskList):
-    latestRoute, latestPosition = 0, 0
+    latestRoute, latestPosition = -1, 0
     for taskId in task.dependencyTasks:
         task = taskList[int(taskId)]
         included = False
