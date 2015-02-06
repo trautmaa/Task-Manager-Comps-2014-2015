@@ -17,7 +17,7 @@ from collections import deque
 import sys, os
 
 # Number of seconds VNS is allowed to run
-stoppingCondition = 5
+stoppingCondition = 200
 
 random.seed(211680280677)
 
@@ -41,7 +41,7 @@ def solve(csvFile):
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
+    bestGreedy = min(solutionList, key=lambda schedule : schedule.getProfit())
 
     appendToSchedSteps("greedySched", bestGreedy)
             
@@ -82,6 +82,8 @@ def vns(taskList, currSchedule):
 
     global unplannedTasks
     global prevUnplanned
+    global routesModified
+    routesModified = []
     
     unplannedTasks = deque(taskList[:])
    
@@ -227,11 +229,10 @@ def shaking(currSchedule, nHood):
 '''
 def crossExchange(currSchedule, nHood):
 #     print "********** Entering crossExchange **********"
-        
+    
     currSchedule = copy.deepcopy(currSchedule)
     
     if len(currSchedule) <= 1:
-#         print "Not doing cross exchange"
 #         print "********** Exiting crossExchange **********"
         return currSchedule
     
@@ -256,18 +257,24 @@ def crossExchange(currSchedule, nHood):
     else:
         route2Len = random.randint(0, min(len2, nHood))
     
+    appendToSchedSteps("Swapping segments in routes %d and %d" %(day1, day2), currSchedule)
+    appendToSchedSteps("route %d, len %d, route %d, len %d" %(day1, route1Len, day2, route2Len), currSchedule)
+    
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
-    routeSegment2 = getRouteSegment(currSchedule, day1, day2, route2Len)
+    routeSegment2 = getRouteSegment(currSchedule, day2, day1, route2Len)
 
     route1Start, route1End = routeSegment1[0], routeSegment1[1]
     route2Start, route2End = routeSegment2[0], routeSegment2[1]
-
-    if route1End - route1Start == 0 or route2End - route2Start == 0:
+    
+    appendToSchedSteps("route %d start %d end %d" %(day1, route1Start, route1End), currSchedule)
+    appendToSchedSteps("route %d start %d end %d" %(day2, route2Start, route2End), currSchedule)
+    
+    if route1End - route1Start == 0 and route2End - route2Start == 0:
         return currSchedule 
 
     route1 = currSchedule[day1][route1Start : route1End]
     route2 = currSchedule[day2][route2Start : route2End]
-
+    
     tasks1 = currSchedule[day1][:route1Start] + route2 + currSchedule[day1][route1End:]
     tasks2 = currSchedule[day2][:route2Start] + route1 + currSchedule[day2][route2End:]
 
@@ -275,11 +282,12 @@ def crossExchange(currSchedule, nHood):
     newDay1 = Objects.Route()
     newDay1.setTaskList(tasks1, [None] * len(tasks1))
     
-    
     # starting index of the sub-route we will be removing
     newDay2 = Objects.Route()
     newDay2.setTaskList(tasks2, [None] * len(tasks2))
     
+    appendToSchedSteps("new day %d" %(day1), newDay1, day1)
+    appendToSchedSteps("new day %d" %(day2), newDay2, day2)
     
     for task in route2:
         unplannedTasks.append(task)
@@ -287,6 +295,11 @@ def crossExchange(currSchedule, nHood):
     # remove route1 from day1, remove route2 from day2, insert route1 into day2 where route2 was
     currSchedule[day1] = newDay1
     currSchedule[day2] = newDay2
+    
+    for i in range(len(routesModified)):
+        routesModified.pop()
+    routesModified.append(day1)
+    routesModified.append(day2)
     
 #     print "********** Exiting crossExchange **********"
     return currSchedule
@@ -314,7 +327,6 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
     # origRoute: choose random segment w/ customers who have a valid time window in newDay
     # if there is no such route, choose the longest route.
     while n < len(origRoute):
-        
         # checking to see if the current route is longer than longest route, if it is update 
         # longest route start and length
         if (n - currRouteStart) > longestRouteLen:
@@ -323,22 +335,11 @@ def getRouteSegment(currSchedule, origDay, newDay, segmentLength):
         
         # if task n has a valid time window in day 2, check to see if the route from curr start to n is 
         # long enough, if so add it to possible list of routes
-        allHaveTimeWindows = True
-        foundEmptyTW = True
-        if len(origRoute[n].timeWindows[newDay]) > 0:
-            if n - currRouteStart == segmentLength:
-                #Check to make sure all task from currRouteStart to currRouteStart + segmentLength have tws in newDay
-                while allHaveTimeWindows:
-                    for i in range(segmentLength):
-                        if n + i < len(origRoute):
-                            if len(origRoute[n + i].timeWindows[newDay]) == 0:
-                                allHaveTimeWindows = False
-                                foundEmptyTW = False
-                    allHaveTimeWindows = False 
-                if not foundEmptyTW:
-                    possRoutes.append(currRouteStart)
-                currRouteStart += 1
         
+        if len(origRoute[n].timeWindows[newDay]) > 0 :
+            if n - currRouteStart == segmentLength - 1:
+                possRoutes.append(currRouteStart)
+                currRouteStart += 1
         # move on to the next route if previous conditional statement was no satisfied 
         else:
             currRouteStart = n + 1
@@ -420,9 +421,10 @@ def optionalExchange1(currSchedule, nHood):
      # replace the chosen days with the updated days   
     currSchedule[day] = newRoute
     
-#     print
-#     print currSchedule
-#     printUnplanned()
+    for i in range(len(routesModified)):
+        routesModified.pop()
+    routesModified.append(day)
+    
 #     print "********** Exiting optExchange1 **********"
     return currSchedule
 
@@ -467,6 +469,11 @@ def optionalExchange2(currSchedule, nHood):
     
 #     print "********** Exiting optExchange2 **********"
     
+    for i in range(len(routesModified)):
+        routesModified.pop()
+    
+    routesModified.append(day)
+    
     appendToSchedSteps("At the end of optExchange2 at nHood %d" % (nHood), currSchedule)
     return currSchedule
 
@@ -495,15 +502,17 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
     appendToSchedSteps("sched at start of threeOPT", currSchedule)
-    
+    appendToSchedSteps("routesModed for 3opt, %s" %(str(routesModified)), currSchedule)
+
     currSchedule = copy.deepcopy(currSchedule)
     
     # generate a list of all routes that are longer than 3
     possRoutes = []
-    for r in range(len(currSchedule)):
-        if len(currSchedule[r]) > 3:
-            possRoutes.append(r)
-    
+    for r in range(len(routesModified)):
+        routeIndex = routesModified[r]
+        if len(currSchedule[routeIndex]) > 3:
+            possRoutes.append(routeIndex)
+            
     # If there are no such routes, give up.
     if len(possRoutes) == 0:
         appendToSchedSteps("sched too short in threeOPT", currSchedule)
@@ -518,10 +527,6 @@ def threeOPT(taskList, currSchedule):
     currLength, currFeasibility = getRouteDurationWithFeasibility(currRoute, day, taskList)
     numTasks = len(currRoute)
     
-    # calculate the maximum number of routes we could generate
-    # AVERY WE NEVER USE THIS
-    maxM = math.factorial(numTasks) / (6 * math.factorial(numTasks) - 3)
-    
 #     appendToSchedSteps("Working with route %d in 3OPT, numTasks %d" %(day, numTasks), currRoute, day)
     
     # swap sections of 3 or less from k to j with segments from j+1 to n
@@ -535,18 +540,24 @@ def threeOPT(taskList, currSchedule):
             #calculate the duration and feasibility of the new route
             newLength, newFeasibility = getRouteDurationWithFeasibility(newRoute, day, taskList)
             
-            if currLength >= newLength and newFeasibility <= currFeasibility:
-                if newLength < currLength or newFeasibility < currFeasibility:
-                    
-                    # If neither duration or feasibility got worse and one of those improved,
-                    # accept the new route.
-                    appendToSchedSteps("ThreeOPT: better route", newRoute, day)
-                    currSchedule[day] = newRoute
+            if newRouteDominates(currLength, currFeasibility, newLength, newFeasibility):
+                appendToSchedSteps("ThreeOPT: better route: last to mid", newRoute, day)
+                currSchedule[day] = newRoute
 #                     print "********** Exiting threeOPT ***************"       
-                    return currSchedule
+                return currSchedule
+            
     appendToSchedSteps("no better sched found in threeOpt", currSchedule)
 #     print "********** Exiting threeOPT ***************"       
     return currSchedule
+
+'''
+check to see if the new route dominates the old route
+'''
+def newRouteDominates(currLen, currFeas, newLen, newFeas):
+    if currLen >= newLen and newFeas <= currFeas:
+        if newLen < currLen or newFeas < currFeas:
+            return True
+    return False
 
 def switchChains(k, j, currRoute):
     newRoute = copy.deepcopy(currRoute)
@@ -566,6 +577,8 @@ def bestInsertion(taskList, currSchedule):
     currSchedule = copy.deepcopy(currSchedule)
 
     # Keep track of the first task we try to add, stop if we try to add it again
+    if len(unplannedTasks) == 0:
+        return currSchedule
     currTask = unplannedTasks.popleft()
     firstTaskID = currTask.id
     firstTime = True
