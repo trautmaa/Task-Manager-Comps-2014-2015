@@ -339,6 +339,12 @@ def integerProgramSolve(taskList, timeLimit, outputFlag):
         solver = pulp.solvers.GUROBI(OutputFlag = outputFlag, TimeLimit = timeLimit)
 
     prob.solve(solver)
+    model = prob.solverModel
+    probStatus = model.getAttr("Status")
+    if probStatus == 2:
+        isOptimal = True
+    else:
+        isOptimal = False
 
     # for debugging infeasible models:
     # model = prob.solverModel
@@ -349,7 +355,7 @@ def integerProgramSolve(taskList, timeLimit, outputFlag):
     # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
     
     # assert(prob.status == 1) # Problem was solved
-    return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList)
+    return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList), isOptimal
 
 '''
 A helper function that does everything but print the solution,
@@ -358,9 +364,9 @@ for use in comparing different algorithms.
 def runIntegerProgram(csvFile, timeLimit = -1, outputFlag = 0):
     taskList = createTasksFromCsv.getTaskList(csvFile)
     helperFunctions.preprocessTimeWindows(taskList)
-    schedule = integerProgramSolve(taskList, timeLimit, outputFlag)
+    schedule, isOptimal = integerProgramSolve(taskList, timeLimit, outputFlag)
     # assert(isFeasible(taskList, schedule))
-    return schedule
+    return schedule, isOptimal
 
 '''
 Helper function called in main to process the optional command linear
@@ -394,10 +400,11 @@ and print the solution it produces.
 def main():
     print
     timeLimit, outputFlag = processCommandLineArgs(sys.argv)
-    solvedSchedule = runIntegerProgram("test.csv", timeLimit, outputFlag)
+    solvedSchedule, isOptimal = runIntegerProgram("newTest.csv", timeLimit, outputFlag)
     print
-    if timeLimit != -1:
-        print "WARNING: As a time limit was set, output may not be optimal."
+    if not isOptimal:
+        print "WARNING: As the integer program was terminated before completion,"
+        print "this solution may not be optimal."
         print
     print solvedSchedule
     print
