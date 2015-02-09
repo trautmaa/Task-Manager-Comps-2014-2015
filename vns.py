@@ -17,7 +17,7 @@ from collections import deque
 import sys, os
 
 # Number of seconds VNS is allowed to run
-stoppingCondition = 200
+stoppingCondition = 3
 
 random.seed(211680280677)
 
@@ -1394,7 +1394,12 @@ def checkForProperTaskScheduling(currRoute, routeIndex):
                 print "*********************************"
                 return False
     return True
-            
+
+'''
+Function so the GUI can display the time you may have to wait
+'''
+def getStoppingCondition():
+    return stoppingCondition
     
 def changedTimeWindowsInSchedule(route, r, taskList):
     for t in range(len(route)):
