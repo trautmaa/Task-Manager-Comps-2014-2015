@@ -26,6 +26,7 @@ import greedyByOrder, greedyByPresentChoice
 from math import floor
 from createTests import dayLength
 import os
+from vns import solve, getStoppingCondition
 
 
 def setup():
@@ -207,16 +208,24 @@ def updateButtons():
             rect = buttonRects[r]
             if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctsFrontEnd[r]):
                 if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
-                    
+
                     #if it was the okay button, AND we have already selected an algorithm...
                     #run the algorithm
                     if r == 0:
-                        if True in buttonList[1:]:
-                            clickedOkay[0] = True
-                            textSize(100)
-                            fill(blues[0])
-                            text("Loading...", width/2,height/2)
-                    
+                        tempList = buttonList[1:]
+                        for boolIndex in range(len(tempList)):
+                            bool = buttonList[boolIndex]
+                            if bool == True:
+                                clickedOkay[0] = True
+                                textSize(100)
+                                fill(blues[0])
+                                text("Loading...", width/2,height/2)
+
+                                #This is giving some super strange error, help
+                                #if it's VNS tell us how long we need to wait
+                                #if (buttonList[1] == True):
+                                   #text(str(getStoppingCondition(), width/4, height/4)
+
                     #only change the button's boolean if it wasn't the okay button
                     #AND if no other button was toggled
                     else:
@@ -224,7 +233,7 @@ def updateButtons():
                             for j in range(len(buttonRects)):
                                 if buttonList[j] == True:
                                     buttonList[j] = False
-                        buttonList[r] = not buttonList[r]    
+                        buttonList[r] = not buttonList[r]
     
 def menuSetup():
     pass
@@ -272,7 +281,30 @@ def calendarDrawInit():
     
     
     #do stuff so that we can call different algorithms depending on user's selection
+    '''
+    #setup for VNS
+    if buttonList[1] == True:
+        
+        algorithm = pwd("vns.py")
+        csvFile = pwd("test50.csv")
+        schedule, useless = solve(csvFile)
+        print schedule
+        print "ASDFHSFGKJHWEFHEW: ", schedule[0]
+        
+        pass
+        
+    #setup for Int Program
+    elif buttonList[2] == True:
+        pass
     
+    #setup for Pulse
+    elif buttonList[3] == True:
+        pass
+    else:
+        #ERROR: none of our known algorithms were selected when okay when selected
+        #Default to VNS
+        pass
+    '''
     
     
     vns = pwd("vns.py")
@@ -283,7 +315,7 @@ def calendarDrawInit():
     csvFile = pwd("newTest.csv")
     
     #vns schedule:
-#     schedule, useless = vns.solve(csvFile)
+    #schedule, useless = vns.solve(csvFile)
     sched = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
@@ -292,10 +324,10 @@ def calendarDrawInit():
     bestGreedy = max(solutionList, key = lambda sched : sched.getProfit())
  
     schedule.append(bestGreedy)
-    print schedule[0]
+    #print schedule[0]
     #Globals for reference later
     
-    dayWidth[0] = (width -sideBarWidth) /len(schedule[0])
+    dayWidth[0] = (width -sideBarWidth) / len(schedule[0])
 
     #populate the rectColors list with some rainbow colors
     setColors()
