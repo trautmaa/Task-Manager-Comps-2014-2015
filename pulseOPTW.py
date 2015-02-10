@@ -10,8 +10,6 @@ Ants are actually called Pulses now
 '''
 To do :
 figure out 
-    - bounding
-    - soft dominance
     - parallel python
 '''
 '''
@@ -22,9 +20,33 @@ Global variables needed(?):
 '''
 
 import helperFunctions, copy
+import createTasksFromCsv, collections
+from createTests import dayLength
 
-global allNodes
 
+def solve(csvFile):
+    global allNodes, taskList, reducedBoundsMatrix
+    global  delta, tShoe, primalBound
+    
+    taskList = createTasksFromCsv.getTaskList(csvFile)
+    allNodes = [x.id for x in taskList]
+    
+    #2-dimensional list with first index value as tao (currentTime), second index value as node
+    reducedBoundsMatrix = collections.defaultdict(list)
+    
+    #we can mess with this as we see fit. Make delta larger to speed things up. Make it smaller to have more values.
+    delta = dayLength/10
+    tShoe = dayLength/10
+
+    defineBounds(tShoe, delta, taskList)
+
+    
+    bestPaths = []
+    for node in taskList:
+        bestPaths.append(pulse(node.id, 0, 0, [0]))
+        
+    print "Wow you made it"
+    print "best schedule\n", max(bestPaths, key = lambda x: getProfit(x))
 
 '''
 Recursively generate every possible path starting with starting path and going to every unvisited node...
@@ -36,42 +58,30 @@ This function is called in separate threads by our main function..
 def pulse(node, currScore, currTime, currPath):
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
     # nodes in the current path and node under consideration
-    unvisitedNodes = allNodes - set(currPath) - node
-    assert(node not in currPath)
+    unvisitedNodes = copy.deepcopy(allNodes)
+    for n in range(1, len(currPath)):
+        unvisitedNodes.remove(currPath[n].id)
+    result = []
+    assert(node not in currPath[1:])
     assert(currScore >= 0 and currTime >= 0)
     # checking if it's work considering this new path...could it possibly be optimal
     newProposedEndingTime = isFeasible(node, currPath)
-    if newProposedEndingTime != None and inBounds(node, currScore, currTime) \
+    if newProposedEndingTime != None and inBounds(node, currTime, currPath) \
       and notSoftDominated(node, newProposedEndingTime, currPath):
         
-        newPath = currPath.add(node)
-        newScore = currScore + node.score()
+        newPath = currPath[:] + [node]
+        newScore = currScore + taskList[node].priority
         # if it is a candidate for optimality pulse is called recursively, 
         # on the same thread...i.e keep going down the branch
         for newNode in unvisitedNodes:
             newPath = copy.deepcopy(currPath)
-            if noDetour(node, newNode, currPath, newProposedEndingTime):
-                # new time is the current time plus the distance between current node and new node 
-                newTime = currTime + helperFunctions.getDistanceBetweenTwoTasks(node, newNode)
-                pulse(newNode, newScore, newTime, newPath)
-'''
-If there is a gap in the schedule 
-'''
-
-# def noDetour(node, newNode, currTime, currPath):
-#     newSchedule scheduleASAP(newNode)
-    #assert(isFeasible(newSchedule))
-#     if the end of the last node in currPath + dist(last, new) >= start of next time window that could include newNode:
-#         return True
-#     for unvisitedNode in graph:
-#         if it can fit between end of lastNode and start of newNode:
-#             (there is a possible detour)
-#             return False
-#     return True
-def noDetour(node, newNode, currTime, currPath):
-    assert(isFeasible(newSchedule))
-
-    return True
+            # new time is the current time plus the distance between current node and new node 
+            newTime = currTime + helperFunctions.getDistanceBetweenTasks(taskList[node], taskList[newNode])
+            result = result + pulse(newNode, newScore, newTime, newPath)
+    if len(result) == 0:
+        return []
+    return max(result, key = lambda x: getProfit(x))
+                    
 
 
 '''
@@ -82,13 +92,14 @@ taskList[currPath[1]] is the task object for the first scheduled task
 '''
 def isFeasible(node, currPath):
     task = taskList[node]
-    routeIndex = int(currPath[0]) / 100
+    routeIndex = int(currPath[0]) / dayLength
     
     #limit is the earliest we could reach node and begin proposed task
-    limit = currPath[0] + helperFunctions.getDistanceBetweenTwoTasks(taskList[currPath[-1]], taskList[node])
+    limit = currPath[0] + helperFunctions.getDistanceBetweenTasks(taskList[currPath[-1]], taskList[node])
     
     #return a proposedEnd based on the earliest we can schedule the node, considering its time windows
-    for tw in range(len(task.timeWindows)):
+    for tw in range(len(task.timeWindows[routeIndex])):
+
         timeWindow = task.timeWindows[tw][routeIndex]
         proposedEnd = max(timeWindow[0], limit) + task.duration
         
@@ -107,9 +118,9 @@ checks a few different orders to make sure that this ordering is worth further e
 '''
 def notSoftDominated(node, newProposedEndingTime, currPath):
     #look at each new ordering
-    for taskToSwap in range(1, len(currPath)):
+    for nodeToSwap in range(1, len(currPath)):
         tempPath = currPath[:]
-        tempPath[-1], tempPath[taskToSwap] = tempPath[taskToSwap], tempPath[-1]
+        tempPath[-1], tempPath[nodeToSwap] = tempPath[nodeToSwap], tempPath[-1]
         
         #schedule tasks and determine the soonest possible ending time
         newTime = scheduleASAP(tempPath)
@@ -121,19 +132,65 @@ def notSoftDominated(node, newProposedEndingTime, currPath):
     return True
 
 
-def inBounds(node, currTime):
+'''
+inBounds checks our pre-created matrix from define bounds to see if the path is worth further exploration
+'''
+def inBounds(node, currTime, path):
+    if currTime not in reducedBoundsMatrix:
+        return True
+    
+    taoValue = currTime - currTime % delta
+    if reducedBoundsMatrix[taoValue][node] + scheduleASAP(path)[1] >= primalBound:
+        return False
     return True
-'''
-def inBounds(node, currTime):
-    Do this when you're smarter
-'''
+    
+    
 
 '''
-returns a new path with the lowest possible ending time
+define bounds function defines a matrix of values of the least amount of time it would take to complete the schedule
+from a given node to the end within a time limit of the day length minus the length of the path so far (round up? round down?)
+@param tShoe: the lowest time value we will explore in our matrix. We don't go lower than tShoe because we don't want to fully solve
+the problem at this point. 
+@param delta: the length of the time steps
+tHat is just the dayLength
 '''
-def scheduleASAP(path, node):
+def defineBounds(tShoe, delta, taskList):
+    currentLimit = dayLength
+    
+    #go through each value of tao AKA currentTime until we reach our stopping condition
+    while currentLimit > tShoe:        
+        #decrement
+        
+        currentLimit -= delta
+        reducedBoundsMatrix[currentLimit] = ([None] * len(taskList))
+        
+        for task in taskList:
+            path = [0]
+            path += pulse(task.id, 0, currentLimit, path)
+            
+            #add a cost value to our global reducedBoundsMatrix
+            if path == []:
+                reducedBoundsMatrix[currentLimit][task.id] = float("inf")
+            else:
+                print reducedBoundsMatrix
+                print reducedBoundsMatrix[currentLimit]
+                print len(reducedBoundsMatrix[currentLimit])
+                print task.id
+                reducedBoundsMatrix[currentLimit][task.id] = scheduleASAP(path)[1] #this is the duration
+    return reducedBoundsMatrix            
+    
+
+'''
+returns a new path with the lowest possible ending time, as well as a duration
+@param path: a list of task ids in order that they're scheduled. the first index is the ending time of the path
+'''
+def scheduleASAP(path):
     currentTime = 0
     dayIndex = 0
+    if len(path) < 2:
+        return 0, 0
+    
+    task = taskList[path[1]]
     
     setTime = False
     #schedule the first task as early as possible
@@ -145,6 +202,7 @@ def scheduleASAP(path, node):
             timeWindow = task.timeWindows[day][tw]
             if timeWindow[1] - task.duration >= currentTime:
                 currentTime = max(timeWindow[0], currentTime) + task.duration
+                schedStartTime = currentTime - task.duration
                 setTime = True
                 break
         if setTime:
@@ -171,13 +229,17 @@ def scheduleASAP(path, node):
                 break
         if not setTime:
             return None
-    return currentTime
+    return currentTime, currentTime - schedStartTime
+
+def getProfit(sched):
+    tot = 0 
+    for t in range(1, len(sched)):
+        tot += taskList[sched[t]].priority
+    return tot
 
 def main():
-    
-    pulse(node, currScore, currTime, currPath)
-    
-    
+    solve("newTest.csv")
+
     
 if __name__ == '__main__':
     main()
