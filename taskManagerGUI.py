@@ -14,7 +14,6 @@ Improve:
 -loading screen
 -okay button
 
-Highlight selected buttons
 '''
 
 '''
@@ -37,15 +36,16 @@ def setup():
     
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
     global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight
-    global buttonTextSize, buttonFunctsBackEnd
+    global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects
     
     firstCalDraw = [True]
     
     buttonTextSize = 32
     algButtonsHeight = 225
-    testButtonsHeight = 500
-    buttonFunctsFrontEnd = ["Okay!", "VNS", "IntProg", "Pulse"]
-    buttonFunctsBackEnd = ["DontMatta", "vns.py", "integerProgram.py", "pulseOPTW.py"]
+    fileButtonsHeight = 500
+    buttonFunctsFrontEnd = ["Okay!", "VNS",  "Greedy", "IntProg", "Pulse"]
+    buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
+    fileList = ["newTest", "newTest2"]
     buttonHighlightSize = 10
     buttonWidth = 10
     buttonHeight = 80
@@ -53,6 +53,7 @@ def setup():
     
     #initialize empty list; leave room for OKAY button dimensions
     buttonRects = [0] * (len(buttonFunctsFrontEnd))
+    fileRects = [0] * (len(fileList))
     textSize(buttonTextSize)
     buttonRects[0] = [width/2 - textWidth(buttonFunctsFrontEnd[0])/2, height * 2 / 3]
     
@@ -62,6 +63,13 @@ def setup():
         #20 is the space between buttons
         totalFunctionButtonsWidth +=  textWidth(buttonFunctsFrontEnd[i]) + 2 * buttonHighlightSize + 60
     totalFunctionButtonsWidth -= 2 * buttonHighlightSize + 60
+    
+    #moreMath
+    totalFileButtonsWidth = 0
+    for i in range(len(fileList)):
+        #20 is the space between buttons
+        totalFileButtonsWidth +=  textWidth(fileList[i]) + 2 * buttonHighlightSize + 60
+    totalFileButtonsWidth -= 2 * buttonHighlightSize + 60
     
     #populate buttonRects list
     for b in range(1, len(buttonFunctsFrontEnd)):
@@ -73,19 +81,30 @@ def setup():
             rectX = startingX + textWidth(buttonFunctsFrontEnd[b-1]) + 2 * buttonHighlightSize + 60
         rectY = algButtonsHeight
         buttonRects[b] = [rectX, rectY]
+        
+    #populate fileRects list
+    for b in range(len(fileList)):
+        if b == 0:
+            startingX = width/2 - totalFileButtonsWidth/2
+            rectX = startingX
+        else:
+            startingX = fileRects[b-1][0]
+            rectX = startingX + textWidth(fileList[b-1]) + 2 * buttonHighlightSize + 60
+        rectY = fileButtonsHeight
+        fileRects[b] = [rectX, rectY]
     
     #initialize buttonFunctsFrontEnd list to all False, since none are clicked to begin with
     buttonList = len(buttonFunctsFrontEnd) * [False]  
     
+    fileBooleans = len(fileList) * [False]
+    
     drawButtons()
     
-    menuSetup()
        
 
 def draw():
     if not clickedOkay[0]:
         drawMenu()
-        updateButtons() 
     else:
         if firstCalDraw[0]:
             calendarDrawInit()
@@ -114,7 +133,7 @@ def initialize():
     dayWidth = [0]
     maxX, maxY = [0], [0]
     maxNumTimeWindows = [0]
-    schedule = []
+    schedule = [None]
     
     #colors that fit our color scheme
     blues = [color(46, 75, 137), color(71, 98, 157), color(105, 130, 184),
@@ -130,7 +149,7 @@ def initialize():
                 color(255, 231, 185), color(255, 243, 221)]
     
     #rainbow from which to create rectColors rainbow spectrum
-    colorList = [color(255, 0, 0), color(255, 255, 0), color(0, 255, 0),\
+    colorList = [color(255, 0, 0), color(240, 255, 0), color(0, 255, 0),\
                  color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     
     #what times we see on the sidebar
@@ -176,7 +195,10 @@ def initialize():
 def drawButtons():
     for b in range(len(buttonList)):
         buttonRect = buttonRects[b]
-        drawButton(buttonRect[0], buttonRect[1], buttonFunctsFrontEnd[b], buttonHeight) 
+        drawButton(buttonRect[0], buttonRect[1], buttonFunctsFrontEnd[b], buttonHeight)
+    for b in range(len(fileList)):
+        buttonRect = fileRects[b]
+        drawButton(buttonRect[0], buttonRect[1], fileList[b], buttonHeight)
         
 def drawButton(x, y, buttonText, buttonHeight):
     pushStyle()
@@ -199,46 +221,54 @@ def highlightButtons():
             rectY1 = buttonRect[1] - buttonHighlightSize
             rectX2 = buttonWidth + 2 * buttonHighlightSize + textWidth(buttonFunctsFrontEnd[b])
             rectY2 = buttonHeight + 2 * buttonHighlightSize
-            rect(rectX1, rectY1, rectX2, rectY2, 15) #7 is the smoothed style 
-
-#change the booleans associated with clicked buttons
-def updateButtons():
-    if mouseClicked:
-        for r in range(len(buttonRects)):
-            rect = buttonRects[r]
-            if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctsFrontEnd[r]):
-                if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
-
-                    #if it was the okay button, AND we have already selected an algorithm...
-                    #run the algorithm
-                    if r == 0:
-                        tempList = buttonList[1:]
-                        for boolIndex in range(len(tempList)):
-                            bool = buttonList[boolIndex]
-                            if bool == True:
-                                clickedOkay[0] = True
-                                textSize(100)
-                                fill(blues[0])
-                                text("Loading...", width/2,height/2)
-
-                                #This is giving some super strange error, help
-                                #if it's VNS tell us how long we need to wait
-                                #if (buttonList[1] == True):
-                                   #text(str(getStoppingCondition(), width/4, height/4)
-
-                    #only change the button's boolean if it wasn't the okay button
-                    #AND if no other button was toggled
-                    else:
-                        if True in buttonList[1:]:
-                            for j in range(len(buttonRects)):
-                                if buttonList[j] == True:
-                                    buttonList[j] = False
-                        buttonList[r] = not buttonList[r]
+            rect(rectX1, rectY1, rectX2, rectY2, 15)
     
-def menuSetup():
-    pass
+    for b in range(len(fileList)):
+        #if it has been selected, highlight it..
+        if fileBooleans[b] == True:
+            buttonRect = fileRects[b]
+            fill(greens[3], alpha = 100)
+            rectX1 = buttonRect[0] - buttonHighlightSize
+            rectY1 = buttonRect[1] - buttonHighlightSize
+            rectX2 = buttonWidth + 2 * buttonHighlightSize + textWidth(fileList[b])
+            rectY2 = buttonHeight + 2 * buttonHighlightSize
+            rect(rectX1, rectY1, rectX2, rectY2, 15)
+            
+    
+def mousePressed():
+    for r in range(len(fileRects)):
+        rect = fileRects[r]
+        if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(fileList[r]):
+            if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
+                if True in fileBooleans:
+                    for j in range(len(fileList)):
+                        fileBooleans[j] = False
+                fileBooleans[r] = not fileBooleans[r]
+    
+    for r in range(len(buttonRects)):
+        rect = buttonRects[r]
+        if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctsFrontEnd[r]):
+            if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
 
+                #if it was the okay button, AND we have already selected an algorithm...
+                #run the algorithm
+                if r == 0:
+                    tempList = buttonList[1:]
+                    if True in buttonList[1:] and True in fileBooleans:
+                        clickedOkay[0] = True
+                        textSize(100)
+                        fill(blues[0])
+                        text("Loading...", width/2 - textWidth("Loading...") / 2, 6 * height/7)
 
+                #only change the button's boolean if it wasn't the okay button
+                #AND if no other button was toggled
+                else:
+                    if True in buttonList[1:]:
+                        for j in range(len(buttonRects)):
+                            if buttonList[j] == True:
+                                buttonList[j] = False
+                    buttonList[r] = not buttonList[r]
+    
 
 def setColors():
     for d in range(len(schedule[0])):
@@ -261,11 +291,7 @@ def setColors():
         
         newColor = color(newC[0], newC[1], newC[2])
         
-        
-#         newColor = blendColor(colorList[baseColor-1],colorList[baseColor],0)
-        #newColor = blendColor(colorList[baseColor-1]*percentBetweenColors,colorList[baseColor],BLEND)
         rectColors.append(newColor)
-
 
 def calendarDraw():
     whichTask = -1
@@ -277,54 +303,49 @@ def calendarDraw():
     highlight(whichTask, whichDay)
 
 def calendarDrawInit():
-    #initialize global lists to empty
+
+    fileName = ""
     
-    
+    for b in range(len(fileBooleans)):
+        if fileBooleans[b]:
+            fileName = fileList[b] + ".csv"
+            
+
     #do stuff so that we can call different algorithms depending on user's selection
-    '''
+    csvFile = pwd(fileName)
     #setup for VNS
     if buttonList[1] == True:
+        stoppingCondition = 15
+        schedule[0], useless = solve(csvFile, stoppingCondition)
         
-        algorithm = pwd("vns.py")
-        csvFile = pwd("test50.csv")
-        schedule, useless = solve(csvFile)
-        print schedule
-        print "ASDFHSFGKJHWEFHEW: ", schedule[0]
-        
-        pass
-        
-    #setup for Int Program
+#         schedule os.system("python " + vns + " " + file)
+       
+    #setup for greedy
     elif buttonList[2] == True:
+        sched = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+        greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
+        greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
+        greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
+        solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
+        bestGreedy = max(solutionList, key = lambda sched : sched.getProfit())
+        schedule[0] = bestGreedy
+        
+    
+    #setup for Integer
+    elif buttonList[3] == True:
         pass
     
     #setup for Pulse
-    elif buttonList[3] == True:
+    elif buttonList[4]:
         pass
     else:
         #ERROR: none of our known algorithms were selected when okay when selected
         #Default to VNS
         pass
-    '''
+    
+
     
     
-    vns = pwd("vns.py")
-    file = pwd("newTest.csv")
-    
-    #print os.system("python " + vns + " " + file)
-    
-    csvFile = pwd("newTest.csv")
-    
-    #vns schedule:
-    #schedule, useless = vns.solve(csvFile)
-    sched = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByPrioritySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriority)
-    greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
-    greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
-    solutionList = [greedyByPrioritySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = max(solutionList, key = lambda sched : sched.getProfit())
- 
-    schedule.append(bestGreedy)
-    #print schedule[0]
     #Globals for reference later
     
     dayWidth[0] = (width -sideBarWidth) / len(schedule[0])
@@ -434,6 +455,7 @@ def highlight(whichTask, whichDay):
         textItemsList = []
         task = schedule[0][whichDay][whichTask]
         textStr = ""
+        textStr = textStr + "Name: " + str(task.name) + "\n"
         textStr = textStr + "ID: " + str(task.id) + "\n"
         textStr = textStr + "Release Time: " + str(task.releaseTime) + "\n"
         textStr = textStr + "X Coordinate: " + str(task.x) + "\n"
@@ -522,9 +544,15 @@ def drawDays():
         if(d > 0):
             
             line(dayX, headerHeight, dayX, dayHeight+headerHeight)
+        smooth()
+        textSize(22)
+        fill(255,255,255)
+        dayText = "Day " + str(d+1)
+        text(dayText, dayX + dayWidth[0]/2 - textWidth(dayText), headerHeight - headerHeight/3)
 
     popStyle()
 
+    
 
 #route is a day in the schedule
 #leftX is the sidebarwidth + (dayNum * dayWidth)
@@ -643,8 +671,16 @@ def drawTextBox(whichDay, whichTask):
     #Create Text box
     fill(255,255,255)
     rect(textX, textY, textDimensionX, textDimensionY)
-    
-    
+    for i in range(len(buttonList)):
+        if buttonList[i]:
+            labelString = "Algorithm: " + buttonFunctsFrontEnd[i]
+            
+        
+    #draw the algorithm label
+    stroke(1)
+    fill(255,255,255)
+    textSize(32)
+    text(labelString, textX + textDimensionX / 2 - textWidth(labelString) / 2, textY + 3 * textDimensionY / 2)   
     
     popStyle()
     
