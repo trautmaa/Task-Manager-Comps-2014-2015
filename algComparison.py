@@ -13,6 +13,8 @@ import integerProgram
 
 import time
 import csv
+import os
+
 
 import createTests
 from writeToCsv import writeNTasks
@@ -91,9 +93,15 @@ def outputOutput():
         for row in OUTPUT:
             writer.writerow(row)
 
-            
+def getFiles(n):
+    testList = []
+    for i in range(n):
+        testList.append(str(os.getcwd())+"/Testing Folder/testing" +str(i)+".csv")
+    return testList
+        
 def main():
-    runAlreadyCreatedTestsForXTime(["/Users/mrSchifeling/Desktop/Task-Manager-Comps-2014-2015/willSchedule.csv"], 120)
+    testList = getFiles(10)
+    runAlreadyCreatedTestsForXTime(testList, 1)
                                 
                     
                     
