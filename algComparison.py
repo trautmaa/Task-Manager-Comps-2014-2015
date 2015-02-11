@@ -24,7 +24,7 @@ OUTPUTFILENAME = "TESTRESULTS.csv"
 
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
 #    runGreedies(testList)
-#    runVNS(testList, timeLimit)
+    runVNS(testList, timeLimit)
     runTimedRandomIteration(testList, timeLimit)
     runTimedBruteForce(testList, timeLimit)
 #    runIntegerProgram(testList, timeLimit)
@@ -56,7 +56,7 @@ def runIntegerProgram(testList, timeLimit):
 def runVNS(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = vns.solve(testName, timeLimit)###### THIS WONT WORK YET!!!!!
+        schedule = vns.solve1(testName, timeLimit)[0]###### THIS WONT WORK YET!!!!!
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "VNS")
         
@@ -93,7 +93,7 @@ def outputOutput():
 
             
 def main():
-    runAlreadyCreatedTestsForXTime(["willSchedule.csv"], 10)
+    runAlreadyCreatedTestsForXTime(["willSchedule.csv"], 120)
                                 
                     
                     

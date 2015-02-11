@@ -22,11 +22,15 @@ stoppingCondition = 3
 random.seed(211680280677)
 
 
+def solve1(csvFile, timeLimit):
+    global stoppingCondition
+    stoppingCondition = timeLimit-0.75
+    return solve(csvFile)
+
 '''
 @return: an ordering of tasks
 '''
 def solve(csvFile):
-    
     global schedSteps
     
     # keep track of the schedules as vns progresses
