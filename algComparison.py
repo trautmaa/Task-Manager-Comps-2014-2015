@@ -14,33 +14,39 @@ import integerProgram
 import time
 import csv
 import os
-
-
 import createTests
-from writeToCsv import writeNTasks
-
-# from taskManagerIntProg import runIntegerProgram
 
 OUTPUT = [["Algorithm", "Time Ran", "Profit", "Test Name"]]
 OUTPUTFILENAME = "TESTRESULTS.csv" 
 
+
+'''
+runs all the algorithms you want to with a timeLimit and a list
+of test names.  It then outputs the results.
+'''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
-#    runGreedies(testList)
-#    runVNS(testList, timeLimit)
-#    runTimedRandomIteration(testList, timeLimit)
+    runGreedies(testList)
+    runVNS(testList, timeLimit)
+    runTimedRandomIteration(testList, timeLimit)
     runTimedBruteForce(testList, timeLimit)
-#    runIntegerProgram(testList, timeLimit)
-#    
+    #runIntegerProgram(testList, timeLimit)
+
     outputOutput()
 
-    
+'''
+Runs the timed random iteration on our list of testFiles.
+'''    
 def runTimedRandomIteration(testList, timeLimit):
     for testName in testList:
         start = time.time()
         schedule = timedRandomIteration.randomlyPickBestScheduleUnderTime(testName, timeLimit)
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "TRI")
+
         
+'''
+Runs the timed version of brute force on our list of testFiles.
+'''
 def runTimedBruteForce(testList, timeLimit):
     for testName in testList:
         start = time.time()
@@ -48,13 +54,20 @@ def runTimedBruteForce(testList, timeLimit):
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "TBF")
 
+        
+'''
+Runs the timed version of the integerProgram on our list of testFiles.
+'''
 def runIntegerProgram(testList, timeLimit):
     for testName in testList:
         start = time.time()
         schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)#?????????????
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "IP")
-    
+
+'''
+Runs vns on our list of testFiles.
+'''
 def runVNS(testList, timeLimit):
     for testName in testList:
         start = time.time()
@@ -62,7 +75,9 @@ def runVNS(testList, timeLimit):
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "VNS")
         
-    
+'''
+Runs all greedies on our list of testFiles.
+'''
 def runGreedies(testList):
     greediesList = [greedyByOrder.runGreedyByOrder, greedyConstructiveHeuristic.runGreedyConstructiveHeuristic, greedyByPresentChoice.runGreedyByPresentChoice]
     orderings = [greedyByOrder.orderOptionalByDeadline, greedyByOrder.orderByPriorityOverAvailability, greedyByOrder.orderOptionalByDeadline]
@@ -82,11 +97,20 @@ def runGreedies(testList):
                 timeRan = time.time()-start
                 addToOutput(schedule, timeRan, testName, str(greediesList[i]))
 
-    
+'''
+This function just adds data associated with a result of an
+algorithm on a test file to OUTPUT, which will later be written to
+a csv file.  More data may should be added but I don't know what???
+'''
 def addToOutput(schedule, timeRan, testName, algorithm):
     profit = schedule.getProfit()
     OUTPUT.append([algorithm, timeRan, profit, testName])
 
+    
+'''
+Once we have ran all algorithms on all test cases, we can output
+the results to a csv.
+'''
 def outputOutput():
     with open(OUTPUTFILENAME, 'wb') as f:
         writer = csv.writer(f)
@@ -103,6 +127,8 @@ def main():
     testList = getFiles(10)
     runAlreadyCreatedTestsForXTime(testList, 1)
                                 
+if __name__ == '__main__':
+	main()
                     
                     
         
@@ -214,5 +240,3 @@ def main():
             
             
 
-if __name__ == '__main__':
-	main()
