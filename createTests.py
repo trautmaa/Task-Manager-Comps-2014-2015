@@ -11,18 +11,18 @@ import random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-numberOfTasks = 30
+numberOfTasks = 10
 dayLength = 1440
-numDays = 5
+numDays = 3
 xRange = 60
 yRange = 60
 durationRange = 200 # tasks will receive durations no longer than this
-releaseTimeRange = (dayLength * numDays) - durationRange # tasks will receive release times no earlier than this
+releaseTimeRange = (dayLength * numDays) - durationRange # tasks will receive release times no later than this
 deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
 priorityRange = 3 # optional tasks assigned priority between 1 and this
 likelyhoodOfMandatory = .1 # between 0 and 1, chance a task is generated as mandatory
 maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
-numDependencies = 15
+numDependencies = 0
 assert(numDependencies <= numberOfTasks/2)
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']
@@ -140,7 +140,8 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    writeNTasks(numberOfTasks, "newTest.csv")
+    for i in range(10):
+        writeNTasks(numberOfTasks, "testing"+str(i)+".csv")
 
 
 if __name__ == '__main__':

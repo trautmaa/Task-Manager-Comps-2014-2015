@@ -24,8 +24,8 @@ OUTPUTFILENAME = "TESTRESULTS.csv"
 
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
 #    runGreedies(testList)
-    runVNS(testList, timeLimit)
-    runTimedRandomIteration(testList, timeLimit)
+#    runVNS(testList, timeLimit)
+#    runTimedRandomIteration(testList, timeLimit)
     runTimedBruteForce(testList, timeLimit)
 #    runIntegerProgram(testList, timeLimit)
 #    
@@ -93,7 +93,7 @@ def outputOutput():
 
             
 def main():
-    runAlreadyCreatedTestsForXTime(["willSchedule.csv"], 120)
+    runAlreadyCreatedTestsForXTime(["/Users/mrSchifeling/Desktop/Task-Manager-Comps-2014-2015/willSchedule.csv"], 120)
                                 
                     
                     
