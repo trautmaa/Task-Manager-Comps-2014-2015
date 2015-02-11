@@ -28,6 +28,10 @@ def solve(csvFile):
     global allNodes, taskList, reducedBoundsMatrix
     global  delta, tShoe, primalBound
     
+    #initialize the primalBound
+    primalBound = float("inf")
+    
+    #initialize our list of all nodes
     taskList = createTasksFromCsv.getTaskList(csvFile)
     allNodes = [x.id for x in taskList]
     
@@ -35,8 +39,9 @@ def solve(csvFile):
     reducedBoundsMatrix = collections.defaultdict(list)
     
     #we can mess with this as we see fit. Make delta larger to speed things up. Make it smaller to have more values.
-    delta = dayLength/10
-    tShoe = dayLength/10
+    #delta = dayLength/10, tShoe = dayLength/10 make us reach maximum recursion depth
+    delta = dayLength/3
+    tShoe = dayLength/4
 
     defineBounds(tShoe, delta, taskList)
 
@@ -66,6 +71,8 @@ def pulse(node, currScore, currTime, currPath):
     assert(currScore >= 0 and currTime >= 0)
     # checking if it's work considering this new path...could it possibly be optimal
     newProposedEndingTime = isFeasible(node, currPath)
+    print "newProposedEndingTime: ", newProposedEndingTime
+    print "inBounds? ", inBounds(node, currTime, currPath)
     if newProposedEndingTime != None and inBounds(node, currTime, currPath) \
       and notSoftDominated(node, newProposedEndingTime, currPath):
         
@@ -139,6 +146,7 @@ def inBounds(node, currTime, path):
     if currTime not in reducedBoundsMatrix:
         return True
     
+    #round down taoValue so it is consistent with our matrix indices and we may compare
     taoValue = currTime - currTime % delta
     if reducedBoundsMatrix[taoValue][node] + scheduleASAP(path)[1] >= primalBound:
         return False
@@ -162,7 +170,7 @@ def defineBounds(tShoe, delta, taskList):
         #decrement
         
         currentLimit -= delta
-        reducedBoundsMatrix[currentLimit] = ([None] * len(taskList))
+        reducedBoundsMatrix[currentLimit] = ([0] * len(taskList))
         
         for task in taskList:
             path = [0]
@@ -177,6 +185,8 @@ def defineBounds(tShoe, delta, taskList):
                 print len(reducedBoundsMatrix[currentLimit])
                 print task.id
                 reducedBoundsMatrix[currentLimit][task.id] = scheduleASAP(path)[1] #this is the duration
+                print "duration: ", scheduleASAP(path)[1]
+                print "path", path
     return reducedBoundsMatrix            
     
 
