@@ -23,10 +23,10 @@ OUTPUT = [["Algorithm", "Time Ran", "Profit", "Test Name"]]
 OUTPUTFILENAME = "TESTRESULTS.csv" 
 
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
-    runGreedies(testList)
+#    runGreedies(testList)
 #    runVNS(testList, timeLimit)
-#    runTimedRandomIteration(testList, timeLimit)
-#    runTimedBruteForce(testList, timeLimit)
+    runTimedRandomIteration(testList, timeLimit)
+    runTimedBruteForce(testList, timeLimit)
 #    runIntegerProgram(testList, timeLimit)
 #    
     outputOutput()
@@ -93,7 +93,7 @@ def outputOutput():
 
             
 def main():
-    runAlreadyCreatedTestsForXTime(["willSchedule.csv"], 60)
+    runAlreadyCreatedTestsForXTime(["willSchedule.csv"], 10)
                                 
                     
                     

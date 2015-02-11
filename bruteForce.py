@@ -10,6 +10,7 @@ import helperFunctions
 import Objects
 from vns import isFeasible
 from vns import isBetterSchedule
+import time
 
 import datetime
 
@@ -25,6 +26,20 @@ def findBestSchedule(taskList, permutations):
         newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
         if isBetterSchedule(newSchedule, bestSchedule):
         	bestSchedule = newSchedule
+    return bestSchedule
+
+def findBestSchedule(taskList, permutations, timeLimit):
+    start = time.time()
+    helperFunctions.preprocessTimeWindows(taskList)
+    bestSchedule = Objects.Schedule()
+    for perm in permutations:
+        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
+        if isBetterSchedule(newSchedule, bestSchedule):
+            bestSchedule = newSchedule
+        if time.time()-start >= timeLimit:
+            return bestSchedule
+
+    
     return bestSchedule
 
 
@@ -48,6 +63,11 @@ def runBruteForceAlg(csvFile):
     bestSchedule = findBestSchedule(objectList, taskOrderings)
     return bestSchedule
 
+def runBruteForceAlg(csvFile, timeLimit):
+    objectList = createTasksFromCsv.getTaskList(csvFile)
+    taskOrderings = getAllPermutations(len(objectList))
+    bestSchedule = findBestSchedule(objectList, taskOrderings, timeLimit)
+    return bestSchedule
 
 
 '''
