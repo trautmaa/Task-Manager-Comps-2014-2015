@@ -17,7 +17,6 @@ from collections import deque
 import sys, os
 
 # Number of seconds VNS is allowed to run
-stoppingCondition = 3
 
 random.seed(211680280677)
 
@@ -30,8 +29,10 @@ def solve1(csvFile, timeLimit):
 '''
 @return: an ordering of tasks
 '''
-def solve(csvFile):
+def solve(csvFile, stoppingCondition):
+    
     global schedSteps
+    
     
     # keep track of the schedules as vns progresses
     schedSteps = []
@@ -45,7 +46,7 @@ def solve(csvFile):
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
-    bestGreedy = min(solutionList, key=lambda schedule : schedule.getProfit())
+    bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
 
     appendToSchedSteps("greedySched", bestGreedy)
             
@@ -56,7 +57,7 @@ def solve(csvFile):
     currSchedule = createSchedule(copy.deepcopy(bestGreedy))
     bestGreedy.resetEndingTimes()
     # Modify the greedy algorithm
-    currSchedule = vns(taskList, currSchedule)
+    currSchedule = vns(taskList, currSchedule, stoppingCondition)
     assert(isFeasible(taskList, currSchedule)) 
     for r in range(len(bestGreedy)):
         route = bestGreedy[r]
@@ -79,7 +80,7 @@ def solve(csvFile):
 '''
 @return: best schedule found in time limit
 '''
-def vns(taskList, currSchedule):
+def vns(taskList, currSchedule, stoppingCondition):
     
 #     print "********** Entering VNS **********"
 
@@ -1433,12 +1434,12 @@ def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
             
 def main():
     # print "********** Main **********"
-    
+    stoppingCondition = int(sys.argv[2])
     #run vns on file specified in user input
     f = sys.argv[1]
     f = os.path.realpath(f)
     
-    result = solve(f)
+    result = solve(f, stoppingCondition)
     print
     print result[0]
     print
