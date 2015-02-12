@@ -74,7 +74,7 @@ def makeSchedule(taskList):
 
 def main():
     print
-    printGreedyByPresentChoice("newTest.csv")
+    printGreedyByPresentChoice("testing0.csv")
     
 
 

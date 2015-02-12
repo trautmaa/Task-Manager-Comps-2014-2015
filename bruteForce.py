@@ -28,7 +28,7 @@ def findBestSchedule(taskList, permutations):
         	bestSchedule = newSchedule
     return bestSchedule
 
-def findBestSchedule(taskList, permutations, timeLimit):
+def findBestScheduleWithTimeLimit(taskList, permutations, timeLimit):
     start = time.time()
     helperFunctions.preprocessTimeWindows(taskList)
     bestSchedule = Objects.Schedule()
@@ -63,7 +63,7 @@ def runBruteForceAlg(csvFile):
     bestSchedule = findBestSchedule(objectList, taskOrderings)
     return bestSchedule
 
-def runBruteForceAlg(csvFile, timeLimit):
+def runBruteForceAlgWithTimeLimit(csvFile, timeLimit):
     objectList = createTasksFromCsv.getTaskList(csvFile)
     taskOrderings = getAllPermutations(len(objectList))
     bestSchedule = findBestSchedule(objectList, taskOrderings, timeLimit)
@@ -85,7 +85,7 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("test.csv")
+    printBruteForce("testing0.csv")
     print datetime.datetime.now()
 
 

@@ -165,12 +165,14 @@ def addCompletionTimeConstraints(prob, ritkConstants, serviceTimeConstants,
                 prob += aitVariables[i][t] <= fitkConstants[i][t][k] + latestTimeWindowEnd * (1 - yitkVariables[i][t][k]) # ait <= B(1 - yitk)
 
 
-def addReleaseTaskConstraints(prob, yiVariables, aiVariables, taskList):
+def addReleaseTaskConstraints(prob, yiVariables, aitVariables, taskList, numDays):
     for i in range(len(taskList)):
         for taskId in taskList[i].dependencyTasks:
             assert(taskId != i)
-            prob += yiVariables[i] <= yiVariables[taskId]
-            prob += aiVariables[i] > aiVariables[taskId]
+            prob += yiVariables[i] <= yiVariables[int(taskId)]
+            for t in range(numDays):
+                for t2 in range(numDays):
+                    prob += aitVariables[i][t] >= aitVariables[int(taskId)][t2]
 
 '''
 A function that adds constraints to the problem.  This constraint is
@@ -325,6 +327,10 @@ def integerProgramSolve(taskList, timeLimit, outputFlag):
                                             numTasks, numDays)
 
     addFirstLastTaskConstraints(prob, numTasks, numDays, xihtVariables, xhitVariables)
+    
+    addReleaseTaskConstraints(prob, yiVariables, aitVariables, taskList, numDays)
+#    
+#    prob += yiVariables[0] == 1
 
 
     # Gurobi model variables can be set using keyword arguments
@@ -347,12 +353,11 @@ def integerProgramSolve(taskList, timeLimit, outputFlag):
         isOptimal = False
 
     # for debugging infeasible models:
-    # model = prob.solverModel
-    # model.computeIIS()
-    # model.write("gurobiModel.ilp")
+#    model.computeIIS()
+#    model.write("gurobiModel.ilp")
 
     # for debugging feasible models:
-    # printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
+#    printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables, xihtVariables, xhitVariables)
     
     # assert(prob.status == 1) # Problem was solved
     return makeSchedule(yiVariables, yitkVariables, aitVariables, numDays, taskList), isOptimal
@@ -400,7 +405,7 @@ and print the solution it produces.
 def main():
     print
     timeLimit, outputFlag = processCommandLineArgs(sys.argv)
-    solvedSchedule, isOptimal = runIntegerProgram("newTest.csv", timeLimit, outputFlag)
+    solvedSchedule, isOptimal = runIntegerProgram("testing0.csv", timeLimit, outputFlag)
     print
     if not isOptimal:
         print "WARNING: As the integer program was terminated before completion,"

@@ -27,6 +27,16 @@ def orderByPriority(timeWindowsAndPriorities):
 	timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[1], reverse = True)
 	return timeWindowsAndPriorities
 
+def orderForReleaseTasks(timeWindowsAndPriorities):
+    for index, timeIdTuple in enumerate(timeWindowsAndPriorities):
+        for dependencyTask in timeWindowsAndPriorities[index][4]:
+            timeWindowsAndPriorities[int(dependencyTask)][1] += timeIdTuple[1]
+            
+    timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[0])
+    timeWindowsAndPriorities = sorted(timeWindowsAndPriorities, key=lambda timeIdTuple: timeIdTuple[1], reverse = True)
+    return timeWindowsAndPriorities
+    
+
 def orderOptionalByDeadline(timeWindowsAndPriorities):
 	maxPriority = max(timeWindowsAndPriorities, key= lambda timeWindowsAndPriorities:timeWindowsAndPriorities[1])[1]
 	mandatoryTasks = []
@@ -61,7 +71,8 @@ def runGreedyByOrder(csvFile,orderMethod):
             for window in day:
                 if window[1] >= latestTime:
                     latestTime = window[1]
-        timeWindowsAndPriorities.append((latestTime, task.priority, task.id, float(task.priority)/max(float(task.getNumTimeWindows()), 1)))
+                    
+        timeWindowsAndPriorities.append([latestTime, task.priority, task.id, float(task.priority)/max(float(task.getNumTimeWindows()), 1), task.dependencyTasks])
 		
 	# sorting by deadline	
     
@@ -76,11 +87,13 @@ def runGreedyByOrder(csvFile,orderMethod):
 
 def main():
     print "priority"
-    printGreedyByOrder("willSchedule.csv", orderByPriority)
+    printGreedyByOrder("testing0.csv", orderByPriority)
     print "deadline"
-    printGreedyByOrder("willSchedule.csv", orderOptionalByDeadline)
+    printGreedyByOrder("testing0.csv", orderOptionalByDeadline)
     print "priority/availability"
-    printGreedyByOrder("willSchedule.csv", orderByPriorityOverAvailability)
+    printGreedyByOrder("testing0.csv", orderByPriorityOverAvailability)
+    print "releaseTasks"
+    printGreedyByOrder("testing0.csv", orderForReleaseTasks)
     
     
 
