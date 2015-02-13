@@ -168,6 +168,23 @@ class Schedule:
                     profit += task.getProfit()
         return profit
     
+    def getNumRequired(self):
+        numRequired = 0
+        for route in self.routeList:
+            for task in route.taskList:
+                if task.required == 1:
+                    numRequired += 1
+        return numRequired
+    
+    def getNumOptional(self):
+        numOptional = 0
+        for route in self.routeList:
+            for task in route.taskList:
+                if task.required != 1:
+                    numOptional += 1
+        return numOptional
+        
+    
     def resetEndingTimes(self):
         for route in self.routeList:
             route.resetEndingTimes()

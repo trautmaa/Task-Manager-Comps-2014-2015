@@ -10,6 +10,7 @@ import bruteForce
 import timedRandomIteration
 import vns
 import integerProgram
+import pulseOPTW
 
 import time
 import csv
@@ -64,6 +65,14 @@ def runIntegerProgram(testList, timeLimit):
         schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)#?????????????
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "IP")
+        
+
+def runPulse(testList, timeLimit):
+    for testName in testList:
+        start = time.time()
+        schedule = pulseOPTW.solve(testName)
+        timeRan = time.time()-start
+        addToOutput(schedule, timeRan, testName, "Pulse")
 
 '''
 Runs vns on our list of testFiles.
@@ -71,7 +80,7 @@ Runs vns on our list of testFiles.
 def runVNS(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = vns.solve1(testName, timeLimit)[0]###### THIS WONT WORK YET!!!!!
+        schedule = vns.solve(testName, timeLimit)[0]###### THIS WONT WORK YET!!!!!
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "VNS")
         
@@ -79,8 +88,8 @@ def runVNS(testList, timeLimit):
 Runs all greedies on our list of testFiles.
 '''
 def runGreedies(testList):
-    greediesList = [greedyByOrder.runGreedyByOrder, greedyConstructiveHeuristic.runGreedyConstructiveHeuristic, greedyByPresentChoice.runGreedyByPresentChoice]
-    orderings = [greedyByOrder.orderOptionalByDeadline, greedyByOrder.orderByPriorityOverAvailability, greedyByOrder.orderOptionalByDeadline]
+    greediesList = [greedyByOrder.runGreedyByOrder,  greedyByPresentChoice.runGreedyByPresentChoice]
+    orderings = [greedyByOrder.orderOptionalByDeadline, greedyByOrder.orderForReleaseTasks, greedyByOrder.orderByPriorityOverAvailability, greedyByOrder.orderOptionalByDeadline]
     
     for i in range(len(greediesList)):
         if i == 0:
@@ -95,7 +104,7 @@ def runGreedies(testList):
                 start = time.time()
                 schedule = greediesList[i](testName)
                 timeRan = time.time()-start
-                addToOutput(schedule, timeRan, testName, str(greediesList[i]))
+                addToOutput(schedule, timeRan, testName, "GPC")
 
 '''
 This function just adds data associated with a result of an
@@ -104,7 +113,8 @@ a csv file.  More data may should be added but I don't know what???
 '''
 def addToOutput(schedule, timeRan, testName, algorithm):
     profit = schedule.getProfit()
-    OUTPUT.append([algorithm, timeRan, profit, testName])
+    numTasks = schedule.getNumRequired()
+    OUTPUT.append([algorithm, timeRan, profit,numTasks, testName])
 
     
 '''
