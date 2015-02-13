@@ -1419,7 +1419,7 @@ def changedTimeWindowsInSchedule(route, r, taskList):
                 exit()
             
 '''
-Tries to add the current scedule information to the global list of schedSteps
+Tries to add the current schedule information to the global list of schedSteps
 used by the visualizer.
 @param stringInfo: A string describing the step of the algorithm which just completed
 @param schedOrRoute: The schedule or route object being added to the list

@@ -132,12 +132,6 @@ time that we could allow the passed in task to begin
 taskList[currPath[1]] is the task object for the first scheduled task
 '''
 def isFeasible(node, currPath):
-#     if len(currPath) == 1:
-#         proposedEnd = taskList[node].duration + currPath[0] 
-#         if proposedEnd <= dayLength:
-#             return proposedEnd
-#         else:
-#             return None
     
     task = taskList[node]
     routeIndex = int(currPath[0]) / dayLength
@@ -153,6 +147,8 @@ def isFeasible(node, currPath):
 
         timeWindow = task.timeWindows[routeIndex][tw]
         proposedEnd = max(timeWindow[0], limit) + task.duration
+        
+        # AVERY check against end of tw!!!
         
         #if we could fit the task in its time window after the earliest possible starting time
         #and if the task would not then go over a day division...
