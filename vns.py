@@ -666,6 +666,8 @@ def bestInsertion(taskList, currSchedule):
         # If that new route is under the dayLength, put it back in the schedule
         if isRouteUnderTimeLimit(newRoute) and foundSpot:
             currSchedule[bestSpot[0]] = newRoute
+            if len(unplannedTasks) == 0:
+                break
             currTask = unplannedTasks.popleft()
             firstTaskID = currTask.id
             
