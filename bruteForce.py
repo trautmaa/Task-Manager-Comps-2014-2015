@@ -85,7 +85,7 @@ def printBruteForce(csvFile):
 
 def main():
     print
-    printBruteForce("testing0.csv")
+    printBruteForce("little1.csv")
     print datetime.datetime.now()
 
 
