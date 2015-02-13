@@ -21,11 +21,6 @@ import sys, os
 random.seed(211680280677)
 
 
-def solve1(csvFile, timeLimit):
-    global stoppingCondition
-    stoppingCondition = timeLimit-0.75
-    return solve(csvFile)
-
 '''
 @return: an ordering of tasks
 '''
