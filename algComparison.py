@@ -26,13 +26,14 @@ runs all the algorithms you want to with a timeLimit and a list
 of test names.  It then outputs the results.
 '''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
-    #runGreedies(testList)
-    runPulse(testList, timeLimit)
-    runVNS(testList, timeLimit)
-    #runTimedRandomIteration(testList, timeLimit)
-    #runTimedBruteForce(testList, timeLimit)
-    #runIntegerProgram(testList, timeLimit)
-    
+    for test in testList:
+        #runGreedies(testList)
+        runPulse([test], timeLimit)
+        runVNS([test], timeLimit)
+        #runTimedRandomIteration(testList, timeLimit)
+        #runTimedBruteForce(testList, timeLimit)
+        #runIntegerProgram(testList, timeLimit)
+
 
     outputOutput()
 
@@ -144,8 +145,8 @@ def getFiles(n):
     return testList
         
 def main():
-    testList = getFiles(4)
-    runAlreadyCreatedTestsForXTime(testList, 1)
+    testList = getFiles(10)
+    runAlreadyCreatedTestsForXTime(testList, 10)
                                 
 if __name__ == '__main__':
 	main()
