@@ -17,7 +17,7 @@ import csv
 import os
 import createTests
 
-OUTPUT = [["Algorithm", "Time Ran", "Profit", "Test Name"]]
+OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number of Total Tasks", "Number of Required Tasks", "Number of Optional Tasks", "Total Waiting Time", "Total WorkingTime", "Total Distance Traveled", "Test Name"]]
 OUTPUTFILENAME = "TESTRESULTS.csv" 
 
 
@@ -51,7 +51,7 @@ Runs the timed version of brute force on our list of testFiles.
 def runTimedBruteForce(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = bruteForce.runBruteForceAlg(testName, timeLimit)###### THIS WONT WORK YET!!!!! 
+        schedule = bruteForce.runBruteForceAlgWithTimeLimit(testName, timeLimit)###### THIS WONT WORK YET!!!!! 
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "TBF")
 
@@ -113,8 +113,13 @@ a csv file.  More data may should be added but I don't know what???
 '''
 def addToOutput(schedule, timeRan, testName, algorithm):
     profit = schedule.getProfit()
-    numTasks = schedule.getNumRequired()
-    OUTPUT.append([algorithm, timeRan, profit,numTasks, testName])
+    numRequiredTasks = schedule.getNumRequired()
+    numOptionalTasks = schedule.getNumOptional()
+    numTotalTasks = numOptionalTasks + numRequiredTasks
+    waitingTime = schedule.getWaitingTime()
+    workingTime = schedule.getWorkingTime()
+    distanceTraveled = schedule.getDistanceTraveled()
+    OUTPUT.append([algorithm, timeRan, profit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName])
 
     
 '''

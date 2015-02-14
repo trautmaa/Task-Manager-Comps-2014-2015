@@ -14,21 +14,15 @@ import time
 
 import datetime
 
-'''
-A function given a list of task objects and all the potential task permutations
-will create a schedule for each ordering and output one of the schedules with 
-the most tasks scheduled.
-'''
-def findBestSchedule(taskList, permutations):
-    helperFunctions.preprocessTimeWindows(taskList)
-    bestSchedule = Objects.Schedule()
-    for perm in permutations:
-        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
-        if isBetterSchedule(newSchedule, bestSchedule):
-        	bestSchedule = newSchedule
-    return bestSchedule
+
+
 
 def findBestScheduleWithTimeLimit(taskList, permutations, timeLimit):
+    '''
+    A function given a list of task objects and all the potential task permutations
+    will create a schedule for each ordering and output one of the best schedules in the
+    time it has that is has tried.
+    '''
     start = time.time()
     helperFunctions.preprocessTimeWindows(taskList)
     bestSchedule = Objects.Schedule()
@@ -53,20 +47,17 @@ def getAllPermutations(lengthOfPerms):
 
     return permutations
 
-'''
-A function that will run our brute force algorithm to find the
-best schedule.
-'''
-def runBruteForceAlg(csvFile):
-    objectList = createTasksFromCsv.getTaskList(csvFile)
-    taskOrderings = getAllPermutations(len(objectList))
-    bestSchedule = findBestSchedule(objectList, taskOrderings)
-    return bestSchedule
+
+
 
 def runBruteForceAlgWithTimeLimit(csvFile, timeLimit):
+    '''
+    A function that will run our brute force algorithm to find the
+    best schedule it can find in a certain timeLimit.
+    '''
     objectList = createTasksFromCsv.getTaskList(csvFile)
     taskOrderings = getAllPermutations(len(objectList))
-    bestSchedule = findBestSchedule(objectList, taskOrderings, timeLimit)
+    bestSchedule = findBestScheduleWithTimeLimit(objectList, taskOrderings, timeLimit)
     return bestSchedule
 
 
@@ -74,8 +65,8 @@ def runBruteForceAlgWithTimeLimit(csvFile, timeLimit):
 Prints the output of runBruteForceAlg in a more
 detailed format.
 '''
-def printBruteForce(csvFile):
-    schedule = runBruteForceAlg(csvFile)
+def printBruteForce(csvFile, timeLimit):
+    schedule = runBruteForceAlgWithTimeLimit(csvFile, timeLimit)
     print schedule
     print schedule.getProfit()
     print

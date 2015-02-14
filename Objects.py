@@ -2,6 +2,9 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
+import helperFunctions
+
+
 '''
 A class to represent how many different locations there are for each task
 '''
@@ -172,7 +175,7 @@ class Schedule:
         numRequired = 0
         for route in self.routeList:
             for task in route.taskList:
-                if task.required == 1:
+                if task.required == str(1):
                     numRequired += 1
         return numRequired
     
@@ -180,9 +183,40 @@ class Schedule:
         numOptional = 0
         for route in self.routeList:
             for task in route.taskList:
-                if task.required != 1:
+                if task.required != str(1):
                     numOptional += 1
         return numOptional
+    
+    def getWaitingTime(self):
+        waitingTime = 0
+        for route in self.routeList:
+            for i in range(len(route.taskList)):
+                if i == len(route.taskList)-1:
+                    pass
+                else:
+                    extraWaitingTime = (route.endingTimes[i+1]-  route.endingTimes[i])
+                    extraWaitingTime -= route.taskList[i+1].duration
+                    extraWaitingTime -= helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i+1])
+                    waitingTime += extraWaitingTime
+        return waitingTime
+    
+    def getWorkingTime(self):
+        workingTime = 0
+        for route in self.routeList:
+            for task in route:
+                workingTime += task.duration
+        return workingTime
+    
+    def getDistanceTraveled(self):
+        distanceTraveled = 0
+        for route in self.routeList:
+            for i in range(len(route.taskList)):
+                if i == len(route.taskList)-1:
+                    pass
+                else:
+                    extraDistance = helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i+1])
+                    distanceTraveled += extraDistance
+        return distanceTraveled
         
     
     def resetEndingTimes(self):
