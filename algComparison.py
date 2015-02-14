@@ -27,11 +27,12 @@ of test names.  It then outputs the results.
 '''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
     #runGreedies(testList)
+    runPulse(testList, timeLimit)
     runVNS(testList, timeLimit)
     #runTimedRandomIteration(testList, timeLimit)
     #runTimedBruteForce(testList, timeLimit)
     #runIntegerProgram(testList, timeLimit)
-    runPulse(testList, timeLimit)
+    
 
     outputOutput()
 
@@ -74,7 +75,7 @@ def runPulse(testList, timeLimit):
     for testName in testList:
         start = time.time()
         pulseOPTW.setTimes()
-        schedule = pulseOPTW.solve(testName)
+        schedule = pulseOPTW.solve(testName) 
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "Pulse")
 

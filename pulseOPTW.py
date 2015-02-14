@@ -64,10 +64,13 @@ def solve(csvFile):
     for node in taskList:
         bestPaths.append(pulse(node.id, [0]))
     
-    bestSched = max(bestPaths, key = lambda x: getProfit(x))
+    bestSched = max(bestPaths, key = lambda x: getProfit(x))[1:]
+    bestSched = helperFunctions.createOptimalSchedule(taskList, bestSched)
+    
     print "Wow you made it"
     print "best schedule\n", bestSched
-    print "profit", getProfit(bestSched)
+    print "profit", bestSched.getProfit()
+    return bestSched
     
 
 '''
@@ -325,7 +328,7 @@ def getProfit(sched):
         tot += taskList[sched[t]].priority
     return tot
 
-def setTimes():
+def setTimes(): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
     global stoppingTime, startTime
     startTime = time.time()
     stoppingTime = float("inf")
