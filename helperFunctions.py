@@ -2,9 +2,7 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-import createTasksFromCsv, math
-
-from Objects import Task, Route, Schedule
+import createTasksFromCsv, math, Objects
 
 '''
 A function given two task objects will return the euclidean distance
@@ -142,9 +140,9 @@ def createOptimalSchedule(taskList, taskOrdering):
                 if timeWindow[1] > dayEndings[index]:
                     dayEndings[index] = timeWindow[1]
 
-    schedule = Schedule()
+    schedule = Objects.Schedule()
     for day in range(lastDay):
-        schedule.append(Route())
+        schedule.append(Objects.Route())
 
     # the current index in the time windows list
     timeWindowIndex = 0

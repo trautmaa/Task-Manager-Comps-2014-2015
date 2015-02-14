@@ -4,7 +4,6 @@
 
 import helperFunctions
 
-
 '''
 A class to represent how many different locations there are for each task
 '''

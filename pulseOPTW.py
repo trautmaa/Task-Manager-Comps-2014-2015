@@ -21,7 +21,7 @@ Global variables needed(?):
 -primal bound information
 '''
 
-import helperFunctions, copy, sys
+import helperFunctions, copy, sys, time
 import createTasksFromCsv, collections
 from createTests import dayLength
 
@@ -29,7 +29,7 @@ from createTests import dayLength
 def solve(csvFile):
     global allNodes, taskList, reducedBoundsMatrix
     global delta, tShoe, primalBound
-    global timeLimit
+    global timeLimit, checkingBounds
     
     '''
     The primal bound holds the priority of best possible schedule we have found so far.
@@ -37,6 +37,7 @@ def solve(csvFile):
     then we update the primal bound.
     '''
     primalBound = [0]
+    checkingBounds = [True]
     
     #initialize our list of all nodes
     taskList = createTasksFromCsv.getTaskList(csvFile)
@@ -51,14 +52,17 @@ def solve(csvFile):
     
     #we can mess with this as we see fit. Make delta larger to speed things up. Make it smaller to have more values.
     #delta = timeLimit/10, tShoe = timeLimit/10 make us reach maximum recursion depth
-    delta = timeLimit/3
-    tShoe = timeLimit/2
+    
+    delta = timeLimit/8
+    if stoppingTime > 10000:
+        tShoe = 3 * timeLimit/4
+    else:
+        tShoe = timeLimit
 
     defineBounds(tShoe, delta, taskList)
-    
     bestPaths = []
     for node in taskList:
-        bestPaths.append(pulse(node.id, 0, [0]))
+        bestPaths.append(pulse(node.id, [0]))
     
     bestSched = max(bestPaths, key = lambda x: getProfit(x))
     print "Wow you made it"
@@ -75,13 +79,16 @@ This function is called in separate threads by our main function.
 @param: node, current score, current time, and current path
 @ return: nothing
 '''
-def pulse(node, currScore, currPath):
-    print "************ entering pulse **************"
-    print "primal:", primalBound
+def pulse(node, currPath):
+#     print "************ entering pulse **************"
+#     print "primal:", primalBound
 #     print "path:", currPath, " + ", node
 #     print "score: %d, time: %d" %(currScore, currPath[0])
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
     # nodes in the current path and node under consideration
+    if time.time() - startTime > stoppingTime:
+        return currPath
+    
     currTime = currPath[0]
     
     unvisitedNodes = copy.deepcopy(allNodes)
@@ -89,7 +96,7 @@ def pulse(node, currScore, currPath):
         unvisitedNodes.remove(currPath[n])
     result = []
     assert(node not in currPath[1:])
-    assert(currScore >= 0 and currTime >= 0)
+    assert(currTime >= 0)
     
     # checking if it's work considering this new path...could it possibly be optimal
     
@@ -100,7 +107,6 @@ def pulse(node, currScore, currPath):
 #         print "Passed Tests"
         unvisitedNodes.remove(node)
         newPath = currPath[:] + [node]
-        newScore = currScore + taskList[node].priority
         # if it is a candidate for optimality pulse is called recursively, 
         # on the same thread...i.e keep going down the branch
         newPath[0] = newProposedEndingTime
@@ -112,7 +118,7 @@ def pulse(node, currScore, currPath):
             if newTime == None:
 #                 print " INFEASIBLE TO ADD ", newNode
                 continue
-            res = pulse(newNode, newScore, newPath)
+            res = pulse(newNode, newPath)
 #             print "GOT RESULt", res
             result.append(res)
 #     else:
@@ -131,15 +137,11 @@ def pulse(node, currScore, currPath):
     
     best = max(result, key = lambda x: getProfit(x))
     
-    if getProfit(best) > primalBound[0]:
+    if not checkingBounds[0] and getProfit(best) > primalBound[0]:
         print "RESETTING PRIMAL BOUND from %d to %d" %(primalBound[0], getProfit(best))
+        print best
         primalBound[0] = getProfit(best)
         
-    
-    if len(result) >= 15:
-        print "Paths found"
-        print getProfit(best), best
-    
     return best
                     
 '''
@@ -244,14 +246,14 @@ def defineBounds(lowestTime, delta, taskList):
         
         for task in taskList:
             path = [remainingTime]
-            path = pulse(task.id, 0, path)
+            path = pulse(task.id, path)
             
             #add a cost value to our global reducedBoundsMatrix
             if path == []:
                 # There was no feasible path from this node with the remaining
                 # time. Therefore the best possible additional profit from this
                 # path is 0.
-                reducedBoundsMatrix[remainingTime][task.id] = 0
+                reducedBoundsMatrix[remainingTime][task.id] = float("inf")
             else:
 #                 print reducedBoundsMatrix
 #                 print reducedBoundsMatrix[remainingTime]
@@ -262,6 +264,8 @@ def defineBounds(lowestTime, delta, taskList):
     print "matrix"
     print reducedBoundsMatrix
     print "*****************************************************************************"
+    checkingBounds[0] = False
+    
     return reducedBoundsMatrix            
     
 
@@ -322,8 +326,13 @@ def getProfit(sched):
     return tot
 
 def main():
+    global stoppingTime, startTime
+    startTime = time.time()
     testFile = sys.argv[1]
-    
+    if len(sys.argv) >= 3:
+        stoppingTime = int(sys.argv[2])
+    else:
+        stoppingTime = float("inf")
     solve(testFile)
 
     
