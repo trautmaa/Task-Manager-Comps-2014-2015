@@ -1,6 +1,7 @@
 # Comps 2014
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
+import functools
 
 '''
 Find the paper on the drive: Ants>Duque,...
@@ -21,6 +22,7 @@ Global variables needed(?):
 -primal bound information
 '''
 
+import multiprocessing
 import helperFunctions, copy, sys, time
 import createTasksFromCsv, collections
 from createTests import dayLength
@@ -28,15 +30,17 @@ from createTests import dayLength
 
 def solve(csvFile):
     global allNodes, taskList, reducedBoundsMatrix
-    global delta, tShoe, primalBound
+    global delta, tShoe
     global timeLimit, checkingBounds
+    
+    primalBound = multiprocessing.Manager().list([0])
     
     '''
     The primal bound holds the priority of best possible schedule we have found so far.
     Initialize it to 0. If we find a feasible path with a higher priority (score), 
     then we update the primal bound.
     '''
-    primalBound = [0]
+#     primalBound = [0]
     checkingBounds = [True]
     
     #initialize our list of all nodes
@@ -55,20 +59,28 @@ def solve(csvFile):
     
     delta = timeLimit/8
     if stoppingTime > 10000:
-        tShoe = 3 * timeLimit/4
+        tShoe = delta * 7
     else:
         tShoe = timeLimit
 
-    defineBounds(tShoe, delta, taskList)
+    defineBounds(pBound, tShoe, delta, taskList, lock)
     bestPaths = []
-    for node in taskList:
-        bestPaths.append(pulse(node.id, [0]))
     
+    
+    pool = multiprocessing.Pool()
+    
+    partialPulse = functools.partial(pulse, pBound, lock, [0])
+    
+    bestPaths = pool.map(partialPulse, allNodes)
+    
+    pool.close()
+    pool.join()
+    print bestPaths
     bestSched = max(bestPaths, key = lambda x: getProfit(x))
     print "Wow you made it"
     print "best schedule\n", bestSched
     print "profit", getProfit(bestSched)
-    
+
 
 '''
 Recursively generate every possible path starting with starting path and going 
@@ -79,7 +91,7 @@ This function is called in separate threads by our main function.
 @param: node, current score, current time, and current path
 @ return: nothing
 '''
-def pulse(node, currPath):
+def pulse(lock, currPath, node):
 #     print "************ entering pulse **************"
 #     print "primal:", primalBound
 #     print "path:", currPath, " + ", node
@@ -103,6 +115,7 @@ def pulse(node, currPath):
     newProposedEndingTime = isFeasible(node, currPath)
     withinBounds = inBounds(node, currTime, currPath)
     notDominated = notSoftDominated(node, newProposedEndingTime, currPath)
+    
     if newProposedEndingTime != None and withinBounds and notDominated:
 #         print "Passed Tests"
         unvisitedNodes.remove(node)
@@ -118,7 +131,7 @@ def pulse(node, currPath):
             if newTime == None:
 #                 print " INFEASIBLE TO ADD ", newNode
                 continue
-            res = pulse(newNode, newPath)
+            res = pulse(lock, newPath, newNode)
 #             print "GOT RESULt", res
             result.append(res)
 #     else:
@@ -136,11 +149,12 @@ def pulse(node, currPath):
 #     print "************ exiting pulse **************"
     
     best = max(result, key = lambda x: getProfit(x))
-    
+    lock.acquire(True)
     if not checkingBounds[0] and getProfit(best) > primalBound[0]:
-        print "RESETTING PRIMAL BOUND from %d to %d" %(primalBound[0], getProfit(best))
+        print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, primalBound[0], getProfit(best))
         print best
         primalBound[0] = getProfit(best)
+    lock.release()
         
     return best
                     
@@ -232,7 +246,7 @@ lower than tShoe because we don't want to fully solve the problem yet.
 
 @param delta: the length of the time steps tHat is just the timeLimit
 '''
-def defineBounds(lowestTime, delta, taskList):
+def defineBounds(lowestTime, delta, taskList, lock):
     print "*********** entering defineBounds ***********"
     remainingTime = timeLimit
     
@@ -246,7 +260,7 @@ def defineBounds(lowestTime, delta, taskList):
         
         for task in taskList:
             path = [remainingTime]
-            path = pulse(task.id, path)
+            path = pulse(lock, path, task.id)
             
             #add a cost value to our global reducedBoundsMatrix
             if path == []:
