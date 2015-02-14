@@ -325,6 +325,11 @@ def getProfit(sched):
         tot += taskList[sched[t]].priority
     return tot
 
+def setTimes():
+    global stoppingTime, startTime
+    startTime = time.time()
+    stoppingTime = float("inf")
+
 def main():
     global stoppingTime, startTime
     startTime = time.time()
