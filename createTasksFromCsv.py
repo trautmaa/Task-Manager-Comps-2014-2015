@@ -117,7 +117,7 @@ def getTimeWindows(timeWindowString):
 
 
 def main():
-    for task in makeObjects(readInTask("test1000.csv")):
+    for task in makeObjects(readInTask("newTest.csv")):
         print "",
         print task
         

@@ -11,7 +11,7 @@ import random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-numberOfTasks = 10
+numberOfTasks = 20
 dayLength = 1440
 numDays = 3
 xRange = 60
@@ -22,7 +22,7 @@ deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later 
 priorityRange = 3 # optional tasks assigned priority between 1 and this
 likelyhoodOfMandatory = .1 # between 0 and 1, chance a task is generated as mandatory
 maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
-numDependencies = 0
+numDependencies = 8
 assert(numDependencies <= numberOfTasks/2)
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']

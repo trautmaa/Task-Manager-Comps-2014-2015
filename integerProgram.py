@@ -239,19 +239,6 @@ def printDebugInfo(prob, yiVariables, yitkVariables, aitVariables, xijtVariables
     print
 
 
-'''
-A function that takes a list of tasks and iterates over them,
-returning the latest time window ending of any task.
-'''
-def getLatestDeadline(taskList):
-    latestDeadline = 0
-    for task in taskList:
-        for day in task.timeWindows:
-            for timeWindow in day:
-                if timeWindow[1] > latestDeadline:
-                    latestDeadline = timeWindow[1]
-    return latestDeadline
-
 
 '''
 A function that takes a solved integer program and converts it into a makeSchedule
@@ -293,7 +280,7 @@ def integerProgramSolve(taskList, timeLimit, outputFlag):
     numTasks = len(taskList)
     mostDaysTask = max(taskList, key = lambda task : len(task.timeWindows))
     numDays = len(mostDaysTask.timeWindows)
-    latestTimeWindowEnd = getLatestDeadline(taskList)
+    latestTimeWindowEnd = helperFunctions.getLatestDeadline(taskList)
 
     yiVariables = [pulp.LpVariable(("y" + str(i)), 0, 1, pulp.LpBinary) for i in range(numTasks)] # included or not
     yitkVariables = makeYitkVariables(taskList, numDays) # task i scheduled on day t in time window k

@@ -30,6 +30,21 @@ def addAllTasksToSched(sched, taskList):
             sched += task
     return sched
 
+
+'''
+A function that takes a list of tasks and iterates over them,
+returning the latest time window ending of any task.
+'''
+def getLatestDeadline(taskList):
+    latestDeadline = 0
+    for task in taskList:
+        for day in task.timeWindows:
+            for timeWindow in day:
+                if timeWindow[1] > latestDeadline:
+                    latestDeadline = timeWindow[1]
+    return latestDeadline
+
+
 '''
 Given a list of tasks, returns them in reverse deadline order. It's a terrible
 schedule and therefore perfect for testing VNS.

@@ -1431,7 +1431,7 @@ def appendToSchedSteps(stringInfo, schedOrRoute, routeIndex = None):
             
 def main():
     # print "********** Main **********"
-    stoppingCondition = int(sys.argv[2])
+    stoppingCondition = float(sys.argv[2])
     #run vns on file specified in user input
     f = sys.argv[1]
     f = os.path.realpath(f)
