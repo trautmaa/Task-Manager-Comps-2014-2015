@@ -40,7 +40,6 @@ def solve(csvFile):
     Initialize it to 0. If we find a feasible path with a higher priority (score), 
     then we update the primal bound.
     '''
-#     primalBound = [0]
     checkingBounds = [True]
     
     #initialize our list of all nodes
@@ -63,13 +62,13 @@ def solve(csvFile):
     else:
         tShoe = timeLimit
 
-    defineBounds(pBound, tShoe, delta, taskList, lock)
+    defineBounds(tShoe, delta, taskList, primalBound)
     bestPaths = []
     
     
     pool = multiprocessing.Pool()
     
-    partialPulse = functools.partial(pulse, pBound, lock, [0])
+    partialPulse = functools.partial(pulse, primalBound, [0])
     
     bestPaths = pool.map(partialPulse, allNodes)
     
@@ -94,9 +93,9 @@ This function is called in separate threads by our main function.
 @param: node, current score, current time, and current path
 @ return: nothing
 '''
-def pulse(lock, currPath, node):
+def pulse(pBound, currPath, node):
 #     print "************ entering pulse **************"
-#     print "primal:", primalBound
+#     print "primal:", pBound
 #     print "path:", currPath, " + ", node
 #     print "score: %d, time: %d" %(currScore, currPath[0])
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
@@ -116,7 +115,7 @@ def pulse(lock, currPath, node):
     # checking if it's work considering this new path...could it possibly be optimal
     
     newProposedEndingTime = isFeasible(node, currPath)
-    withinBounds = inBounds(node, currTime, currPath)
+    withinBounds = inBounds(node, currTime, currPath, pBound)
     notDominated = notSoftDominated(node, newProposedEndingTime, currPath)
     
     if newProposedEndingTime != None and withinBounds and notDominated:
@@ -134,7 +133,7 @@ def pulse(lock, currPath, node):
             if newTime == None:
 #                 print " INFEASIBLE TO ADD ", newNode
                 continue
-            res = pulse(lock, newPath, newNode)
+            res = pulse(pBound, newPath, newNode)
 #             print "GOT RESULt", res
             result.append(res)
 #     else:
@@ -152,12 +151,10 @@ def pulse(lock, currPath, node):
 #     print "************ exiting pulse **************"
     
     best = max(result, key = lambda x: getProfit(x))
-    lock.acquire(True)
-    if not checkingBounds[0] and getProfit(best) > primalBound[0]:
-        print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, primalBound[0], getProfit(best))
+    if not checkingBounds[0] and getProfit(best) > pBound[0]:
+        print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], getProfit(best))
         print best
-        primalBound[0] = getProfit(best)
-    lock.release()
+        pBound[0] = getProfit(best)
         
     return best
                     
@@ -221,7 +218,7 @@ def notSoftDominated(node, newProposedEndingTime, currPath):
 inBounds checks our pre-created matrix from define bounds to see if the path is
 worth further exploration
 '''
-def inBounds(node, currTime, path):
+def inBounds(node, currTime, path, pBound):
 #     print "*********** entering inBounds ***********"
     taoValue = currTime - currTime % delta
     if taoValue not in reducedBoundsMatrix:
@@ -233,7 +230,7 @@ def inBounds(node, currTime, path):
     pathScore = reducedBoundsMatrix[taoValue][node] + getProfit(path + [node])
     
 #     print "*********** exiting inBounds ***********"
-    if pathScore <= primalBound[0]:
+    if pathScore <= pBound[0]:
         return False
     return True
     
@@ -249,7 +246,7 @@ lower than tShoe because we don't want to fully solve the problem yet.
 
 @param delta: the length of the time steps tHat is just the timeLimit
 '''
-def defineBounds(lowestTime, delta, taskList, lock):
+def defineBounds(lowestTime, delta, taskList, pBound):
     print "*********** entering defineBounds ***********"
     remainingTime = timeLimit
     
@@ -263,7 +260,7 @@ def defineBounds(lowestTime, delta, taskList, lock):
         
         for task in taskList:
             path = [remainingTime]
-            path = pulse(lock, path, task.id)
+            path = pulse(pBound, path, task.id)
             
             #add a cost value to our global reducedBoundsMatrix
             if path == []:
