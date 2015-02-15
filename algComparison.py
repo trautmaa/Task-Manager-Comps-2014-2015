@@ -26,14 +26,19 @@ runs all the algorithms you want to with a timeLimit and a list
 of test names.  It then outputs the results.
 '''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
-    runGreedies(testList)
-    runVNS(testList, timeLimit)
-    runTimedRandomIteration(testList, timeLimit)
-    runTimedBruteForce(testList, timeLimit)
-    #runIntegerProgram(testList, timeLimit)
+    for test in testList:
+        #runGreedies(testList)
+        runPulse([test], timeLimit)
+        runVNS([test], timeLimit)
+        #runTimedRandomIteration(testList, timeLimit)
+        #runTimedBruteForce(testList, timeLimit)
+        #runIntegerProgram(testList, timeLimit)
+
 
     outputOutput()
 
+
+    
 '''
 Runs the timed random iteration on our list of testFiles.
 '''    
@@ -70,7 +75,8 @@ def runIntegerProgram(testList, timeLimit):
 def runPulse(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = pulseOPTW.solve(testName)
+        pulseOPTW.setTimes()
+        schedule = pulseOPTW.solve(testName) 
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "Pulse")
 
@@ -140,118 +146,8 @@ def getFiles(n):
         
 def main():
     testList = getFiles(10)
-    runAlreadyCreatedTestsForXTime(testList, 1)
+    runAlreadyCreatedTestsForXTime(testList, 10)
                                 
 if __name__ == '__main__':
 	main()
                     
-                    
-        
-        
-        
-#def runNComparisons(n):
-#    totalOrderedDeadlineProfit, totalOrderedDeadlineTime = 0, 0
-#    
-#    totalOrderedPriorityProfit, totalOrderedPriorityTime = 0, 0
-#    
-#    totalOrderedAvailabilityPriorityProfit, totalOrderedAvailabilityPriorityTime = 0, 0
-#    for i in range(n):
-#        createTests.writeNTasks(inputSize, fileName)
-#        
-#        
-#        greedyByDeadlineOrderSchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderOptionalByDeadline)
-#        greedyByPriorityOrderSchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderByPriority)
-#        greedyByPriorityAvailabilitySchedule = greedyByOrder.runGreedyByOrder(fileName, greedyByOrder.orderByPriorityOverAvailability)
-#        print greedyByDeadlineOrderSchedule.getProfit()
-#        totalOrderedDeadlineProfit += greedyByDeadlineOrderSchedule.getProfit()
-#        totalOrderedPriorityProfit += greedyByPriorityOrderSchedule.getProfit()
-#        totalOrderedAvailabilityPriorityProfit += greedyByPriorityAvailabilitySchedule.getProfit()
-#        
-#        
-#    print "Average totalOrderedDeadlineProfit:" , str(totalOrderedDeadlineProfit/n)
-#    print "Average totalOrderedPriorityProfit:" , str(totalOrderedPriorityProfit/n)
-#    print "Average totalOrderedAvailabilityPriorityProfit:" , str(totalOrderedAvailabilityPriorityProfit/n)
-        
-
-
-#fileName = "testing.csv"
-#inputSize = 50
-#
-#'''
-#Prints the total number of tasks the algorithm with a particular name
-#has scheduled, as well as the percentage of tasks it has scheduled.
-#'''
-#def printAlgResults(algName, totalTasks, possibleTasksCompleted, tasksCompleted, totalTime):
-#	print algName, "has scheduled", tasksCompleted, "out of", \
-#		possibleTasksCompleted, "or", \
-#		(100.0 * tasksCompleted / possibleTasksCompleted), \
-#		"percent of possible tasks."
-#	if (totalTime != None):
-#		print "This algorithm takes", (totalTime / (totalTasks / inputSize)), "seconds on average."
-#
-#'''
-#Loops forever, repeatedly generating new inputs for the problem,
-#solving them with all algorithms, and periodically printing
-#updates on the aggregate numbers solved by each algorithm.
-#'''
-#def comparisonLoop():
-#	inputsSeen = 0
-#	totalTasksSeen = 0
-#	tasksCompletedBrute = 0
-#	tasksCompletedOrderDeadline = 0
-#	tasksCompletedOrderRelease = 0
-#	tasksCompletedChoiceStarting = 0
-#	tasksCompletedChoiceCompletion = 0
-#
-#	tasksCompletedIntegerProgram = 0
-#	bruteForceTime = 0
-#	integerProgramTime = 0
-#	while True:
-#		inputsSeen += 1
-#		totalTasksSeen = inputsSeen * inputSize
-## 		writeNTasks(inputSize, fileName)
-#		beforeTime = time()
-#		tasksCompletedBrute += len(runBruteForceAlg(fileName))
-#		bruteForceTime += time() - beforeTime
-#		beforeTime = time()
-## 		tasksCompletedIntegerProgram += len(runIntegerProgram(fileName))
-## 		integerProgramTime += time() - beforeTime
-#		tasksCompletedOrderRelease += len(runGreedyByOrder(fileName, orderByRelease))
-#		tasksCompletedOrderDeadline += len(runGreedyByOrder(fileName, orderByDeadline))
-#		tasksCompletedChoiceStarting += len(runGreedyByPresentChoice(fileName, orderByStartingTime))
-#		tasksCompletedChoiceCompletion += len(runGreedyByPresentChoice(fileName, orderByEndingTime))
-#		print inputsSeen, "inputs seen total, each of size", inputSize, "."
-#		printAlgResults(
-#			"Brute force", totalTasksSeen, tasksCompletedBrute, tasksCompletedBrute, bruteForceTime)
-## 		printAlgResults(
-## 			"Integer program", totalTasksSeen, tasksCompletedBrute, tasksCompletedIntegerProgram, integerProgramTime)
-#		printAlgResults(
-#			"Greedy by release date", totalTasksSeen, tasksCompletedBrute, tasksCompletedOrderRelease, None)
-#		printAlgResults(
-#			"Greedy by deadline", totalTasksSeen, tasksCompletedBrute, tasksCompletedOrderDeadline, None)
-#		printAlgResults(
-#			"Greedy by starting time", totalTasksSeen, tasksCompletedBrute, tasksCompletedChoiceStarting, None)
-#		printAlgResults(
-#			"Greedy by finish time", totalTasksSeen, tasksCompletedBrute, tasksCompletedChoiceCompletion, None)
-#		print
-#		if (tasksCompletedBrute != tasksCompletedIntegerProgram):
-#			print
-#			print "Integer program produced a non-optimal solution, halting comparison for debugging."
-#			print
-#
-#            
-
-#            
-#            
-#def getNumberOfRequiredAndOptionalTasks(schedule):
-#    required, optional = 0, 0
-#    for route in schedule:
-#        for task in route:
-#            if task.required == str(1):
-#                required += 1
-#            else:
-#                optional += 1
-#    return required, optional
-            
-            
-

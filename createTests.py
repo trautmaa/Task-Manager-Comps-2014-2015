@@ -11,9 +11,9 @@ import random
 '''
 Make sure your input variables make sense!!!!!!!!!
 '''
-numberOfTasks = 20
+numberOfTasks = 10
 dayLength = 1440
-numDays = 1
+numDays = 3
 xRange = 60
 yRange = 60
 durationRange = 200 # tasks will receive durations no longer than this
@@ -140,8 +140,8 @@ def writeNTasks(n, csvFile):
     return csvFile
 
 def main():
-    for i in range(1):
-        writeNTasks(numberOfTasks, "medium"+str(i + 20)+".csv")
+    for i in range(10):
+        writeNTasks(numberOfTasks, "testing"+str(i)+".csv")
 
 
 if __name__ == '__main__':

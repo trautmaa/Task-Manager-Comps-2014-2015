@@ -76,11 +76,14 @@ def solve(csvFile):
     pool.close()
     pool.join()
     print bestPaths
-    bestSched = max(bestPaths, key = lambda x: getProfit(x))
+    bestSched = max(bestPaths, key = lambda x: getProfit(x))[1:]
+    bestSched = helperFunctions.createOptimalSchedule(taskList, bestSched)
+    
     print "Wow you made it"
     print "best schedule\n", bestSched
-    print "profit", getProfit(bestSched)
-
+    print "profit", bestSched.getProfit()
+    return bestSched
+    
 
 '''
 Recursively generate every possible path starting with starting path and going 
@@ -338,6 +341,11 @@ def getProfit(sched):
     for t in range(1, len(sched)):
         tot += taskList[sched[t]].priority
     return tot
+
+def setTimes(): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
+    global stoppingTime, startTime
+    startTime = time.time()
+    stoppingTime = float("inf")
 
 def main():
     global stoppingTime, startTime

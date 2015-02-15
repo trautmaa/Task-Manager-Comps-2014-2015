@@ -24,6 +24,12 @@ A function that returns a tuple of a task's coordinates.
 def getCoords(task):
     return (task.x, task.y)
 
+def addAllTasksToSched(sched, taskList):
+    for task in taskList:
+        if task.id not in sched:
+            sched += task
+    return sched
+
 '''
 Given a list of tasks, returns them in reverse deadline order. It's a terrible
 schedule and therefore perfect for testing VNS.
@@ -147,7 +153,7 @@ def createOptimalSchedule(taskList, taskOrdering):
     # the current index in the time windows list
     timeWindowIndex = 0
 
-    while (timeWindowIndex < len(taskList)):
+    while (timeWindowIndex < len(taskOrdering)): ### maybe this will work...
         currentTask = taskList[taskOrdering[timeWindowIndex]]
         
         isInsertable, endingTime, endingDay, insertPosition = isTaskInsertable(schedule, currentTask, dayEndings, taskList)
