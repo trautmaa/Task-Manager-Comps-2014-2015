@@ -98,8 +98,12 @@ def solve(csvFile):
     Calling map on the thread pool with our partial pulse function with added
     node args.
     '''
-#     bestPaths = pool.map(partialPulse, allNodes)
-    bestPaths = map(partialPulse, allNodes)
+    
+    #Uncomment the following line for parallel
+    bestPaths = pool.map(partialPulse, allNodes)
+    
+    #Uncomment the following line for sequential
+#     bestPaths = map(partialPulse, allNodes)
 
     print bestPaths
     bestSched = max(bestPaths, key = lambda x: getProfit(x))
@@ -159,7 +163,9 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
     newProposedEndingTime = isFeasible(node, currPath)
     withinBounds = inBounds(node, currPath, pBound)
     notDominated = notSoftDominated(node, newProposedEndingTime, currPath)
-    cannotDetour = noDetour(node, currPath, unvisitedNodes)
+    cannotDetour = noDetour(node, currPath, unvisitedNodes, newProposedEndingTime)
+    
+    cannotDetour = True
     
     if (definingBounds[0] and newProposedEndingTime != None) or (newProposedEndingTime != None and withinBounds and notDominated and cannotDetour):
         unvisitedNodes.remove(node)
@@ -178,23 +184,20 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
             res = pulse(pBound, newPath, allNodes, newNode, definingBounds)
 #             print "GOT RESULt", res
             result.append(res)
-#     else:
-#         print "failed"
-#         print "newEndingTIme", newProposedEndingTime
+    elif newProposedEndingTime != None and not cannotDetour:
+        print "failed"
+        print "newEndingTIme", newProposedEndingTime
 #         print "withinBounds", withinBounds
 #         print "notDominated", notDominated
-#         print "cannotDetour", cannotDetour
+        print "cannotDetour", cannotDetour
     if len(result) == 0:
         return []
     
     best = max(result, key = lambda x: getProfit(x))
     if not definingBounds[0] and getProfit(best) > pBound[0]:
         print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], getProfit(best))
-        print best, "\a"
+        print best#, "\a"
         pBound[0] = getProfit(best)
-    if len(best) > 27:
-        print "thread: %s exiting at length %d with best" %(multiprocessing.current_process().name, len(best))
-        print best
     return best
                     
 '''
@@ -239,13 +242,6 @@ def isFeasible(node, currPath):
             
     #if it's not possible to schedule the task (visit the node) then it's not feasible
     return None
-
-# def checkRelease(node, path):
-#     noEndingTime = currPath[1:]
-#     for r in range(len(task.dependencyTasks)):
-#         releaseTask = task.dependencyTasks[r]
-#         if releaseTask not in noEndingTime:
-#             return None
 
 '''
 checks a few different orders to make sure that this ordering is worth further
@@ -292,23 +288,42 @@ def inBounds(node, path, pBound):
     return True
 
 
-def noDetour(node, currPath, unvisitedNodes):
+def noDetour(node, currPath, unvisitedNodes, proposedEnd):
     '''
     For each unvisited node, try to insert it between the end of currPath and node.
     If the endingTime of scheduleASAP is the same, return False
     '''
-    pathEnd = scheduleASAP(currPath + [node], currPath[0])
-    if pathEnd == None:
-        return False
-    pathEnd = pathEnd[0]
+    oldPathEnd = currPath[0]
+    
     currPath = currPath[:]
+    oldPath = currPath + [node]
+    oldPath[0] = proposedEnd
     unvisitedNodes = unvisitedNodes[:]
     unvisitedNodes.remove(node)
+    
+    #AVERY: investigate why diff answers for isFeasible and scheduleASAP
+    
+    if proposedEnd == None:
+        return False
+
     for newNode in unvisitedNodes:
-        newSched = [pathEnd] + currPath[1:] + [newNode] + [node]
-        newSchedEnd = scheduleASAP(newSched, currPath[0])
-        if newSchedEnd != None and newSchedEnd[0] == pathEnd:
+        newPathEnd = isFeasible(newNode, currPath)
+        if newPathEnd == None:
+            continue
+        newPath = oldPath + [newNode]
+        
+        newPathEnd = isFeasible(node, newPath)
+        if newPathEnd != None and newPathEnd == proposedEnd:
+            print "Detour from", currPath, "+", newNode, "+", node
+            print oldPathEnd, "+", node, "=", proposedEnd
+            print oldPathEnd, "+", newNode, "+", node, "=", newPathEnd
+            print
             return False
+        elif newPathEnd != None:
+            print "no detour from", currPath, "+", newNode, "+", node
+            print oldPathEnd, "+", node, "=", proposedEnd
+            print oldPathEnd, "+", newNode, "+", node, "=", newPathEnd
+            print
     return True
     
     
@@ -400,6 +415,7 @@ def scheduleASAP(path, initTime = 0):
         # find the next possible time window to schedule node in in this day or any later days... 
         for day in range(0, len(task.timeWindows)):
             for tw in range(len(task.timeWindows[day])):
+                
                 #if task can be scheduled in this time window..
                 timeWindow = task.timeWindows[day][tw]
                 travelTime = helperFunctions.getDistanceBetweenTasks(taskList[path[t-1]], taskList[path[t]])
