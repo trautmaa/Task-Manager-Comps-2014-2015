@@ -8,30 +8,18 @@ from copy import deepcopy
 
 import random
 
-'''
-Make sure your input variables make sense!!!!!!!!!
-'''
-numberOfTasks = 20
-dayLength = 1440
-numDays = 3
-xRange = 60
-yRange = 60
-durationRange = 200 # tasks will receive durations no longer than this
-releaseTimeRange = (dayLength * numDays) - durationRange # tasks will receive release times no later than this
-deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
-priorityRange = 3 # optional tasks assigned priority between 1 and this
-likelyhoodOfMandatory = .1 # between 0 and 1, chance a task is generated as mandatory
-maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
-numDependencies = 8
-assert(numDependencies <= numberOfTasks/2)
-
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']
 
-def setPriorityOfTask(task, priority):
-    if random.random() >= likelyhoodOfMandatory:
-        task.append(random.randint(1, priority))
-    else:
+'''
+Sets the priority of a task to a random integer between 1 and priority.
+If a task is required, the priority is set to -1 as a placeholder and then
+updated in setRequiredOfTask.
+'''
+def setPriorityOfTask(task, priority, isRequired):
+    if isRequired:
         task.append(-1)
+    else:
+        task.append(random.randint(1, priority))
                    
 def setRequiredOfTask(task):
     if task[-1] == -1:
@@ -56,7 +44,7 @@ def setDependencies(taskList, numDependencies):
             task.append([])
     
         
-def setTimeWindowsOfTask(task, numDays):
+def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength):
     timeWindows = []
     releaseTime = task[2]
     duration = task[3]
@@ -99,49 +87,96 @@ that is returned is: [xCoord, yCoord, releaseTime, duration, deadline]
 (where duration is deadline - releaseTime). It is required that deadline
 is later or the same as the release time.
 '''
-def generateTask(xConstraint, yConstraint, releaseTime, maxDuration, deadline, priority, required, numDays):
+def generateTask(xConstraint, yConstraint, releaseTime, minDuration, maxDuration, deadline, priority,
+    isRequired, numDays, maxNumTimeWindows, dayLength):
     assert (deadline >= releaseTime)
     task = []
     
     for feature in [xConstraint, yConstraint, releaseTime]:
         task.append(random.randint(0, feature)) 
-    task.append(random.randint(1, maxDuration))
+    task.append(random.randint(minDuration, maxDuration))
     task.append(random.randint(task[2] + task[3], deadline))
-    setPriorityOfTask(task, priority)
+    setPriorityOfTask(task, priority, isRequired)
     setRequiredOfTask(task)
-    setTimeWindowsOfTask(task, numDays)
+    setTimeWindowsOfTask(task, numDays, maxNumTimeWindows, dayLength)
 
     return task
 
-def process(taskList, maxSumProfit):
+'''
+Checks to see if a task had priority set to -1 as a placeholder for being
+required, and if so, replaces that priority with a priority larger
+than the sum of all optional task priorities (effectively infinite).
+'''
+def changeRequiredTasksProfit(taskList, maxSumProfit):
     for task in taskList:
         if task[-2] == 1:
             task[-3] = maxSumProfit
 
 '''
 A function that will write n tasks to a csv file.  It uses
-generateTask to create the task to write. Right now the
-constraints for generateTask are hard coded but that can 
-be changed.  The name of the csv file is returned.
+generateTask to create the task to write.
+
+@param dayLength: the length of the day
+@param n: the number of tasks to write to the csv
+@param xRange: the highest x value a task's location will be set to
+@param yRange: the highest y value a task's location will be set to
+@param releaseTimeRange: the latest a task's release time can be set (global across days)
+@param durationMin: the shortest duration that can be set for a task
+@param durationMax: the longest duration that can be set for a task
+@param deadlineRange: the latest deadline a task can be assigned (global across days)
+@param priorityRange: the highest priority an optional task can be assigned
+@param numberRequired: the number of tasks to be set to be required
+@param numDays: the number of days in the scheduled
+@param maxNumTimeWindows: the highest number of time windows a task can be given
+@param percentDependencies: the (decimal) percentage of tasks that will be given one other task as a dependency
+@param csvFile: the name of the csv file to write the schedule to
+
+@return: the name of the csv file
 '''
-def writeNTasks(n, csvFile):
-    random.seed(time.time())
+def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, durationMax, deadlineRange,
+    priorityRange, numberRequired, numDays, maxNumTimeWindows, percentDependencies, csvFile):
     taskList = []
+    numDependencies = int(n * percentDependencies)
+    
+    isRequired = [False for task in range(n)]
+    requiredIndices = random.sample(range(n), numberRequired)
+    for i in requiredIndices:
+        isRequired[i] = True
+
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
-            taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationRange, deadlineRange, priorityRange, 0, numDays))
+            taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationMin, durationMax,
+                deadlineRange, priorityRange, isRequired[i], numDays, maxNumTimeWindows, dayLength))
         maxSumProfit = (n + 1) * priorityRange + 1
-        process(taskList, maxSumProfit)
+        changeRequiredTasksProfit(taskList, maxSumProfit)
         setDependencies(taskList, numDependencies)
         for task in taskList:
             writer.writerow(task)
     return csvFile
 
 def main():
-    for i in range(10):
-        writeNTasks(numberOfTasks, "testing"+str(i)+".csv")
+    dayLength = 1440
+
+    # make sure these make sense!
+    numberOfTasks = 20
+    numDays = 3
+    xRange = 60
+    yRange = 60
+    durationMin = 0 # tasks will receive durations no shorter than this
+    durationMax = 200 # tasks will receive durations no longer than this
+    releaseTimeRange = (dayLength * numDays) - durationMax # tasks will receive release times no later than this
+    deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
+    priorityRange = 3 # optional tasks assigned priority between 1 and this
+    numberRequired = int(.1 * numberOfTasks) # number of required tasks
+    maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
+    percentDependencies = 0.5 # percent of tasks with 1 dependency (must be <.5 right now)
+    assert(percentDependencies <= 0.5)
+    
+    writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
+        durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
+        numDays, maxTaskTimeWindows, percentDependencies, "newTest.csv")
 
 
 if __name__ == '__main__':
