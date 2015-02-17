@@ -20,6 +20,8 @@ import helperFunctions
 from Objects import Route, Task, Schedule
 from vns import isFeasible
 
+defaultFileName = 'newTest.csv'
+
 '''
 Returns a three dimensional list of decision variables y i,t,k representing
 whether or not task i is scheduled on day t during time window k.
@@ -358,6 +360,7 @@ def runIntegerProgram(csvFile, timeLimit = -1, outputFlag = 0):
     helperFunctions.preprocessTimeWindows(taskList)
     schedule, isOptimal = integerProgramSolve(taskList, timeLimit, outputFlag)
     # assert(isFeasible(taskList, schedule))
+
     return schedule, isOptimal
 
 '''
@@ -367,23 +370,29 @@ to run, and whether or not you want ongoing output as it runs.
 '''
 def processCommandLineArgs(args):
     if len(args) > 1:
-        try:
-            timeLimit = int(sys.argv[1])
-        except ValueError:
-            print "time limit argument not an integer"
-            exit()
+        fileName = sys.argv[1]
         if len(args) > 2:
             try:
-                outputFlag = int(sys.argv[2])
+                timeLimit = int(sys.argv[2])
             except ValueError:
-                print "output flag argument not an integer"
+                print "time limit argument not an integer"
                 exit()
+            if len(args) > 3:
+                try:
+                    outputFlag = int(sys.argv[3])
+                except ValueError:
+                    print "output flag argument not an integer"
+                    exit()
+            else:
+                outputFlag = 0
         else:
+            timeLimit = -1
             outputFlag = 0
     else:
         timeLimit = -1
         outputFlag = 0
-    return timeLimit, outputFlag
+        fileName = defaultFileName
+    return fileName, timeLimit, outputFlag
 
 '''    
 A main function that will read in the list of tasks from a csv, construct the integer program,
@@ -391,8 +400,9 @@ and print the solution it produces.
 '''
 def main():
     print
-    timeLimit, outputFlag = processCommandLineArgs(sys.argv)
-    solvedSchedule, isOptimal = runIntegerProgram("testing0.csv", timeLimit, outputFlag)
+    fileName, timeLimit, outputFlag = processCommandLineArgs(sys.argv)
+    print fileName, timeLimit, outputFlag
+    solvedSchedule, isOptimal = runIntegerProgram(fileName, timeLimit, outputFlag)
     print
     if not isOptimal:
         print "WARNING: As the integer program was terminated before completion,"
