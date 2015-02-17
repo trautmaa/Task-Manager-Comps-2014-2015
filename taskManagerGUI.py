@@ -306,6 +306,7 @@ def calendarDraw():
     whichDay = -1
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
     drawScreen()
+    drawButton(exitButton[2], exitButton[3], exitButton[1], buttonHeight)
     drawMap(whichDay, whichTask)
     drawTextBox(whichDay, whichTask)
     highlight(whichTask, whichDay)
@@ -316,7 +317,7 @@ def calendarDrawInit():
     
     for b in range(len(fileBooleans)):
         if fileBooleans[b]:
-            fileName = pwd(fileList[b] + ".csv")
+            fileName = fileList[b] + ".csv"
             
 
     #do stuff so that we can call different algorithms depending on user's selection
@@ -345,6 +346,7 @@ def calendarDrawInit():
     
     #setup for Pulse
     elif buttonList[4]:
+        fileName = pwd(fileName)
         output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " 10")
         print output
         sched = createTasksFromCsv.getTaskList("pulseSched.csv")
