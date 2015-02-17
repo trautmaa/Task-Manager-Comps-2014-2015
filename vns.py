@@ -43,7 +43,7 @@ def solve(csvFile, stoppingCondition):
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
 
-    appendToSchedSteps("greedySched", bestGreedy)
+    appendToSchedSteps("Initial schedule to be improved by VNS", bestGreedy)
             
     assert(isFeasible(taskList, bestGreedy))
     # print bestGreedy
@@ -58,9 +58,6 @@ def solve(csvFile, stoppingCondition):
         route = bestGreedy[r]
         isRouteActuallyFeasible(route, r, "after VNS run")    
 
-    # print "vns journey"
-    # helperFunctions.printScheduleJourney(currSchedule)
-    
     
     print "Profit of Greedy Schedule is: "
     print bestGreedy.getProfit()
@@ -68,7 +65,6 @@ def solve(csvFile, stoppingCondition):
     print currSchedule.getProfit()
     
 
-#     helperFunctions.writeTasks("testReturn.csv", currSchedule)
 
     return currSchedule, schedSteps
 
@@ -118,7 +114,7 @@ def vns(taskList, currSchedule, stoppingCondition):
     while time.time() - initTime < stoppingCondition:
         # If we have gone through all neighborhood structures, start again
         nHood = 1
-        appendToSchedSteps("OUTSIDE vns little while loop", currSchedule)
+#         appendToSchedSteps("OUTSIDE vns little while loop", currSchedule)
         
         while nHood < nHoodMax and time.time() - initTime < stoppingCondition:
             currSchedule = copy.deepcopy(currSchedule)
@@ -127,24 +123,24 @@ def vns(taskList, currSchedule, stoppingCondition):
             
             iterCount += 1
             
-            appendToSchedSteps("Sched before anything, nHood %d" % (nHood), currSchedule)
+            appendToSchedSteps("Schedule before shaking", currSchedule)
             
             shakeSolution = shaking(currSchedule, nHood)
             
-            appendToSchedSteps("Sched after shaking, nHood %d" % (nHood), shakeSolution)
+            appendToSchedSteps("Schedule after shaking, before iterative improvement", shakeSolution)
             
             iterSolution = iterativeImprovement(taskList, shakeSolution, nHood)
             
-            appendToSchedSteps("Sched after iterativeImprovent, nHood %d" % (nHood), iterSolution)
+            appendToSchedSteps("Schedule after iterativeImprovent", iterSolution)
             
 
             # make sure the modified solution is still feasible. 
             # If it is not, try again
             # If it is, and it is a better solution, update bestSolution
             
-            appendToSchedSteps("Sched before isFeasible, nHood %d" % (nHood), iterSolution)
+            appendToSchedSteps("Schedule after iterative improvement, before checking Feasibility", iterSolution)
             feasibleSchedule = isFeasible(taskList, iterSolution)
-            appendToSchedSteps("Sched after isFeasible", feasibleSchedule)
+#             appendToSchedSteps("Sched after isFeasible", feasibleSchedule)
             
             
             # if feasible and better
@@ -155,11 +151,11 @@ def vns(taskList, currSchedule, stoppingCondition):
                 # If our solution is better than the current solution, update.
                 if isBetterSchedule(feasibleSchedule, currSchedule):
                     currSchedule = feasibleSchedule
-                    appendToSchedSteps("Sched is BETTER!!!", currSchedule)
+                    appendToSchedSteps("We have found a BETTER schedule!", currSchedule)
                     nHood = 1
                 # Otherwise, increment nHood
                 else:
-                    appendToSchedSteps("Sched is not better :( ", currSchedule)
+                    appendToSchedSteps("Our schedule is WORSE than our best so far", currSchedule)
                     nHood += 1
                 
                 # If our solution is better than the best solution so far, update.
@@ -173,7 +169,7 @@ def vns(taskList, currSchedule, stoppingCondition):
                     numIterations = 0
                     
                     if nHood > 8:
-                        appendToSchedSteps("sched is not better but 8000", feasibleSchedule)
+                        appendToSchedSteps("Our schedule is not better, but we have iterated 8000 times", feasibleSchedule)
                         currSchedule = feasibleSchedule
                         nHood = 1
                         unplannedTasks = prevUnplanned
@@ -182,10 +178,10 @@ def vns(taskList, currSchedule, stoppingCondition):
                     # If the new solution is not more than .5% longer (distance), accept
                     elif calcTotalDistance(iterSolution) >= .995 * calcTotalDistance(currSchedule):
                         currSchedule = feasibleSchedule
-                        appendToSchedSteps("sched is not better but 8000 and other stuff", currSchedule)
+                        appendToSchedSteps("Our schedule is not better but we have iterated 8000 times and the new solution isn't too long", currSchedule)
                         unplannedTasks = prevUnplanned
                 else:
-                    appendToSchedSteps("sched was NONE", feasibleSchedule)
+                    appendToSchedSteps("Schedule was NONE", feasibleSchedule)
                     numIterations += 1 
                     unplannedTasks = prevUnplanned
             else:
@@ -219,7 +215,7 @@ def shaking(currSchedule, nHood):
     else:
         newSchedule = optionalExchange2(currSchedule, nHood)
     
-    appendToSchedSteps("At the end of shaking, nHood %d" % (nHood), newSchedule)
+#     appendToSchedSteps("Finished shaking", newSchedule)
 #     print "********** Exiting shaking **********"
     return newSchedule
 
@@ -257,8 +253,8 @@ def crossExchange(currSchedule, nHood):
     else:
         route2Len = random.randint(0, min(len2, nHood))
     
-    appendToSchedSteps("Swapping segments in routes %d and %d" %(day1, day2), currSchedule)
-    appendToSchedSteps("route %d, len %d, route %d, len %d" %(day1, route1Len, day2, route2Len), currSchedule)
+    appendToSchedSteps("Swapping parts of routes %d and %d in CROSS EXCHANGE" %(day1, day2), currSchedule)
+#     appendToSchedSteps("route %d, len %d, route %d, len %d" %(day1, route1Len, day2, route2Len), currSchedule)
     
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
     routeSegment2 = getRouteSegment(currSchedule, day2, day1, route2Len)
@@ -266,8 +262,8 @@ def crossExchange(currSchedule, nHood):
     route1Start, route1End = routeSegment1[0], routeSegment1[1]
     route2Start, route2End = routeSegment2[0], routeSegment2[1]
     
-    appendToSchedSteps("route %d start %d end %d" %(day1, route1Start, route1End), currSchedule)
-    appendToSchedSteps("route %d start %d end %d" %(day2, route2Start, route2End), currSchedule)
+#     appendToSchedSteps("route %d start %d end %d" %(day1, route1Start, route1End), currSchedule)
+#     appendToSchedSteps("route %d start %d end %d" %(day2, route2Start, route2End), currSchedule)
     
     if route1End - route1Start == 0 and route2End - route2Start == 0:
         return currSchedule 
@@ -286,8 +282,8 @@ def crossExchange(currSchedule, nHood):
     newDay2 = Objects.Route()
     newDay2.setTaskList(tasks2, [None] * len(tasks2))
     
-    appendToSchedSteps("new day %d" %(day1), newDay1, day1)
-    appendToSchedSteps("new day %d" %(day2), newDay2, day2)
+#     appendToSchedSteps("new day %d" %(day1), newDay1, day1)
+#     appendToSchedSteps("new day %d" %(day2), newDay2, day2)
     
     for task in route2:
         unplannedTasks.append(task)
@@ -302,6 +298,7 @@ def crossExchange(currSchedule, nHood):
     routesModified.append(day2)
     
 #     print "********** Exiting crossExchange **********"
+    appendToSchedSteps("At the end of CROSS EXCHANGE", currSchedule)
     return currSchedule
 
 '''
@@ -426,6 +423,8 @@ def optionalExchange1(currSchedule, nHood):
     routesModified.append(day)
     
 #     print "********** Exiting optExchange1 **********"
+    appendToSchedSteps("At the end of OPTIONAL EXCHANGE 1", currSchedule)
+
     return currSchedule
 
 '''
@@ -474,7 +473,7 @@ def optionalExchange2(currSchedule, nHood):
     
     routesModified.append(day)
     
-    appendToSchedSteps("At the end of optExchange2 at nHood %d" % (nHood), currSchedule)
+    appendToSchedSteps("At the end of OPTIONAL EXCHANGE 2", currSchedule)
     return currSchedule
 
 
@@ -494,15 +493,15 @@ def iterativeImprovement(taskList, currSchedule, nHood):
         newSchedule = bestInsertion(taskList, currSchedule)
 
 #     print "********** Exiting iterativeImprovement **********"
-    appendToSchedSteps("At the end of iterativeImprovement at nHood %d" % (nHood), newSchedule)
+#     appendToSchedSteps("At the end of iterative improvement", newSchedule)
     return newSchedule  
 '''
 @return: solution that has been modified by 3-Opt
 '''
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
-    appendToSchedSteps("sched at start of threeOPT", currSchedule)
-    appendToSchedSteps("routesModed for 3opt, %s" %(str(routesModified)), currSchedule)
+    appendToSchedSteps("About to  start 3-OPT", currSchedule)
+#     appendToSchedSteps("routesModed for 3opt, %s" %(str(routesModified)), currSchedule)
 
     currSchedule = copy.deepcopy(currSchedule)
     
@@ -515,7 +514,7 @@ def threeOPT(taskList, currSchedule):
             
     # If there are no such routes, give up.
     if len(possRoutes) == 0:
-        appendToSchedSteps("sched too short in threeOPT", currSchedule)
+#         appendToSchedSteps("sched too short in threeOPT", currSchedule)
         return currSchedule
     
     # pick a random day from those routes
@@ -541,12 +540,13 @@ def threeOPT(taskList, currSchedule):
             newLength, newFeasibility = getRouteDurationWithFeasibility(newRoute, day, taskList)
             
             if newRouteDominates(currLength, currFeasibility, newLength, newFeasibility):
-                appendToSchedSteps("ThreeOPT: better route: last to mid", newRoute, day)
                 currSchedule[day] = newRoute
-#                     print "********** Exiting threeOPT ***************"       
+#                     print "********** Exiting threeOPT ***************"   
+                appendToSchedSteps("Found a better route in 3-OPT", currSchedule)
+    
                 return currSchedule
             
-    appendToSchedSteps("no better sched found in threeOpt", currSchedule)
+    appendToSchedSteps("No better schedule found in 3-OPT", currSchedule)
 #     print "********** Exiting threeOPT ***************"       
     return currSchedule
 
@@ -674,7 +674,7 @@ def bestInsertion(taskList, currSchedule):
 
             
         # Get the next unplanned task
-    appendToSchedSteps("Just finished bestInsertion", currSchedule)
+    appendToSchedSteps("Finished bestInsertion", currSchedule)
 #     print "********** Exiting bestInsertion **********"
     return currSchedule
 
@@ -695,6 +695,8 @@ def isRouteUnderTimeLimit(route):
 
 def isFeasible(taskList, currSchedule):
 #     print "********** Entering isFeasible **********"
+    appendToSchedSteps("Beginning to check feasibility", currSchedule)
+
     currSchedule = copy.deepcopy(currSchedule)
     newSchedule = copy.deepcopy(currSchedule)
     for r in range(len(currSchedule)):
@@ -704,7 +706,7 @@ def isFeasible(taskList, currSchedule):
             return None
         else:
             newSchedule[r] = newRoute
-    appendToSchedSteps("Before minRoute:", newSchedule)
+#     appendToSchedSteps("Before minRoute:", newSchedule)
 
     for r in range(len(newSchedule)):
         newSchedule[r] = minRoute(taskList, newSchedule[r], r)
@@ -716,7 +718,8 @@ def isFeasible(taskList, currSchedule):
 def isRouteFeasible(currRoute, routeIndex):
 #     print "********** Entering isRouteFeasible **********"
     currRoute = copy.deepcopy(currRoute)
-    
+    appendToSchedSteps("Beginning route feasibility check", currRoute, routeIndex)
+
     # for each task except the first, add travel time from prev task to curr task
     # to the duration of task, then subtract that same time from each time window
     # start, and from release time.
@@ -749,7 +752,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    appendToSchedSteps("Route %d is not feasible after tightening. Infeasibility: %.2f" % (routeIndex, infeas), currRoute, routeIndex)
+    appendToSchedSteps("Route %d is NOT FEASIBLE after tightening, return None"  %(routeIndex), currRoute, routeIndex)
     return None, infeas
                     
 '''
@@ -763,7 +766,7 @@ def getRouteDurationWithFeasibility(route, routeIndex, taskList):
     currRoute = isRouteFeasible(currRoute, routeIndex)[0]
     if currRoute == None:
         currRoute = copy.deepcopy(route)
-        appendToSchedSteps("getting length of infeasible route", currRoute, routeIndex)
+#         appendToSchedSteps("getting length of infeasible route", currRoute, routeIndex)
         return calcLengthOfInfeasibleRoute(currRoute, routeIndex)
     
     currRoute = minRoute(taskList, currRoute, routeIndex)
@@ -882,7 +885,7 @@ def tightenTWStarts(currRoute, routeIndex):
         
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
-    appendToSchedSteps("Route %d is feasible after TTWS" % (routeIndex), currRoute, routeIndex)
+    appendToSchedSteps("Route %d is FEASIBLE after tightening time window STARTS" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 '''
@@ -969,7 +972,7 @@ def tightenTWEnds(currRoute, routeIndex):
         return None
     
 #     print "********** Exiting tightenTWEnds3 **********"
-    appendToSchedSteps("Route %d is feasible after TTWE" % (routeIndex), currRoute, routeIndex)
+    appendToSchedSteps("Route %d is FEASIBLE after tightening time window ENDS" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
@@ -1033,14 +1036,14 @@ def minRoute(taskList, currRoute, routeIndex):
             bestRoute = newRoute
         latestWaitingTask = getLatestWaitingTask(newRoute)
         
-    appendToSchedSteps("Route at end of minRoute, before task revert", bestRoute, routeIndex)
+#     appendToSchedSteps("Route at end of minRoute, before task revert", bestRoute, routeIndex)
 
     # Set bestRoute tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
     # preprocessing steps
 
     bestRoute = resetTasks(bestRoute, taskList)
-    appendToSchedSteps("Route at end of minRoute after task revert", bestRoute, routeIndex)
+    appendToSchedSteps("Route at end of minRoute", bestRoute, routeIndex)
 
     # print "********** Exiting minRoute **********"
     return bestRoute
