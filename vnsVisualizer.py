@@ -43,7 +43,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("newTest.csv"))
+    currSchedule, schedSteps = vns.solve(pwd("newTest.csv"), 5)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -101,7 +101,8 @@ def drawRoute():
     
     fill(headerColor, 255)
     rect(0, 0, width, headerHeight)
-
+    fill(dayColor)
+    text("Task IDs", 5, headerHeight - 10)
     
     # width of the screen minus the side bar with divided by the number of routes in the schedule
     currSchedule = sched[0][1]
