@@ -412,6 +412,9 @@ def main():
     print
     print "profit is: " + str(solvedSchedule.getProfit())
     print
+    helperFunctions.writeTasks("intProgSched.csv", solvedSchedule)
+
+
 
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ def setup():
 
 def setupHelper():
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
-    global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight, timeButtonsHeight
+    global firstCalDraw, buttonHighlightSize, algButtonsHeight, fileButtonsHeight, timeButtonsHeight
     global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects, timeBooleans
     global exitButton, timeList, timeRects, backButton
     
@@ -56,7 +56,9 @@ def setupHelper():
     buttonHeight = 80
     
     exitButton = [False, "Exit", 20, height - buttonHeight - 20, buttonWidth + textWidth("Exit"), buttonHeight]
-    backButton = [False, "Back", width - 20 - textWidth("Back") - buttonWidth, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
+    #backButton = [False, "Back", width - 20 - textWidth("Back") - buttonWidth, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
+    backButton = [False, "Back", 1820, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
+    print width - 20 - textWidth("Back") - buttonWidth
     
     #initialize empty list; leave room for OKAY button dimensions
     buttonRects = [0] * (len(buttonFunctsFrontEnd))
@@ -145,7 +147,22 @@ def drawMenu():
     background(bgColor)
     highlightButtons()
     drawButtons()
-
+    drawLabels()
+    
+def drawLabels():
+    pushStyle()
+    label0 = "Choose three..."
+    label1 = "Algorithm:"
+    label2 = "Test File:"
+    label3 = "Time Limit:"
+    label0Height = algButtonsHeight/2
+    textSize(41)
+    fill(blues[0])
+    labelList = [label0, label1, label2, label3]
+    heightsList = [label0Height, algButtonsHeight + 50, fileButtonsHeight + 50, timeButtonsHeight + 50]
+    for i in range(len(labelList)):
+        text(labelList[i], 20, heightsList[i])
+    popStyle()
 
 def initialize():
     
@@ -317,7 +334,7 @@ def mousePressed():
                         clickedOkay[0] = True
                         textSize(100)
                         fill(blues[0])
-                        text("Loading...", width/2 - textWidth("Loading...") / 2, 6 * height/7)
+                        text("Loading...", width/2 - textWidth("Loading...") / 2, 7 * height/8)
 
                 #only change the button's boolean if it wasn't the okay button
                 #AND if no other button was toggled
@@ -387,7 +404,6 @@ def calendarDrawInit():
     for b in range(len(timeBooleans)):
         if timeBooleans[b]:
             timeValue = int(timeList[b])
-            print "$$", timeValue
             
     #do stuff so that we can call different algorithms depending on user's selection
     csvFile = pwd(fileName)
