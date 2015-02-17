@@ -21,7 +21,7 @@ To run this properly, drag and drop the file onto processing-py, available at
 https://github.com/jdf/processing.py
 '''
 
-import greedyByOrder, greedyByPresentChoice
+import greedyByOrder, greedyByPresentChoice, createTasksFromCsv, helperFunctions
 from math import floor
 from createTests import dayLength
 import os
@@ -33,10 +33,13 @@ def setup():
     size(displayWidth, displayHeight)
     
     initialize()
-    
+    setupHelper()
+
+def setupHelper():
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
     global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight
     global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects
+    global exitButton
     
     firstCalDraw = [True]
     
@@ -50,6 +53,7 @@ def setup():
     buttonWidth = 10
     buttonHeight = 80
     
+    exitButton = [False, "Exit", 20, height - buttonHeight - 20, buttonWidth + textWidth("Exit"), buttonHeight]
     
     #initialize empty list; leave room for OKAY button dimensions
     buttonRects = [0] * (len(buttonFunctsFrontEnd))
@@ -199,6 +203,8 @@ def drawButtons():
     for b in range(len(fileList)):
         buttonRect = fileRects[b]
         drawButton(buttonRect[0], buttonRect[1], fileList[b], buttonHeight)
+    drawButton(exitButton[2], exitButton[3], exitButton[1], buttonHeight)
+    
         
 def drawButton(x, y, buttonText, buttonHeight):
     pushStyle()
@@ -268,7 +274,9 @@ def mousePressed():
                             if buttonList[j] == True:
                                 buttonList[j] = False
                     buttonList[r] = not buttonList[r]
-    
+    if mouseX > exitButton[2] and mouseX < exitButton[2] + exitButton[4]:
+        if mouseY > exitButton[3] and mouseY < exitButton[3] + exitButton[5]:
+            exit()
 
 def setColors():
     for d in range(len(schedule[0])):
@@ -308,7 +316,7 @@ def calendarDrawInit():
     
     for b in range(len(fileBooleans)):
         if fileBooleans[b]:
-            fileName = fileList[b] + ".csv"
+            fileName = pwd(fileList[b] + ".csv")
             
 
     #do stuff so that we can call different algorithms depending on user's selection
@@ -337,7 +345,13 @@ def calendarDrawInit():
     
     #setup for Pulse
     elif buttonList[4]:
-        pass
+        output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " 10")
+        print output
+        sched = createTasksFromCsv.getTaskList("pulseSched.csv")
+        order = range(len(sched))
+        schedule[0] = helperFunctions.createOptimalSchedule(sched, order)
+
+    
     else:
         #ERROR: none of our known algorithms were selected when okay when selected
         #Default to VNS

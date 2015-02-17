@@ -2,7 +2,7 @@
 # Larkin Flodin, Avery Johnson, Maraki Ketema, 
 # Abby Lewis, Will Schifeling, and  Alex Trautman
 
-import createTasksFromCsv, math, Objects
+import createTasksFromCsv, math, Objects,csv
 
 '''
 A function given two task objects will return the euclidean distance
@@ -121,7 +121,7 @@ be changed.  The name of the csv file is returned.
 ''' 
 def writeTasks(csvFile, schedule):
     taskList = []
-    taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows']
+    taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks', 'name']
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
@@ -137,8 +137,10 @@ def writeTasks(csvFile, schedule):
                 task.append(route[t].priority)
                 task.append(route[t].required)
                 task.append(route[t].timeWindows)
+                task.append([int(x) for x in route[t].dependencyTasks])
+                task.append(route[t].name)
+
                 taskList.append(task)
-            taskList.append([])
         print "taskList", taskList
         for task in taskList:
             writer.writerow(task)

@@ -1206,6 +1206,7 @@ def isBetterSchedule(sched1, sched2):
     sum1 = sched1.getProfit()
     sum2 = sched2.getProfit()
     return sum1 > sum2
+
 '''
 @return: schedule object containing all of the routes and tasks from the original solution
 '''

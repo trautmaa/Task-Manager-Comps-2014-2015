@@ -118,13 +118,15 @@ def solve(csvFile):
     # (read documentation)
     pool.join()
     
-#     bestSched = helperFunctions.createOptimalSchedule(taskList, bestSched[1:])
+    bestSched = helperFunctions.createOptimalSchedule(taskList, bestSched[1:])
+    
+    
     
     print "Wow you made it"
     print "best schedule\n", bestSched
     print "profit", bestProfit
     print "primal bound", primalBound
-    return bestSched[1:]
+    return bestSched
     
 
 '''
@@ -450,7 +452,9 @@ def main():
         stoppingTime = int(sys.argv[2])
     else:
         stoppingTime = float("inf")
-    solve(testFile)
+    schedule = solve(testFile)
+    
+    helperFunctions.writeTasks("pulseSched.csv", schedule)
 
     
 if __name__ == '__main__':
