@@ -37,43 +37,54 @@ def setup():
 
 def setupHelper():
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
-    global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight
-    global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects
-    global exitButton
+    global firstCalDraw, buttonHighlightSize, algButtonsHeight, testButtonsHeight, timeButtonsHeight
+    global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects, timeBooleans
+    global exitButton, timeList, timeRects, backButton
     
     firstCalDraw = [True]
     
     buttonTextSize = 32
-    algButtonsHeight = 225
-    fileButtonsHeight = 500
+    algButtonsHeight = height/6
+    fileButtonsHeight = 2 * height / 6
+    timeButtonsHeight = 3 * height / 6
     buttonFunctsFrontEnd = ["Okay!", "VNS",  "Greedy", "IntProg", "Pulse"]
     buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
     fileList = ["newTest", "newTest2"]
+    timeList = ["  3  ", "  15  ", "  60  "]
     buttonHighlightSize = 10
     buttonWidth = 10
     buttonHeight = 80
     
     exitButton = [False, "Exit", 20, height - buttonHeight - 20, buttonWidth + textWidth("Exit"), buttonHeight]
+    backButton = [False, "Back", width - 20 - textWidth("Back") - buttonWidth, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
     
     #initialize empty list; leave room for OKAY button dimensions
     buttonRects = [0] * (len(buttonFunctsFrontEnd))
     fileRects = [0] * (len(fileList))
+    timeRects = [0] * (len(timeList))
     textSize(buttonTextSize)
-    buttonRects[0] = [width/2 - textWidth(buttonFunctsFrontEnd[0])/2, height * 2 / 3]
+    buttonRects[0] = [width/2 - textWidth(buttonFunctsFrontEnd[0])/2, height * 4 / 6]
     
     #math
     totalFunctionButtonsWidth = 0
     for i in range(1, len(buttonFunctsFrontEnd)):
-        #20 is the space between buttons
+        #60 is the space between buttons
         totalFunctionButtonsWidth +=  textWidth(buttonFunctsFrontEnd[i]) + 2 * buttonHighlightSize + 60
     totalFunctionButtonsWidth -= 2 * buttonHighlightSize + 60
     
     #moreMath
     totalFileButtonsWidth = 0
     for i in range(len(fileList)):
-        #20 is the space between buttons
+        #60 is the space between buttons
         totalFileButtonsWidth +=  textWidth(fileList[i]) + 2 * buttonHighlightSize + 60
     totalFileButtonsWidth -= 2 * buttonHighlightSize + 60
+    
+    #moreMath
+    totalTimeButtonsWidth = 0
+    for i in range(len(timeList)):
+        #120 is the space between buttons
+        totalTimeButtonsWidth +=  textWidth(timeList[i]) + 2 * buttonHighlightSize + 120
+    totalTimeButtonsWidth -= 2 * buttonHighlightSize + 120
     
     #populate buttonRects list
     for b in range(1, len(buttonFunctsFrontEnd)):
@@ -96,11 +107,24 @@ def setupHelper():
             rectX = startingX + textWidth(fileList[b-1]) + 2 * buttonHighlightSize + 60
         rectY = fileButtonsHeight
         fileRects[b] = [rectX, rectY]
+
+    #populate timeRects list
+    for b in range(len(timeList)):
+        if b == 0:
+            startingX = width/2 - totalTimeButtonsWidth/2
+            rectX = startingX
+        else:
+            startingX = timeRects[b-1][0]
+            rectX = startingX + textWidth(timeList[b-1]) + 2 * buttonHighlightSize + 120
+        rectY = timeButtonsHeight
+        timeRects[b] = [rectX, rectY]
     
     #initialize buttonFunctsFrontEnd list to all False, since none are clicked to begin with
     buttonList = len(buttonFunctsFrontEnd) * [False]  
     
     fileBooleans = len(fileList) * [False]
+    
+    timeBooleans = len(timeList) * [False]
     
     drawButtons()
     
@@ -128,7 +152,7 @@ def initialize():
     global dayWidth, dayHeight, headerHeight, sideBarWidth, mapDimension, mapX, mapY, maxX, maxY
     global textX, textY, textDimensionX, textDimensionY, clickedOkay
     global taskRects, taskMapDots, dayRects, colorList, rectColors
-    global schedule, minWidth, timeList, timeWindowRects, maxNumTimeWindows
+    global schedule, minWidth, sideTimeList, timeWindowRects, maxNumTimeWindows
     global blues, greens, oranges, yellows, bgColor
     
     clickedOkay = [False]    
@@ -157,7 +181,7 @@ def initialize():
                  color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
     
     #what times we see on the sidebar
-    timeList = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6]
+    sideTimeList = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6]
     
     
     smooth()
@@ -203,7 +227,13 @@ def drawButtons():
     for b in range(len(fileList)):
         buttonRect = fileRects[b]
         drawButton(buttonRect[0], buttonRect[1], fileList[b], buttonHeight)
+    for b in range(len(timeList)):
+        buttonRect = timeRects[b]
+        drawButton(buttonRect[0], buttonRect[1], timeList[b], buttonHeight)
+        
+    #exit button is kinda its own thing
     drawButton(exitButton[2], exitButton[3], exitButton[1], buttonHeight)
+    
     
         
 def drawButton(x, y, buttonText, buttonHeight):
@@ -239,9 +269,21 @@ def highlightButtons():
             rectX2 = buttonWidth + 2 * buttonHighlightSize + textWidth(fileList[b])
             rectY2 = buttonHeight + 2 * buttonHighlightSize
             rect(rectX1, rectY1, rectX2, rectY2, 15)
-            
+        
+    for b in range(len(timeList)):
+        #if it has been selected, highlight it..
+        if timeBooleans[b] == True:
+            buttonRect = timeRects[b]
+            fill(greens[3], alpha = 100)
+            rectX1 = buttonRect[0] - buttonHighlightSize
+            rectY1 = buttonRect[1] - buttonHighlightSize
+            rectX2 = buttonWidth + 2 * buttonHighlightSize + textWidth(timeList[b])
+            rectY2 = buttonHeight + 2 * buttonHighlightSize
+            rect(rectX1, rectY1, rectX2, rectY2, 15)    
     
 def mousePressed():
+    
+    #pick a file
     for r in range(len(fileRects)):
         rect = fileRects[r]
         if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(fileList[r]):
@@ -251,6 +293,17 @@ def mousePressed():
                         fileBooleans[j] = False
                 fileBooleans[r] = not fileBooleans[r]
     
+    #pick a time
+    for r in range(len(timeRects)):
+        rect = timeRects[r]
+        if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(timeList[r]):
+            if mouseY > rect[1] and mouseY < rect[1] + buttonHeight:
+                if True in timeBooleans:
+                    for j in range(len(timeList)):
+                        timeBooleans[j] = False
+                timeBooleans[r] = not timeBooleans[r]
+    
+    #pick an algorithm, and also deal with the "okay" button
     for r in range(len(buttonRects)):
         rect = buttonRects[r]
         if mouseX > rect[0] and mouseX < rect[0] + buttonWidth + textWidth(buttonFunctsFrontEnd[r]):
@@ -274,9 +327,18 @@ def mousePressed():
                             if buttonList[j] == True:
                                 buttonList[j] = False
                     buttonList[r] = not buttonList[r]
+                    
+    #pick the exit button
     if mouseX > exitButton[2] and mouseX < exitButton[2] + exitButton[4]:
         if mouseY > exitButton[3] and mouseY < exitButton[3] + exitButton[5]:
             exit()
+            
+    #pick the back button
+    if mouseX > backButton[2] and mouseX < backButton[2] + backButton[4]:
+        if mouseY > backButton[3] and mouseY < backButton[3] + backButton[5]:
+            #goBack
+            setup()
+
 
 def setColors():
     for d in range(len(schedule[0])):
@@ -307,6 +369,7 @@ def calendarDraw():
     whichTask, whichDay = update(mouseX, mouseY, whichTask, whichDay)
     drawScreen()
     drawButton(exitButton[2], exitButton[3], exitButton[1], buttonHeight)
+    drawButton(backButton[2], backButton[3], backButton[1], buttonHeight)
     drawMap(whichDay, whichTask)
     drawTextBox(whichDay, whichTask)
     highlight(whichTask, whichDay)
@@ -315,16 +378,22 @@ def calendarDrawInit():
 
     fileName = ""
     
+    #get the name of the test file we are to use
     for b in range(len(fileBooleans)):
         if fileBooleans[b]:
             fileName = fileList[b] + ".csv"
+    
+    #get an integer value for running time
+    for b in range(len(timeBooleans)):
+        if timeBooleans[b]:
+            timeValue = int(timeList[b])
+            print "$$", timeValue
             
-
     #do stuff so that we can call different algorithms depending on user's selection
     csvFile = pwd(fileName)
     #setup for VNS
     if buttonList[1] == True:
-        stoppingCondition = 15
+        stoppingCondition = timeValue
         schedule[0], useless = solve(csvFile, stoppingCondition)
         
 #         schedule os.system("python " + vns + " " + file)
@@ -342,12 +411,18 @@ def calendarDrawInit():
     
     #setup for Integer
     elif buttonList[3] == True:
-        pass
+        fileName = pwd(fileName)
+        output = os.system("python " + pwd("integerProgram.py") + " " + fileName + " " + str(timeValue))
+        print output
+        sched = createTasksFromCsv.getTaskList("intProgSched.csv")
+        order = range(len(sched))
+        schedule[0] = helperFunctions.createOptimalSchedule(sched, order)
+        
     
     #setup for Pulse
     elif buttonList[4]:
         fileName = pwd(fileName)
-        output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " 10")
+        output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " " + str(timeValue))
         print output
         sched = createTasksFromCsv.getTaskList("pulseSched.csv")
         order = range(len(sched))
@@ -527,7 +602,7 @@ def setupScreen():
         y = (headerHeight + ((i/100.0 - .07) * dayHeight))
         strokeWeight(2)
         stroke(0, 0, 0, 50)
-        timeText = "%d:%02d" % (timeList[i/10 - 1], 00)
+        timeText = "%d:%02d" % (sideTimeList[i/10 - 1], 00)
         text(timeText, 0, y)
 
         #limit line width to width of days
