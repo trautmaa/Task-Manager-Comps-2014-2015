@@ -291,6 +291,7 @@ def inBounds(node, path, pBound):
         return False
     return True
 
+# AVERY: something is still up with bounds: if they go too far down, they prune the optimal branch
 
 def noDetour(node, origPath, unvisitedNodes, proposedEnd):
     '''
