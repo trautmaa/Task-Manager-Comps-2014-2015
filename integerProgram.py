@@ -411,6 +411,8 @@ def main():
     print
     print "profit is: " + str(solvedSchedule.getProfit())
     print
+    print "number of tasks is: ", solvedSchedule.getNumRequired() + solvedSchedule.getNumOptional()
+    print
     helperFunctions.writeTasks("intProgSched.csv", solvedSchedule)
 
 

@@ -141,7 +141,6 @@ def writeTasks(csvFile, schedule):
                 task.append(route[t].name)
 
                 taskList.append(task)
-        print "taskList", taskList
         for task in taskList:
             writer.writerow(task)
     return csvFile

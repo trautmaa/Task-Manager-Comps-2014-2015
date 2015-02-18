@@ -7,6 +7,7 @@ import time
 from copy import deepcopy
 
 import random
+import copy
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']
 
@@ -46,14 +47,16 @@ def setDependencies(taskList, numDependencies):
             task.append([])
     
         
-def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength):
+def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength, isConsistent):
     timeWindows = []
     releaseTime = task[2]
     duration = task[3]
     deadline = task[4]
-    daysWithTimeWindows = random.sample(range(numDays), random.randint(1, numDays))
-    daysWithTimeWindows.sort()
-    print daysWithTimeWindows
+    if isConsistent:
+        daysWithTimeWindows = range(numDays)
+    else:
+        daysWithTimeWindows = random.sample(range(numDays), random.randint(1, numDays))
+        daysWithTimeWindows.sort()
     for day in range(numDays):
         dayWindows = []
         if day in daysWithTimeWindows:
@@ -65,7 +68,6 @@ def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength):
             else:
                 maxTimeWindowLength = dayLength / 4
             
-            # if a time window can be scheduled on that day for this task
             for window in range(numberTimeWindows):
                 timeWindowLength = random.randint(int(duration * 1.5), maxTimeWindowLength)
                 if window == 0:
@@ -79,10 +81,38 @@ def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength):
     
         timeWindows.append(dayWindows)
     
-    # to replicate old conditions:
-    # task.append([[releaseTime, deadline]])
+    if isConsistent:
+        timeWindows = makeConsistent(timeWindows, dayLength)
 
     task.append(timeWindows)
+
+    # if we are going to do this permanently we should remove release times/deadlines from other functions
+    task[2] = getEarliestWindowStart(timeWindows)
+    task[4] = getLatestWindowEnd(timeWindows)
+
+def getEarliestWindowStart(timeWindows):
+    for day in timeWindows:
+        for window in day:
+            return window[0]
+
+def getLatestWindowEnd(timeWindows):
+    for day in reversed(timeWindows):
+        for window in reversed(day):
+            return window[1]
+
+
+'''
+Given a list of all time windows for a task, modifies them so that
+all the windows occur at the same relative time every day as they do
+on the first day.
+'''
+def makeConsistent(timeWindows, dayLength):
+    firstDayWindows = timeWindows[0]
+    for dayNumber, day in enumerate(timeWindows):
+        timeWindows[dayNumber] = copy.deepcopy(firstDayWindows)
+        for index, window in enumerate(firstDayWindows):
+            timeWindows[dayNumber][index] = ((window[0] + dayLength * dayNumber), (window[1] + dayLength * dayNumber))
+    return timeWindows
     
 def getTimeWindowStart(dayLength, dayWindows, timeWindowLength, day):
     isPossible = False
@@ -109,7 +139,7 @@ that is returned is: [xCoord, yCoord, releaseTime, duration, deadline]
 is later or the same as the release time.
 '''
 def generateTask(xConstraint, yConstraint, releaseTime, minDuration, maxDuration, deadline, priority,
-    isRequired, numDays, maxNumTimeWindows, dayLength):
+    isRequired, isConsistent, numDays, maxNumTimeWindows, dayLength):
     assert (deadline >= releaseTime)
     task = []
     
@@ -119,7 +149,7 @@ def generateTask(xConstraint, yConstraint, releaseTime, minDuration, maxDuration
     task.append(random.randint(task[2] + task[3], deadline))
     setPriorityOfTask(task, priority, isRequired)
     setRequiredOfTask(task)
-    setTimeWindowsOfTask(task, numDays, maxNumTimeWindows, dayLength)
+    setTimeWindowsOfTask(task, numDays, maxNumTimeWindows, dayLength, isConsistent)
 
     return task
 
@@ -149,30 +179,34 @@ generateTask to create the task to write.
 @param numberRequired: the number of tasks to be set to be required
 @param numDays: the number of days in the scheduled
 @param maxNumTimeWindows: the highest number of time windows a task can be given
-@param percentDependencies: the (decimal) percentage of tasks that will be given one other task as a dependency
+@param numberDependencies: the number of tasks to be given a dependency on one other task
+@param numberConsistent: the number of tasks that have the same time windows every day
 @param csvFile: the name of the csv file to write the schedule to
 
 @return: the name of the csv file
 '''
 def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, durationMax, deadlineRange,
-    priorityRange, numberRequired, numDays, maxNumTimeWindows, percentDependencies, csvFile):
+    priorityRange, numberRequired, numDays, maxNumTimeWindows, numberDependencies, numberConsistent, csvFile):
     taskList = []
-    numDependencies = int(n * percentDependencies)
     
     isRequired = [False for task in range(n)]
+    isConsistent = [False for task in range(n)]
     requiredIndices = random.sample(range(n), numberRequired)
+    consistentIndices = random.sample(range(n), numberConsistent)
     for i in requiredIndices:
         isRequired[i] = True
+    for i in consistentIndices:
+        isConsistent[i] = True
 
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationMin, durationMax,
-                deadlineRange, priorityRange, isRequired[i], numDays, maxNumTimeWindows, dayLength))
+                deadlineRange, priorityRange, isRequired[i], isConsistent[i], numDays, maxNumTimeWindows, dayLength))
         maxSumProfit = (n + 1) * priorityRange + 1
         changeRequiredTasksProfit(taskList, maxSumProfit)
-        setDependencies(taskList, numDependencies)
+        setDependencies(taskList, numberDependencies)
         for task in taskList:
             writer.writerow(task)
     return csvFile
@@ -180,23 +214,27 @@ def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, dur
 def main():
 
     # make sure these make sense!
-    numberOfTasks = 20
+    numberOfTasks = 64
     numDays = 3
     xRange = 60
     yRange = 60
-    durationMin = 0 # tasks will receive durations no shorter than this
-    durationMax = 240 # tasks will receive durations no longer than this
+    durationMin = 1 # tasks will receive durations no shorter than this
+    durationMax = 120 # tasks will receive durations no longer than this
+
+    # these do nothing right now:
     releaseTimeRange = (dayLength * numDays) - durationMax # tasks will receive release times no later than this
     deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
-    priorityRange = 3 # optional tasks assigned priority between 1 and this
-    numberRequired = int(.1 * numberOfTasks) # number of required tasks
+
+    priorityRange = 10 # optional tasks assigned priority between 1 and this
+    numberRequired = 6 # number of required tasks
     maxTaskTimeWindows = 2 # max number of time windows a task can have on a particular day
-    percentDependencies = 0.5 # percent of tasks with 1 dependency (must be <.5 right now)
-    assert(percentDependencies <= 0.5)
+    numberDependencies = 0 # percent of tasks with 1 dependency (must be <.5 right now)
+    numberConsistent = 0
+    assert(numberDependencies <= numberOfTasks / 2)
     
     writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
         durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
-        numDays, maxTaskTimeWindows, percentDependencies, "newTest.csv")
+        numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "newTest.csv")
 
 
 if __name__ == '__main__':
