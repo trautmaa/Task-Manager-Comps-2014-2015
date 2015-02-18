@@ -231,10 +231,10 @@ def main():
     numberDependencies = 0 # percent of tasks with 1 dependency (must be <.5 right now)
     numberConsistent = 0
     assert(numberDependencies <= numberOfTasks / 2)
-    
-    writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
-        durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
-        numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "newTest.csv")
+    for i in range(10):
+        writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
+            durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
+            numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "testing" + str(i)             + ".csv")
 
 
 if __name__ == '__main__':

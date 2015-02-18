@@ -18,24 +18,30 @@ import os
 import createTests
 
 OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number Tasks Scheduled", "Number of Required Tasks Schedules", "Number of Optional Tasks Scheduled", "Total Waiting Time", "Total Working Time", "Total Distance Traveled", "Test Name", "Number of Available Tasks", "Number of Days", "Average Duration of the Tasks", "Average Number of Time Windows Per Task", "Average Length of All Time Windows", "Number of Available Release Tasks"]]
-OUTPUTFILENAME = "TESTRESULTS.csv" 
+OUTPUTFILENAME = "TESTRESULTS" 
 
 
 '''
 runs all the algorithms you want to with a timeLimit and a list
 of test names.  It then outputs the results.
 '''
-def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
+def runAlreadyCreatedTestsForXTime(testList, timeLimit): 
+    start = time.time()
+    constant = 1
     for test in testList:
+        print test, "test", "\n"
         runGreedies([test])
-        runPulse([test], timeLimit)
+        #runPulse([test], timeLimit)
         #runVNS([test], timeLimit)
         #runTimedRandomIteration(testList, timeLimit)
         #runTimedBruteForce(testList, timeLimit)
         #runIntegerProgram(testList, timeLimit)
+        if (time.time() - start) >= 3600*constant: #Outputs every hour...
+            constant += 1
+            outputOutput(time.time()-start)
 
 
-    outputOutput()
+    outputOutput("LAST OUTPUT")
 
 
     
@@ -125,7 +131,6 @@ def getInfoFromSchedule(taskList):
     for task in taskList:
         totalDuration += int(task.duration)
         for day in task.timeWindows:
-            print day
             totalNumTimeWindows += len(day)
             for window in day:
                 totalTimeWindowLength += int(window[1]) - int(window[0])
@@ -134,7 +139,7 @@ def getInfoFromSchedule(taskList):
     numTasks = len(taskList)
     avgDuration = totalDuration/float(numTasks)
     avgNumTimeWindows = totalNumTimeWindows/float(numTasks)
-    avgTimeWindowLength = totalTimeWindowLength/avgNumTimeWindows
+    avgTimeWindowLength = totalTimeWindowLength/totalNumTimeWindows
     return avgDuration, avgNumTimeWindows, avgTimeWindowLength, numReleaseTasks
         
                 
@@ -162,8 +167,9 @@ def addToOutput(schedule, timeRan, testName, algorithm):
 Once we have ran all algorithms on all test cases, we can output
 the results to a csv.
 '''
-def outputOutput():
-    with open(OUTPUTFILENAME, 'wb') as f:
+def outputOutput(timeStamp):
+    outputFile = str(os.getcwd()) + "/Results Folder/" + OUTPUTFILENAME + str(timeStamp) + ".csv"
+    with open(outputFile, 'wb') as f:
         writer = csv.writer(f)
         for row in OUTPUT:
             writer.writerow(row)
