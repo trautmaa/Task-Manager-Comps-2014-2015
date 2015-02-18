@@ -17,7 +17,7 @@ import csv
 import os
 import createTests
 
-OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number of Total Tasks", "Number of Required Tasks", "Number of Optional Tasks", "Total Waiting Time", "Total WorkingTime", "Total Distance Traveled", "Test Name"]]
+OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number Tasks Scheduled", "Number of Required Tasks Schedules", "Number of Optional Tasks Scheduled", "Total Waiting Time", "Total Working Time", "Total Distance Traveled", "Test Name", "Number of Available Tasks", "Number of Days", "Average Duration of the Tasks", "Average Number of Time Windows Per Task", "Average Length of All Time Windows", "Number of Available Release Tasks"]]
 OUTPUTFILENAME = "TESTRESULTS.csv" 
 
 
@@ -27,9 +27,9 @@ of test names.  It then outputs the results.
 '''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit):    
     for test in testList:
-        #runGreedies(testList)
+        runGreedies([test])
         runPulse([test], timeLimit)
-        runVNS([test], timeLimit)
+        #runVNS([test], timeLimit)
         #runTimedRandomIteration(testList, timeLimit)
         #runTimedBruteForce(testList, timeLimit)
         #runIntegerProgram(testList, timeLimit)
@@ -56,7 +56,7 @@ Runs the timed version of brute force on our list of testFiles.
 def runTimedBruteForce(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = bruteForce.runBruteForceAlgWithTimeLimit(testName, timeLimit)###### THIS WONT WORK YET!!!!! 
+        schedule = bruteForce.runBruteForceAlgWithTimeLimit(testName, timeLimit)
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "TBF")
 
@@ -67,7 +67,7 @@ Runs the timed version of the integerProgram on our list of testFiles.
 def runIntegerProgram(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)#?????????????
+        schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)
         timeRan = time.time()-start
         addToOutput(schedule, timeRan, testName, "IP")
         
@@ -95,7 +95,7 @@ Runs all greedies on our list of testFiles.
 '''
 def runGreedies(testList):
     greediesList = [greedyByOrder.runGreedyByOrder,  greedyByPresentChoice.runGreedyByPresentChoice]
-    orderings = [greedyByOrder.orderOptionalByDeadline, greedyByOrder.orderForReleaseTasks, greedyByOrder.orderByPriorityOverAvailability, greedyByOrder.orderOptionalByDeadline]
+    orderings = [greedyByOrder.orderOptionalByDeadline, greedyByOrder.orderForReleaseTasks, greedyByOrder.orderByPriorityOverAvailability, greedyByOrder.orderByPriority]
     
     for i in range(len(greediesList)):
         if i == 0:
@@ -104,7 +104,15 @@ def runGreedies(testList):
                     start = time.time()
                     schedule = greediesList[i](testName, orderings[j])
                     timeRan = time.time()-start
-                    addToOutput(schedule, timeRan, testName, (str(greediesList[i]) + str(orderings[j])))
+                    if j == 0:
+                        algName = "GBOOBD"
+                    elif j == 1: 
+                        algName = "GBOFRT"
+                    elif j == 2:
+                        algName = "GBOPOA"
+                    else:
+                        algName = "GBOOBP"
+                    addToOutput(schedule, timeRan, testName, algName)
         else:
             for testName in testList:
                 start = time.time()
@@ -112,6 +120,25 @@ def runGreedies(testList):
                 timeRan = time.time()-start
                 addToOutput(schedule, timeRan, testName, "GPC")
 
+def getInfoFromSchedule(taskList):
+    totalDuration, totalNumTimeWindows, totalTimeWindowLength, numReleaseTasks = 0, 0, 0, 0
+    for task in taskList:
+        totalDuration += int(task.duration)
+        for day in task.timeWindows:
+            print day
+            totalNumTimeWindows += len(day)
+            for window in day:
+                totalTimeWindowLength += int(window[1]) - int(window[0])
+        if len(task.dependencyTasks) != 0:
+            numReleaseTasks += 1
+    numTasks = len(taskList)
+    avgDuration = totalDuration/float(numTasks)
+    avgNumTimeWindows = totalNumTimeWindows/float(numTasks)
+    avgTimeWindowLength = totalTimeWindowLength/avgNumTimeWindows
+    return avgDuration, avgNumTimeWindows, avgTimeWindowLength, numReleaseTasks
+        
+                
+                
 '''
 This function just adds data associated with a result of an
 algorithm on a test file to OUTPUT, which will later be written to
@@ -125,7 +152,10 @@ def addToOutput(schedule, timeRan, testName, algorithm):
     waitingTime = schedule.getWaitingTime()
     workingTime = schedule.getWorkingTime()
     distanceTraveled = schedule.getDistanceTraveled()
-    OUTPUT.append([algorithm, timeRan, profit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName])
+    taskList = createTasksFromCsv.getTaskList(testName)
+    numTasks, numDays = len(taskList), len(taskList[0].timeWindows)
+    avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks = getInfoFromSchedule(taskList)
+    OUTPUT.append([algorithm, timeRan, profit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName[-20:], numTasks, numDays, avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks])
 
     
 '''
@@ -138,15 +168,31 @@ def outputOutput():
         for row in OUTPUT:
             writer.writerow(row)
 
-def getFiles(n):
+            
+            
+def sortAndRenameFiles(testList):
+    sortedTestList = []
+    for i in range(10):  #### UNDER THE ASSUMPTION THAT WE WONT HAVE MORE THAN 10 OF ONE TEST
+        for test in testList:
+            if str(i) in test:
+                sortedTestList.append(test) 
+    for i in range(len(sortedTestList)):
+        sortedTestList[i] = str(os.getcwd()) + "/Testing Folder/" + sortedTestList[i]
+    return sortedTestList
+            
+
+def getFiles():
     testList = []
-    for i in range(n):
-        testList.append(str(os.getcwd())+"/Testing Folder/testing" +str(i)+".csv")
+    path = str(os.getcwd()) + "/Testing Folder/"
+    testList = os.listdir(path)
+    testList.remove('.DS_Store')
+    testList = sortAndRenameFiles(testList)
     return testList
         
 def main():
-    testList = getFiles(10)
-    runAlreadyCreatedTestsForXTime(testList, 10)
+    testList = getFiles()
+    print testList
+    runAlreadyCreatedTestsForXTime(testList, 2)
                                 
 if __name__ == '__main__':
 	main()
