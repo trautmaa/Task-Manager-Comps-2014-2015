@@ -10,6 +10,8 @@ import random
 
 taskFeatures = ['xCoord', 'yCoord', 'releaseTime', 'duration', 'deadline', 'priority', 'required', 'timeWindows', 'dependencyTasks']
 
+dayLength = 1440
+
 '''
 Sets the priority of a task to a random integer between 1 and priority.
 If a task is required, the priority is set to -1 as a placeholder and then
@@ -176,7 +178,6 @@ def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, dur
     return csvFile
 
 def main():
-    dayLength = 1440
 
     # make sure these make sense!
     numberOfTasks = 20
