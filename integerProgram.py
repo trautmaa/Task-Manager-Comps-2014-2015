@@ -18,7 +18,6 @@ import createTasksFromCsv
 import helperFunctions
 
 from Objects import Route, Task, Schedule
-from vns import isFeasible
 
 defaultFileName = 'newTest.csv'
 

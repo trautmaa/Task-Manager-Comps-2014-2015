@@ -48,37 +48,56 @@ def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength):
     timeWindows = []
     releaseTime = task[2]
     duration = task[3]
-    deadline = task[4]    
+    deadline = task[4]
+    daysWithTimeWindows = random.sample(range(numDays), random.randint(1, numDays))
+    daysWithTimeWindows.sort()
+    print daysWithTimeWindows
     for day in range(numDays):
         dayWindows = []
-        # if a time window can be scheduled on that day for this task
-        if (((day + 1) * dayLength) - duration - 1) >= releaseTime and deadline >= (day * dayLength + duration):
-
-            # either deadline / duration, or dayLength / duration, or (endOfDay - releaseTime) / duration
-            maxNumTimeWindows = min((dayLength - 1), ((day + 1) * dayLength - releaseTime), deadline) / duration
-            # further constrain by global parameter
-            maxNumTimeWindows = min(maxNumTimeWindows, maxTaskTimeWindows)
-            endingWindowTime = 0
-            for window in range(maxNumTimeWindows):
-                if endingWindowTime + duration >= min(deadline, (day + 1) * dayLength):
-                    break
-                else:
-                    startingWindowTime = random.randint(max(endingWindowTime, releaseTime, day * dayLength), min(deadline, (day + 1) * dayLength - 1) - duration)
-                    endingWindowTime = random.randint((startingWindowTime + duration), min(deadline, (day + 1) * dayLength - 1))
-                    dayTimeWindow = (startingWindowTime, endingWindowTime)
-                    assert(startingWindowTime >= releaseTime)
-                    assert(endingWindowTime <= deadline)
-                    assert((endingWindowTime - startingWindowTime) >= duration)
-                    assert(endingWindowTime / dayLength == startingWindowTime / dayLength)
-                    dayWindows.append(dayTimeWindow)
+        if day in daysWithTimeWindows:
+            numberTimeWindows = random.randint(1, maxTaskTimeWindows)
+            numberTimeWindows = min(numberTimeWindows, dayLength / duration)
+            # bad things will happen if maxTaskTimeWindows > 3
+            if maxTaskTimeWindows == 3:
+                maxTimeWindowLength = dayLength / 6
+            else:
+                maxTimeWindowLength = dayLength / 4
             
-        
+            # if a time window can be scheduled on that day for this task
+            for window in range(numberTimeWindows):
+                timeWindowLength = random.randint(int(duration * 1.5), maxTimeWindowLength)
+                if window == 0:
+                    timeWindowStart = random.randint(1 + day * dayLength, (day + 1) * dayLength - timeWindowLength)
+                else:
+                    timeWindowStart = getTimeWindowStart(dayLength, dayWindows, timeWindowLength, day)
+                
+                timeWindowEnd = timeWindowStart + timeWindowLength
+                dayWindows.append((timeWindowStart, timeWindowEnd))
+                dayWindows.sort()
+    
         timeWindows.append(dayWindows)
     
     # to replicate old conditions:
     # task.append([[releaseTime, deadline]])
 
     task.append(timeWindows)
+    
+def getTimeWindowStart(dayLength, dayWindows, timeWindowLength, day):
+    isPossible = False
+    while not isPossible:   
+        position = random.randint(0, len(dayWindows))
+        if position == 0:
+            earliestStart = 1 + day * dayLength
+            latestEnd = dayWindows[0][0]
+        elif position == len(dayWindows):
+            earliestStart = dayWindows[position - 1][1]
+            latestEnd = (day + 1) * dayLength
+        else:
+            earliestStart = dayWindows[position - 1][1]
+            latestEnd = dayWindows[position][0]
+        if timeWindowLength <= latestEnd - earliestStart:
+            isPossible = True
+    return random.randint(earliestStart, latestEnd - timeWindowLength)
 
 '''
 Generates a task as a list so that it may be written to a csv file.
@@ -165,12 +184,12 @@ def main():
     xRange = 60
     yRange = 60
     durationMin = 0 # tasks will receive durations no shorter than this
-    durationMax = 200 # tasks will receive durations no longer than this
+    durationMax = 240 # tasks will receive durations no longer than this
     releaseTimeRange = (dayLength * numDays) - durationMax # tasks will receive release times no later than this
     deadlineRange = dayLength * numDays # tasks will be assigned deadlines no later than this
     priorityRange = 3 # optional tasks assigned priority between 1 and this
     numberRequired = int(.1 * numberOfTasks) # number of required tasks
-    maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
+    maxTaskTimeWindows = 2 # max number of time windows a task can have on a particular day
     percentDependencies = 0.5 # percent of tasks with 1 dependency (must be <.5 right now)
     assert(percentDependencies <= 0.5)
     
