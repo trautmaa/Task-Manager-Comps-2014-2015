@@ -16,9 +16,8 @@ Multiprocessing tutorial:
 import multiprocessing
 import helperFunctions, copy, sys, time
 import createTasksFromCsv, collections
+from createTests import dayLength
 
-# maybe there is a better fix than this?
-dayLength = 1440
 
 def solve(csvFile):
     global timeLimit, taskList, delta, tShoe, reducedBoundsMatrix, timeElapsed
