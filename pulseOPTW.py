@@ -193,9 +193,6 @@ def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [Fa
         return []
     
     best = max(result, key = lambda x: getProfit(x))
-    if getProfit(best) == pBound[0]:
-        print "same as primal bound"
-        print best
     if not definingBounds[0] and getProfit(best) > pBound[0]:
         print "%s RESETTING1 PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], getProfit(best))
         print best#, "\a"
