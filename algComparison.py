@@ -198,7 +198,7 @@ def getFiles():
 def main():
     testList = getFiles()
     print testList
-    runAlreadyCreatedTestsForXTime(testList, 5)
+    runAlreadyCreatedTestsForXTime(testList, 300)
                                 
 if __name__ == '__main__':
 	main()
