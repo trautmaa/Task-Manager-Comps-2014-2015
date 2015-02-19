@@ -169,7 +169,15 @@ class Schedule:
                 if task != None:
                     profit += task.getProfit()
         return profit
-    
+
+    def getOptionalProfit(self):
+        profit = 0
+        for route in self.routeList:
+            for task in route.taskList:
+                if task.required == str(0):
+                    profit += task.getProfit()
+        return profit
+
     def getNumRequired(self):
         numRequired = 0
         for route in self.routeList:
@@ -193,9 +201,9 @@ class Schedule:
                 if i == len(route.taskList)-1:
                     pass
                 else:
-                    extraWaitingTime = (route.endingTimes[i+1]-  route.endingTimes[i])
-                    extraWaitingTime -= route.taskList[i+1].duration
-                    extraWaitingTime -= helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i+1])
+                    extraWaitingTime = (route.endingTimes[i + 1] - route.endingTimes[i])
+                    extraWaitingTime -= route.taskList[i + 1].duration
+                    extraWaitingTime -= helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i + 1])
                     waitingTime += extraWaitingTime
         return waitingTime
     
@@ -210,10 +218,10 @@ class Schedule:
         distanceTraveled = 0
         for route in self.routeList:
             for i in range(len(route.taskList)):
-                if i == len(route.taskList)-1:
+                if i == len(route.taskList) - 1:
                     pass
                 else:
-                    extraDistance = helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i+1])
+                    extraDistance = helperFunctions.getDistanceBetweenTasks(route.taskList[i], route.taskList[i + 1])
                     distanceTraveled += extraDistance
         return distanceTraveled
         

@@ -17,10 +17,10 @@ import csv
 import os
 import createTests
 
-OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number Tasks Scheduled", "Number of Required Tasks Schedules", "Number of Optional Tasks Scheduled", 
-           "Total Waiting Time", "Total Working Time", "Total Distance Traveled", 
-           "Test Name", "Number of Available Tasks", "Number of Days", "Average Duration of the Tasks", 
-           "Average Number of Time Windows Per Task", "Average Length of All Time Windows", "Number of Available Release Tasks"]]
+OUTPUT = [["Algorithm", "Time Ran", "Profit", "Optional Profit", "Tasks Scheduled", "Required Tasks Scheduled", "Optional Tasks Scheduled", 
+           "Waiting Time", "Working Time", "Distance Traveled", 
+           "Test Name", "Available Tasks", "Days", "Average Duration of Tasks", 
+           "Average Time Windows Per Task", "Average Length of Time Windows", "Available Release Tasks"]]
 OUTPUTFILENAME = "TESTRESULTS" 
 
 
@@ -41,7 +41,7 @@ def runAlreadyCreatedTestsForXTime(testList, timeLimit):
         runIntegerProgram([test], timeLimit)
         if (time.time() - start) >= 3600 * constant: # Outputs every hour...
             constant += 1
-            outputOutput(time.time()-start)
+            outputOutput(time.time() - start)
 
 
     outputOutput("LAST OUTPUT")
@@ -154,6 +154,7 @@ a csv file.  More data may should be added but I don't know what???
 '''
 def addToOutput(schedule, timeRan, testName, algorithm):
     profit = schedule.getProfit()
+    optionalProfit = schedule.getOptionalProfit()
     numRequiredTasks = schedule.getNumRequired()
     numOptionalTasks = schedule.getNumOptional()
     numTotalTasks = numOptionalTasks + numRequiredTasks
@@ -163,7 +164,7 @@ def addToOutput(schedule, timeRan, testName, algorithm):
     taskList = createTasksFromCsv.getTaskList(testName)
     numTasks, numDays = len(taskList), len(taskList[0].timeWindows)
     avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks = getInfoFromSchedule(taskList)
-    OUTPUT.append([algorithm, timeRan, profit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName[-20:], numTasks, numDays, avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks])
+    OUTPUT.append([algorithm, timeRan, profit, optionalProfit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName[-20:], numTasks, numDays, avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks])
 
     
 '''

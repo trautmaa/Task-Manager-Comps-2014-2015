@@ -132,47 +132,47 @@ def main():
 	for i in range(10):
 		createBaselineTest(makeFilePath("baseline", i))
 
-		# createTaskNumberTest(makeFilePath("sixteenTask", i), 16)
-		# createTaskNumberTest(makeFilePath("thirtyTwoTask", i), 32)
-		# # 64 is baseline
-		# createTaskNumberTest(makeFilePath("oneTwentyEightTask", i), 128)
-		# createTaskNumberTest(makeFilePath("twoFiftySixTask", i), 256)
+		createTaskNumberTest(makeFilePath("sixteenTask", i), 16)
+		createTaskNumberTest(makeFilePath("thirtyTwoTask", i), 32)
+		# 64 is baseline
+		createTaskNumberTest(makeFilePath("oneTwentyEightTask", i), 128)
+		createTaskNumberTest(makeFilePath("twoFiftySixTask", i), 256)
 
-		# createDayNumberTest(makeFilePath("oneDay", i), 1)
-		# # 3 is baseline
-		# createDayNumberTest(makeFilePath("fiveDay", i), 5)
-		# createDayNumberTest(makeFilePath("sevenDay", i), 7)
+		createDayNumberTest(makeFilePath("oneDay", i), 1)
+		# 3 is baseline
+		createDayNumberTest(makeFilePath("fiveDay", i), 5)
+		createDayNumberTest(makeFilePath("sevenDay", i), 7)
 
-		# createMaxTimeWindowsTest(makeFilePath("oneWindow", i), 1)
-		# # 2 is baseline
-		# createMaxTimeWindowsTest(makeFilePath("threeWindow", i), 3)
+		createMaxTimeWindowsTest(makeFilePath("oneWindow", i), 1)
+		# 2 is baseline
+		createMaxTimeWindowsTest(makeFilePath("threeWindow", i), 3)
 
-		# createNumberRequiredTest(makeFilePath("zeroRequired", i), 0)
-		# # 8 is baseline
-		# createNumberRequiredTest(makeFilePath("sixteenRequired", i), 16)
-		# createNumberRequiredTest(makeFilePath("thirtyTwoRequired", i), 32)
+		createNumberRequiredTest(makeFilePath("zeroRequired", i), 0)
+		# 8 is baseline
+		createNumberRequiredTest(makeFilePath("sixteenRequired", i), 16)
+		createNumberRequiredTest(makeFilePath("thirtyTwoRequired", i), 32)
 
-		# createPriorityTest(makeFilePath("onePriority", i), 1)
-		# # 10 is baseline
-		# createPriorityTest(makeFilePath("oneHundredPriority", i), 100)
+		createPriorityTest(makeFilePath("onePriority", i), 1)
+		# 10 is baseline
+		createPriorityTest(makeFilePath("oneHundredPriority", i), 100)
 
-		# createLocationTest(makeFilePath("thirtyLocation", i), 30, 30)
-		# # 60, 60 is baseline
-		# createLocationTest(makeFilePath("oneHundredTwentyLocation", i), 120, 120)
-		# createLocationTest(makeFilePath("twoHundredFortyLocation", i), 240, 240)
+		createLocationTest(makeFilePath("thirtyLocation", i), 30, 30)
+		# 60, 60 is baseline
+		createLocationTest(makeFilePath("oneHundredTwentyLocation", i), 120, 120)
+		createLocationTest(makeFilePath("twoHundredFortyLocation", i), 240, 240)
 
-		# createDurationTest(makeFilePath("sixtyDuration", i), 1, 60)
-		# # 1, 120 is baseline
-		# createDurationTest(makeFilePath("twoHundredFortyDuration", i), 1, 240)
-		# createDurationTest(makeFilePath("threeHundredSixtyDuration", i), 1, 360)
+		createDurationTest(makeFilePath("sixtyDuration", i), 1, 60)
+		# 1, 120 is baseline
+		createDurationTest(makeFilePath("twoHundredFortyDuration", i), 1, 240)
+		createDurationTest(makeFilePath("threeHundredSixtyDuration", i), 1, 360)
 
-		# # 0 is baseline
-		# createConsistentTest(makeFilePath("thirtyTwoConsistent", i), 32)
-		# createConsistentTest(makeFilePath("sixtyFourConsistent", i), 64)
+		# 0 is baseline
+		createConsistentTest(makeFilePath("thirtyTwoConsistent", i), 32)
+		createConsistentTest(makeFilePath("sixtyFourConsistent", i), 64)
 
-		# # 0 is baseline
-		# createReleaseTasksTest(makeFilePath("sixteenDependencies", i), 16)
-		# createReleaseTasksTest(makeFilePath("thirtyTwoDependencies", i), 32)
+		# 0 is baseline
+		createReleaseTasksTest(makeFilePath("sixteenDependencies", i), 16)
+		createReleaseTasksTest(makeFilePath("thirtyTwoDependencies", i), 32)
 
 
 if __name__ == '__main__':
