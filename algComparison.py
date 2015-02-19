@@ -34,12 +34,12 @@ def runAlreadyCreatedTestsForXTime(testList, timeLimit):
     for test in testList:
         print test, "test", "\n"
         runGreedies([test])
-        runPulse([test], timeLimit)
+        # runPulse([test], timeLimit)
         runVNS([test], timeLimit)
         runTimedRandomIteration([test], timeLimit)
-        runTimedBruteForce([test], timeLimit)
+        # runTimedBruteForce([test], timeLimit)
         runIntegerProgram([test], timeLimit)
-        if (time.time() - start) >= 3600 * constant: #Outputs every hour...
+        if (time.time() - start) >= 3600 * constant: # Outputs every hour...
             constant += 1
             outputOutput(time.time()-start)
 
