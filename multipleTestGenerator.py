@@ -25,7 +25,8 @@ maxTaskTimeWindows = 2
 numberDependencies = 0
 numberConsistent = 0
 
-''' Creates a test with baseline parameters. See
+'''
+Creates a test with baseline parameters. See
 https://docs.google.com/a/carleton.edu/document/d/18T8vBWkGwU1XW6XSNElvy18muNcUZbKYWpDTg-EXb_Y/edit
 
 @param fileName: the path of the file to create the test at
@@ -104,7 +105,8 @@ def createReleaseTasksTest(fileName, numRelease):
 	createTestWithGlobals(fileName)
 	numberDependencies = oldNumRelease
 
-''' Creates a test given the current global parameter settings. These must be set
+'''
+Creates a test given the current global parameter settings. These must be set
 before calling this function, and should be reset afterwards.
 
 @param fileName: the path of the file to create the test at
@@ -114,6 +116,11 @@ def createTestWithGlobals(fileName):
         durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
         numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, fileName)
 
+'''
+Takes a string representing the category of the test, and a number to be appended at the end,
+and returns a string that is a path in the test folder to a file like:
+"test_testTypeString_number.csv"
+'''
 def makeFilePath(testTypeString, number):
 	return str(os.getcwd()) + "/Testing Folder/test_" + testTypeString + "_" + str(number) + ".csv"
 

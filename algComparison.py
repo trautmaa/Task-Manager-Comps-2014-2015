@@ -31,12 +31,12 @@ def runAlreadyCreatedTestsForXTime(testList, timeLimit):
     for test in testList:
         print test, "test", "\n"
         runGreedies([test])
-        #runPulse([test], timeLimit)
-        #runVNS([test], timeLimit)
-        #runTimedRandomIteration(testList, timeLimit)
-        #runTimedBruteForce(testList, timeLimit)
-        #runIntegerProgram(testList, timeLimit)
-        if (time.time() - start) >= 3600*constant: #Outputs every hour...
+        runPulse([test], timeLimit)
+        runVNS([test], timeLimit)
+        runTimedRandomIteration([test], timeLimit)
+        runTimedBruteForce([test], timeLimit)
+        runIntegerProgram([test], timeLimit)
+        if (time.time() - start) >= 3600 * constant: #Outputs every hour...
             constant += 1
             outputOutput(time.time()-start)
 
@@ -52,7 +52,7 @@ def runTimedRandomIteration(testList, timeLimit):
     for testName in testList:
         start = time.time()
         schedule = timedRandomIteration.randomlyPickBestScheduleUnderTime(testName, timeLimit)
-        timeRan = time.time()-start
+        timeRan = time.time() - start
         addToOutput(schedule, timeRan, testName, "TRI")
 
         
@@ -63,7 +63,7 @@ def runTimedBruteForce(testList, timeLimit):
     for testName in testList:
         start = time.time()
         schedule = bruteForce.runBruteForceAlgWithTimeLimit(testName, timeLimit)
-        timeRan = time.time()-start
+        timeRan = time.time() - start
         addToOutput(schedule, timeRan, testName, "TBF")
 
         
@@ -73,17 +73,17 @@ Runs the timed version of the integerProgram on our list of testFiles.
 def runIntegerProgram(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)
-        timeRan = time.time()-start
+        schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)[0]
+        timeRan = time.time() - start
         addToOutput(schedule, timeRan, testName, "IP")
         
 
 def runPulse(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        pulseOPTW.setTimes()
+        pulseOPTW.setTimes(timeLimit)
         schedule = pulseOPTW.solve(testName) 
-        timeRan = time.time()-start
+        timeRan = time.time() - start
         addToOutput(schedule, timeRan, testName, "Pulse")
 
 '''
@@ -198,7 +198,7 @@ def getFiles():
 def main():
     testList = getFiles()
     print testList
-    runAlreadyCreatedTestsForXTime(testList, 2)
+    runAlreadyCreatedTestsForXTime(testList, 5)
                                 
 if __name__ == '__main__':
 	main()

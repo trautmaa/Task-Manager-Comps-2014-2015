@@ -435,10 +435,10 @@ def getProfit(sched):
         tot += taskList[sched[t]].priority
     return tot
 
-def setTimes(): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
+def setTimes(timeLimit): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
     global stoppingTime, startTime
     startTime = time.time()
-    stoppingTime = float("inf")
+    stoppingTime = timeLimit
 
 def main():
     global stoppingTime, startTime
