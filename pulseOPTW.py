@@ -13,6 +13,14 @@ Multiprocessing tutorial:
 
 '''
 
+'''
+To do:
+- speed up defineBounds somehow (use bounds?)
+- should we run defineBounds if there's a timeLimit? for how long?
+- 
+'''
+
+
 import multiprocessing
 import helperFunctions, copy, sys, time
 import createTasksFromCsv, collections
@@ -20,12 +28,7 @@ from createTests import dayLength
 
 
 def solve(csvFile):
-    global timeLimit, taskList, delta, tShoe, reducedBoundsMatrix, timeElapsed
-    
-    global initTime
-    initTime = time.time()
-    
-    timeElapsed = [initTime]
+    global timeLimit, taskList, delta, tShoe, timeElapsed
     
     '''
     The primal bound holds the priority of best possible schedule we have found so far.
@@ -52,25 +55,27 @@ def solve(csvFile):
     allNodes = manager.list(allNodes)
     
     #2-dimensional list with first index value as tao (currentTime), second index value as node
-    reducedBoundsMatrix = {}
+#     reducedBoundsMatrix = {}
     
     #we can mess with this as we see fit. Make delta larger to speed things up. Make it smaller to have more values.
     #delta = timeLimit/10, tShoe = timeLimit/10 make us reach maximum recursion depth
 
-    # will hold tShoe and delta    
-    
-    delta = 200
+    delta = 10
     
     # AVERY: hmmmm
     if stoppingTime > 10000:
-        tShoe = 7 * timeLimit / 10
+        tShoe = 8 * timeLimit / 12
     else:
         tShoe = timeLimit
     print "tShoe", tShoe
     boundsInfo = [delta, tShoe]
-    defineBounds(boundsInfo, taskList, primalBound, allNodes)
+    defineBounds(boundsInfo, primalBound, allNodes)
     bestPaths = []
     
+    order = reducedBoundsMatrix[min(reducedBoundsMatrix.keys())]
+    print order
+    allNodes.sort(key = lambda x: order[x])
+    print allNodes
     '''
     Creates a pool of worker threads. Automatically set to the number of
     cores in the machine, but you can set that differently with an int argument.
@@ -90,10 +95,10 @@ def solve(csvFile):
     node args.
     '''
     #Uncomment the following line for parallel
-    bestPaths = pool.map(partialPulse, allNodes)
+#     bestPaths = pool.map(partialPulse, allNodes)
     
     #Uncomment the following line for sequential
-#     bestPaths = map(partialPulse, allNodes)
+    bestPaths = map(partialPulse, allNodes)
 
     print bestPaths
     bestSched = max(bestPaths, key = lambda x: getProfit(x))
@@ -126,10 +131,11 @@ This function is called in separate threads by our main function.
 @param: node, current score, current time, and current path
 @ return: nothing
 '''
-def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
-#     print "entering pulse trying to add"
-#     print node, "to "
-#     print currPath
+def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
+    if pBound[0] >= 423:
+        print "entering pulse trying to add"
+        print node, "to "
+        print currPath
     
     processName = multiprocessing.current_process().name
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
@@ -149,14 +155,15 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
     # checking if it's work considering this new path...could it possibly be optimal
     
     newProposedEndingTime = isFeasible(node, currPath)
-    if definingBounds[0]:
-        withinBounds = True
-        notDominated = True
-        cannotDetour = True
-    else:
-        withinBounds = inBounds(node, currPath, pBound)
-        notDominated = notSoftDominated(node, newProposedEndingTime, currPath)
-        cannotDetour = noDetour(node, currPath, unvisitedNodes, newProposedEndingTime)
+#     if definingBounds[0]:
+#         withinBounds = True
+# #         notDominated = True
+#         cannotDetour = True
+#     else:
+    withinBounds = inBounds(node, currPath, pBound)
+    cannotDetour = noDetour(node, currPath, unvisitedNodes, newProposedEndingTime)
+        
+    notDominated = notSoftDominated(node, newProposedEndingTime, currPath)
     
     if withinBounds and newProposedEndingTime != None and notDominated and cannotDetour:
         unvisitedNodes.remove(node)
@@ -176,7 +183,7 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
         
         for newNode in unvisitedNodes:
             # new time is the current time plus the distance between current node and new node 
-            res = pulse(pBound, newPath, allNodes, newNode, definingBounds)
+            res = pulse(pBound, newPath, allNodes, newNode, [True, False])
 #             if res != []:
 #                 print "trying to add"
 #                 print node       
@@ -184,19 +191,13 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False]):
 #                 print currPath
             profit = getProfit(res)
             
-            if profit >= pBound[0]:
-                result.append(res)
-                if profit > pBound[0] and not definingBounds[0]:
-                    print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], profit)
-                    print res
-                    pBound[0] = profit
-#     else:
-#         print "failed"
-#         print "newEndingTIme", newProposedEndingTime
-#         print "withinBounds", withinBounds
-#         print "notDominated", notDominated
-#         print "cannotDetour", cannotDetour
-#         print
+    elif pBound[0] >= 423:
+        print "PRUNING"
+        print "newEndingTIme", newProposedEndingTime
+        print "withinBounds", withinBounds
+        print "notDominated", notDominated
+        print "cannotDetour", cannotDetour
+        print "profit", getProfit(currPath) - taskList[node].priority
     
     if len(result) == 0:
         return []
@@ -281,13 +282,13 @@ worth further exploration
 def inBounds(node, path, pBound):
     currTime = path[0]
 #     print "*********** entering inBounds ***********"
-    taoValue = currTime - currTime % delta
-    if taoValue not in reducedBoundsMatrix:
+    #round down taoValue so it is consistent with our matrix indices and we may compare
+    taoValue = getTao(reducedBoundsMatrix.keys(), currTime)
+    if taoValue == -1:
 #         print "TaoValue %d not found" %(taoValue)
 #         print "*********** exiting inBounds ***********"
         return True
     
-    #round down taoValue so it is consistent with our matrix indices and we may compare
     pathScore = reducedBoundsMatrix[taoValue][node] + getProfit(path + [node])
     
 #     print "*********** exiting inBounds ***********"
@@ -295,8 +296,20 @@ def inBounds(node, path, pBound):
         return False
     return True
 
-# AVERY: something is still up with bounds: if they go too far down, they prune the optimal branch
+def getTao(reducedBoundsKeys, currTime):
+    reducedBoundsKeys.sort()
+    if currTime < reducedBoundsKeys[0]:
+        return -1
+    else:
+        for k in range(len(reducedBoundsKeys)):
+            if reducedBoundsKeys[k] == currTime:
+                return reducedBoundsKeys[k]
+            elif reducedBoundsKeys[k] > currTime:
+                return reducedBoundsKeys[k-1]
+    return reducedBoundsKeys[-1]
 
+
+# AVERY: something is still up with bounds: if they go too far down, they prune the optimal branch
 def noDetour(node, origPath, unvisitedNodes, proposedEnd):
     '''
     For each unvisited node, try to insert it between the end of origPath and node.
@@ -323,6 +336,8 @@ def noDetour(node, origPath, unvisitedNodes, proposedEnd):
         newPathEnd = isFeasible(node, newPath)
         
         if newPathEnd == proposedEnd:
+#             print "Detour:"
+#             print newPath, " not ", node
             return False
     return True
     
@@ -339,36 +354,59 @@ lower than tShoe because we don't want to fully solve the problem yet.
 
 @param delta: the length of the time steps
 '''
-def defineBounds(boundsInfo, taskList, pBound, allNodes):
+def defineBounds(boundsInfo, pBound, allNodes):
     
     print "*********** entering defineBounds ***********"
-    remainingTime = len(taskList[0].timeWindows) * dayLength
+    timeElapsed = timeLimit
     checkingBounds = [True]
+    
+    global reducedBoundsMatrix
+    reducedBoundsMatrix = multiprocessing.Manager().dict()
 
     #go through each value of tao AKA currentTime until we reach the lower time limit
-    while remainingTime - boundsInfo[0] >= boundsInfo[1]:        
+    while timeElapsed - boundsInfo[0] >= boundsInfo[1]:        
         #decrement
-        remainingTime = remainingTime - boundsInfo[0]
+        timeElapsed = timeElapsed - boundsInfo[0]
         
-        print "Remaining time:", remainingTime
-        reducedBoundsMatrix[remainingTime] = ([float("inf")] * len(taskList))
+        # resetting delta to be higher as we go back in the graph
+        # This makes it so we can go further back but still explore more
+        # short solutions
+        boundsInfo[0] = int(boundsInfo[0] * 1.1)
+        print "Tao:", timeElapsed, "Delta: ", boundsInfo[0]
         
-        for task in taskList:
-            path = [remainingTime]
-
-            path = pulse(pBound, path, allNodes, task.id, definingBounds = checkingBounds)
-            #add a cost value to our global reducedBoundsMatrix
-            if path == []:
-                # There was no feasible path from this node with the remaining
-                # time. Therefore the best possible additional profit from this
-                # path is 0.
-#                 print "Found no path from", path, "to node", task.id
-                
-                reducedBoundsMatrix[remainingTime][task.id] = 0
+        nodeTimes = ([float("inf")] * len(allNodes))
+        
+        for n1 in allNodes:
+            path = [timeElapsed]
+            pathEndingTime = isFeasible(n1, path)
+            if pathEndingTime == None:
+                nodeTimes[n1] = 0
             else:
-#                 print "Found path from", path, "with node", task.id
-#                 print path
-                reducedBoundsMatrix[remainingTime][task.id] = getProfit(path)
+                allOtherNodes = allNodes[:]
+                allOtherNodes.remove(n1)
+                foundPaths = []
+                for n2 in allNodes:
+                    if n2 != n1:
+                        newPath = [pathEndingTime]
+                        foundPaths.append(pulse(pBound, newPath, allOtherNodes, n2, definingBounds = checkingBounds))
+                bestScore = max([getProfit(x) for x in foundPaths])
+                nodeTimes[n1] = bestScore
+                    
+
+#             path = pulse(pBound, path, allNodes, n, definingBounds = checkingBounds)
+#             #add a cost value to our global reducedBoundsMatrix
+#             if path == []:
+#                 # There was no feasible path from this node with the remaining
+#                 # time. Therefore the best possible additional profit from this
+#                 # path is 0.
+# #                 print "Found no path from", path, "to node", task.id
+#                 nodeTimes[n] = 0
+#             else:
+# #                 print "Found path from", path, "with node", task.id
+# #                 print path
+#                 nodeTimes[n] = getProfit(path)
+        
+        reducedBoundsMatrix[timeElapsed] = nodeTimes
     print "*********** exiting defineBounds ********************************************"
     print "matrix"
     
@@ -431,6 +469,8 @@ def scheduleASAP(path, initTime = 0):
 
 def getProfit(sched):
     tot = 0 
+    if len(sched) == 0:
+        return 0
     for t in range(1, len(sched)):
         tot += taskList[sched[t]].priority
     return tot

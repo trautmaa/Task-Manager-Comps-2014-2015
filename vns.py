@@ -4,7 +4,7 @@
 
 import greedyByPresentChoice
 import greedyByOrder
-import integerProgram
+# import integerProgram
 import createTasksFromCsv
 import helperFunctions
 import Objects
@@ -41,9 +41,9 @@ def solve(csvFile, stoppingCondition):
     greedyByPriorityAvailabilitySol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderByPriorityOverAvailability)
     greedyByDeadlineSol = greedyByOrder.runGreedyByOrder(csvFile, greedyByOrder.orderOptionalByDeadline)
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
-    intProgRunTime = min(stoppingCondition / 2, 10)
-    intProgTimedSol = integerProgram.runIntegerProgram(csvFile, intProgRunTime)[0]
-    solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol, intProgTimedSol]
+#     intProgRunTime = min(stoppingCondition / 2, 10)
+#     intProgTimedSol = integerProgram.runIntegerProgram(csvFile, intProgRunTime)[0]
+    solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]#, intProgTimedSol]
     bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
 
     appendToSchedSteps("Initial schedule to be improved by VNS", bestGreedy)
