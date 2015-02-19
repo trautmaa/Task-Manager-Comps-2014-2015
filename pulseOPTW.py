@@ -64,7 +64,7 @@ def solve(csvFile):
     
     # AVERY: hmmmm
     if stoppingTime > 10000:
-        tShoe = 8 * timeLimit / 12
+        tShoe = 9 * timeLimit / 13
     else:
         tShoe = timeLimit
     print "tShoe", tShoe
@@ -191,7 +191,7 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
 #                 print currPath
             profit = getProfit(res)
             
-    elif pBound[0] >= 423:
+    else:
         print "PRUNING"
         print "newEndingTIme", newProposedEndingTime
         print "withinBounds", withinBounds
