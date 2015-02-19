@@ -141,9 +141,6 @@ def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [Fa
     
     result = []
     
-    assert(node not in currPath[1:])
-    assert(currPath[0] >= 0)
-    
     # checking if it's work considering this new path...could it possibly be optimal
     
     newProposedEndingTime = isFeasible(node, currPath)
@@ -168,9 +165,6 @@ def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [Fa
         
         if profit >= pBound[0]:
             result.append(newPath)
-            if profit == pBound[0]:
-                print "SAME as primal bound"
-                print newPath
             if profit > pBound[0] and not definingBounds[0]:
                 print "%s RESETTING0 PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], profit)
                 print newPath
@@ -184,7 +178,7 @@ def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [Fa
 #                 print node       
 #                 print "GOT RESULt", res
 #                 print currPath
-            profit = getProfit(res)
+            result.append(res)            
             
 #     elif not definingBounds[0]:
 #         print "PRUNING"
