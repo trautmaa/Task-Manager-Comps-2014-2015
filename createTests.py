@@ -69,7 +69,7 @@ def setTimeWindowsOfTask(task, numDays, maxTaskTimeWindows, dayLength, isConsist
                 maxTimeWindowLength = dayLength / 4
             
             for window in range(numberTimeWindows):
-                timeWindowLength = random.randint(int(duration * 1.5), maxTimeWindowLength)
+                timeWindowLength = random.randint(duration, maxTimeWindowLength)
                 if window == 0:
                     timeWindowStart = random.randint(1 + day * dayLength, (day + 1) * dayLength - timeWindowLength)
                 else:
