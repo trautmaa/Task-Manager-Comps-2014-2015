@@ -62,11 +62,7 @@ def solve(csvFile):
 
     delta = 10
     
-    # AVERY: hmmmm
-    if stoppingTime > 10000:
-        tShoe = 9 * timeLimit / 13
-    else:
-        tShoe = timeLimit
+    tShoe = 9 * timeLimit / 13
     print "tShoe", tShoe
     boundsInfo = [delta, tShoe]
     defineBounds(boundsInfo, primalBound, allNodes)
@@ -88,17 +84,17 @@ def solve(csvFile):
     has some set arguments. You can then call it later with the remaining arguments
     We use this here so that we can use the map function of the thread pool later
     '''
-    partialPulse = functools.partial(pulse, primalBound, [0], allNodes)
+    partialPulse = functools.partial(pulse, primalBound, [0], allNodes, allNodes[:])
     
     '''
     Calling map on the thread pool with our partial pulse function with added
     node args.
     '''
     #Uncomment the following line for parallel
-#     bestPaths = pool.map(partialPulse, allNodes)
+    bestPaths = pool.map(partialPulse, allNodes)
     
     #Uncomment the following line for sequential
-    bestPaths = map(partialPulse, allNodes)
+#     bestPaths = map(partialPulse, allNodes)
 
     print bestPaths
     bestSched = max(bestPaths, key = lambda x: getProfit(x))
@@ -131,11 +127,11 @@ This function is called in separate threads by our main function.
 @param: node, current score, current time, and current path
 @ return: nothing
 '''
-def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
-    if pBound[0] >= 423:
-        print "entering pulse trying to add"
-        print node, "to "
-        print currPath
+def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [False, False]):
+#     if not definingBounds[0]:
+#         print "entering pulse trying to add"
+#         print node, "to "
+#         print currPath
     
     processName = multiprocessing.current_process().name
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
@@ -143,10 +139,6 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
     if time.time() - startTime > stoppingTime:
         return currPath
     
-    unvisitedNodes = copy.deepcopy(allNodes)
-    
-    for n in range(1, len(currPath)):
-        unvisitedNodes.remove(currPath[n])
     result = []
     
     assert(node not in currPath[1:])
@@ -176,14 +168,17 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
         
         if profit >= pBound[0]:
             result.append(newPath)
+            if profit == pBound[0]:
+                print "SAME as primal bound"
+                print newPath
             if profit > pBound[0] and not definingBounds[0]:
-                print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], profit)
+                print "%s RESETTING0 PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], profit)
                 print newPath
                 pBound[0] = profit
         
         for newNode in unvisitedNodes:
             # new time is the current time plus the distance between current node and new node 
-            res = pulse(pBound, newPath, allNodes, newNode, [True, False])
+            res = pulse(pBound, newPath, allNodes, unvisitedNodes[:], newNode, definingBounds)
 #             if res != []:
 #                 print "trying to add"
 #                 print node       
@@ -191,20 +186,24 @@ def pulse(pBound, currPath, allNodes, node, definingBounds = [False, False]):
 #                 print currPath
             profit = getProfit(res)
             
-    else:
-        print "PRUNING"
-        print "newEndingTIme", newProposedEndingTime
-        print "withinBounds", withinBounds
-        print "notDominated", notDominated
-        print "cannotDetour", cannotDetour
-        print "profit", getProfit(currPath) - taskList[node].priority
+#     elif not definingBounds[0]:
+#         print "PRUNING"
+#         print "newEndingTIme", newProposedEndingTime
+#         print "withinBounds", withinBounds
+#         print "notDominated", notDominated
+#         print "cannotDetour", cannotDetour
+#         print "profit", getProfit(currPath)
+#         print
     
     if len(result) == 0:
         return []
     
     best = max(result, key = lambda x: getProfit(x))
+    if getProfit(best) == pBound[0]:
+        print "same as primal bound"
+        print best
     if not definingBounds[0] and getProfit(best) > pBound[0]:
-        print "%s RESETTING PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], getProfit(best))
+        print "%s RESETTING1 PRIMAL BOUND from %d to %d" %(multiprocessing.current_process().name, pBound[0], getProfit(best))
         print best#, "\a"
         pBound[0] = getProfit(best)
     return best
@@ -239,7 +238,7 @@ def isFeasible(node, currPath):
             limit += dist
     
     #return a proposedEnd based on the earliest we can schedule the node, considering its time windows
-    for d in range(len(task.timeWindows)):
+    for d in range(routeIndex - 1, len(task.timeWindows)):
         for tw in range(len(task.timeWindows[d])):
 
             timeWindow = task.timeWindows[d][tw]
@@ -296,6 +295,10 @@ def inBounds(node, path, pBound):
         return False
     return True
 
+
+'''
+OPTIMIZE THIS
+'''
 def getTao(reducedBoundsKeys, currTime):
     reducedBoundsKeys.sort()
     if currTime < reducedBoundsKeys[0]:
@@ -309,16 +312,13 @@ def getTao(reducedBoundsKeys, currTime):
     return reducedBoundsKeys[-1]
 
 
-# AVERY: something is still up with bounds: if they go too far down, they prune the optimal branch
 def noDetour(node, origPath, unvisitedNodes, proposedEnd):
     '''
     For each unvisited node, try to insert it between the end of origPath and node.
     If the endingTime of scheduleASAP is the same, return False
     '''
-    
-    origPath = origPath[:]
     origPathEnd = origPath[0]
-    
+
     unvisitedNodes = unvisitedNodes[:]
     unvisitedNodes.remove(node)
     
@@ -388,7 +388,7 @@ def defineBounds(boundsInfo, pBound, allNodes):
                 for n2 in allNodes:
                     if n2 != n1:
                         newPath = [pathEndingTime]
-                        foundPaths.append(pulse(pBound, newPath, allOtherNodes, n2, definingBounds = checkingBounds))
+                        foundPaths.append(pulse(pBound, newPath, allOtherNodes, allOtherNodes[:], n2, definingBounds = checkingBounds))
                 bestScore = max([getProfit(x) for x in foundPaths])
                 nodeTimes[n1] = bestScore
                     
@@ -419,6 +419,7 @@ def defineBounds(boundsInfo, pBound, allNodes):
 def scheduleASAP(path, initTime = 0):
     '''
     returns a new path with the lowest possible ending time, as well as a duration
+    
     @param path: a list of task ids in order that they're scheduled. the first 
     index is the ending time of the path
     '''
@@ -432,7 +433,7 @@ def scheduleASAP(path, initTime = 0):
     setTime = False
     #schedule the first task as early as possible
     t = 1
-    for day in range(dayIndex, len(task.timeWindows)):
+    for day in range(0, len(task.timeWindows)):
         for tw in range(len(task.timeWindows[day])):
             
             #if task can be scheduled in this time window..
@@ -441,6 +442,7 @@ def scheduleASAP(path, initTime = 0):
                 currentTime = max(timeWindow[0], currentTime) + task.duration
                 schedStartTime = currentTime - task.duration
                 setTime = True
+                dayIndex = day
                 break
         if setTime:
             break
@@ -451,7 +453,7 @@ def scheduleASAP(path, initTime = 0):
         task = taskList[path[t]]
         setTime = False
         # find the next possible time window to schedule node in in this day or any later days... 
-        for day in range(0, len(task.timeWindows)):
+        for day in range(dayIndex, len(task.timeWindows)):
             for tw in range(len(task.timeWindows[day])):
                 
                 #if task can be scheduled in this time window..
@@ -460,6 +462,7 @@ def scheduleASAP(path, initTime = 0):
                 if timeWindow[1] - task.duration >= currentTime + travelTime:
                     currentTime = max(timeWindow[0], currentTime + travelTime) + task.duration
                     setTime = True
+                    dayIndex = day
                     break
             if setTime:
                 break

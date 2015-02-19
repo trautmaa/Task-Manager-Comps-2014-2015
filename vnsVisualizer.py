@@ -43,7 +43,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("newTest.csv"), 5)
+    currSchedule, schedSteps = vns.solve(pwd("averysImportantTestFile.csv"), 15)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -167,7 +167,7 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
         noStroke()
         taskHeight = task.duration * scale
         if ends:
-            taskEnd = (route.endingTimes[t] - routeIndex * 100) * scale
+            taskEnd = (route.endingTimes[t] - routeIndex * dayLength) * scale
             rect(taskX, headerHeight + taskEnd - taskHeight, taskWidth, taskHeight)
         else:
             pass
