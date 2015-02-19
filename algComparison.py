@@ -191,7 +191,7 @@ def getFiles():
     testList = []
     path = str(os.getcwd()) + "/Testing Folder/"
     testList = os.listdir(path)
-    testList.remove('.DS_Store')
+    #testList.remove('.DS_Store')
     testList = sortAndRenameFiles(testList)
     return testList
         
