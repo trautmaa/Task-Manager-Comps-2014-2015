@@ -19,7 +19,7 @@ durationMin = 1
 durationMax = 120
 deadlineRange = 1440 * 3
 priorityRange = 10
-numberRequired = 6
+numberRequired = 8
 numDays = 3
 maxTaskTimeWindows = 2
 numberDependencies = 0
@@ -35,11 +35,15 @@ def createBaselineTest(fileName):
 	createTestWithGlobals(fileName)
 
 def createTaskNumberTest(fileName, numTasks):
+	global numberRequired
 	global numberOfTasks
 	oldNumTasks = numberOfTasks
+	oldNumRequired = numberRequired
+	numberRequired = int(numTasks * .125)
 	numberOfTasks = numTasks
 	createTestWithGlobals(fileName)
 	numberOfTasks = oldNumTasks
+	numberRequired = oldNumRequired
 
 def createDayNumberTest(fileName, numberOfDays):
 	global numDays
@@ -128,6 +132,7 @@ def main():
 	for i in range(10):
 		createBaselineTest(makeFilePath("baseline", i))
 
+		# createTaskNumberTest(makeFilePath("sixteenTask", i), 16)
 		# createTaskNumberTest(makeFilePath("thirtyTwoTask", i), 32)
 		# # 64 is baseline
 		# createTaskNumberTest(makeFilePath("oneTwentyEightTask", i), 128)
@@ -142,10 +147,12 @@ def main():
 		# # 2 is baseline
 		# createMaxTimeWindowsTest(makeFilePath("threeWindow", i), 3)
 
-		# # 6 is baseline
-		# createNumberRequiredTest(makeFilePath("nineteenRequired", i), 19)
-		# createNumberRequiredTest(makeFilePath("nineteenRequired", i), 32)
+		# createNumberRequiredTest(makeFilePath("zeroRequired", i), 0)
+		# # 8 is baseline
+		# createNumberRequiredTest(makeFilePath("sixteenRequired", i), 16)
+		# createNumberRequiredTest(makeFilePath("thirtyTwoRequired", i), 32)
 
+		# createPriorityTest(makeFilePath("onePriority", i), 1)
 		# # 10 is baseline
 		# createPriorityTest(makeFilePath("oneHundredPriority", i), 100)
 		# createPriorityTest(makeFilePath("oneThousandPriority", i), 1000)
@@ -155,9 +162,10 @@ def main():
 		# createLocationTest(makeFilePath("oneHundredTwentyLocation", i), 120, 120)
 		# createLocationTest(makeFilePath("twoHundredFortyLocation", i), 240, 240)
 
+		# createDurationTest(makeFilePath("sixtyDuration", i), 1, 60)
 		# # 1, 120 is baseline
 		# createDurationTest(makeFilePath("twoHundredFortyDuration", i), 1, 240)
-		# createDurationTest(makeFilePath("twoHundredFortyDuration", i), 1, 360)
+		# createDurationTest(makeFilePath("threeHundredSixtyDuration", i), 1, 360)
 
 		# # 0 is baseline
 		# createConsistentTest(makeFilePath("thirtyTwoConsistent", i), 32)
