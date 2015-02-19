@@ -17,7 +17,10 @@ import csv
 import os
 import createTests
 
-OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number Tasks Scheduled", "Number of Required Tasks Schedules", "Number of Optional Tasks Scheduled", "Total Waiting Time", "Total Working Time", "Total Distance Traveled", "Test Name", "Number of Available Tasks", "Number of Days", "Average Duration of the Tasks", "Average Number of Time Windows Per Task", "Average Length of All Time Windows", "Number of Available Release Tasks"]]
+OUTPUT = [["Algorithm", "Time Ran", "Profit", "Number Tasks Scheduled", "Number of Required Tasks Schedules", "Number of Optional Tasks Scheduled", 
+           "Total Waiting Time", "Total Working Time", "Total Distance Traveled", 
+           "Test Name", "Number of Available Tasks", "Number of Days", "Average Duration of the Tasks", 
+           "Average Number of Time Windows Per Task", "Average Length of All Time Windows", "Number of Available Release Tasks"]]
 OUTPUTFILENAME = "TESTRESULTS" 
 
 
@@ -191,7 +194,7 @@ def getFiles():
     testList = []
     path = str(os.getcwd()) + "/Testing Folder/"
     testList = os.listdir(path)
-    testList.remove('.DS_Store')
+    #testList.remove('.DS_Store')
     testList = sortAndRenameFiles(testList)
     return testList
         
