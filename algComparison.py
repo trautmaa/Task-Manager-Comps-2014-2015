@@ -20,7 +20,7 @@ import createTests
 OUTPUT = [["Algorithm", "Time Ran", "Profit", "Optional Profit", "Tasks Scheduled", "Required Tasks Scheduled", "Optional Tasks Scheduled", 
            "Waiting Time", "Working Time", "Distance Traveled", 
            "Test Name", "Available Tasks", "Days", "Average Duration of Tasks", 
-           "Average Time Windows Per Task", "Average Length of Time Windows", "Available Release Tasks", "VNS Incumbent Profit"]]
+           "Average Time Windows Per Task", "Average Length of Time Windows", "Available Release Tasks", "VNS Incumbent Profit", "intProg Optimal"]]
 OUTPUTFILENAME = "TESTRESULTS" 
 
 
@@ -34,7 +34,7 @@ def runAlreadyCreatedTestsForXTime(testList, timeLimit):
     for test in testList:
         print test, "test", "\n"
         runGreedies([test])
-        # runPulse([test], timeLimit)
+        runPulse([test], timeLimit)
         runVNS([test], timeLimit)
         runTimedRandomIteration([test], timeLimit)
         # runTimedBruteForce([test], timeLimit)
@@ -76,9 +76,11 @@ Runs the timed version of the integerProgram on our list of testFiles.
 def runIntegerProgram(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = integerProgram.runIntegerProgram(testName, timeLimit, 0)[0]
+        intProgTuple = integerProgram.runIntegerProgram(testName, timeLimit, 0)
+        schedule = intProgTuple[0]
+        isOptimal = intProgTuple[1]
         timeRan = time.time() - start
-        addToOutput(schedule, timeRan, testName, "IP")
+        addToOutput(schedule, timeRan, testName, "IP", None, isOptimal)
         
 
 def runPulse(testList, timeLimit):
@@ -154,7 +156,7 @@ This function just adds data associated with a result of an
 algorithm on a test file to OUTPUT, which will later be written to
 a csv file.  More data may should be added but I don't know what???
 '''
-def addToOutput(schedule, timeRan, testName, algorithm, incumbentProfit = None):
+def addToOutput(schedule, timeRan, testName, algorithm, incumbentProfit = None, isOptimal = None):
     profit = schedule.getProfit()
     optionalProfit = schedule.getOptionalProfit()
     numRequiredTasks = schedule.getNumRequired()
@@ -169,7 +171,7 @@ def addToOutput(schedule, timeRan, testName, algorithm, incumbentProfit = None):
     avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks = getInfoFromSchedule(taskList)
     OUTPUT.append([algorithm, timeRan, profit, optionalProfit, numTotalTasks, numRequiredTasks, numOptionalTasks,
         waitingTime, workingTime, distanceTraveled, fileName, numTasks, numDays, avgDuration,
-        avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks, incumbentProfit])
+        avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks, incumbentProfit, isOptimal])
 
     
 '''
@@ -207,7 +209,7 @@ def getFiles():
 def main():
     testList = getFiles()
     print testList
-    runAlreadyCreatedTestsForXTime(testList, 300)
+    runAlreadyCreatedTestsForXTime(testList, 2)
                                 
 if __name__ == '__main__':
 	main()
