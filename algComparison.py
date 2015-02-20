@@ -34,7 +34,7 @@ def runAlreadyCreatedTestsForXTime(testList, timeLimit):
     for test in testList:
         print test, "test", "\n"
         runGreedies([test])
-        runPulse([test], timeLimit)
+        # runPulse([test], timeLimit)
         runVNS([test], timeLimit)
         runTimedRandomIteration([test], timeLimit)
         # runTimedBruteForce([test], timeLimit)
@@ -164,10 +164,11 @@ def addToOutput(schedule, timeRan, testName, algorithm, incumbentProfit = None):
     workingTime = schedule.getWorkingTime()
     distanceTraveled = schedule.getDistanceTraveled()
     taskList = createTasksFromCsv.getTaskList(testName)
+    fileName = testName.split('/')[-1]
     numTasks, numDays = len(taskList), len(taskList[0].timeWindows)
     avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks = getInfoFromSchedule(taskList)
     OUTPUT.append([algorithm, timeRan, profit, optionalProfit, numTotalTasks, numRequiredTasks, numOptionalTasks,
-        waitingTime, workingTime, distanceTraveled, testName[-35:], numTasks, numDays, avgDuration,
+        waitingTime, workingTime, distanceTraveled, fileName, numTasks, numDays, avgDuration,
         avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks, incumbentProfit])
 
     
@@ -206,7 +207,7 @@ def getFiles():
 def main():
     testList = getFiles()
     print testList
-    runAlreadyCreatedTestsForXTime(testList, 2)
+    runAlreadyCreatedTestsForXTime(testList, 300)
                                 
 if __name__ == '__main__':
 	main()
