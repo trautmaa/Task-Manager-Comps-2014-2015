@@ -16,19 +16,18 @@ Multiprocessing tutorial:
 '''
 To do:
 - speed up defineBounds somehow (use bounds?)
-- should we run defineBounds if there's a timeLimit? for how long?
-- 
 '''
-
 
 import multiprocessing
 import helperFunctions, copy, sys, time
 import createTasksFromCsv, collections
 from createTests import dayLength
 
-
 def solve(csvFile):
-    global timeLimit, taskList, delta, tShoe, timeElapsed
+    global timeLimit, taskList, delta, tShoe
+    global startTime
+    
+    startTime = time.time()
     
     '''
     The primal bound holds the priority of best possible schedule we have found so far.
@@ -60,7 +59,8 @@ def solve(csvFile):
     #we can mess with this as we see fit. Make delta larger to speed things up. Make it smaller to have more values.
     #delta = timeLimit/10, tShoe = timeLimit/10 make us reach maximum recursion depth
 
-    delta = 10
+    delta = max(10, (timeLimit/dayLength * 3))
+    
     
     tShoe = 9 * timeLimit / 13
     print "tShoe", tShoe
@@ -68,9 +68,14 @@ def solve(csvFile):
     defineBounds(boundsInfo, primalBound, allNodes)
     bestPaths = []
     
+    
     order = reducedBoundsMatrix[min(reducedBoundsMatrix.keys())]
+    if float("inf") in order:
+        otherKeys = reducedBoundsMatrix.keys()
+        otherKeys.remove(min(reducedBoundsMatrix.keys()))
+        order = reducedBoundsMatrix[min(otherKeys)]
     print order
-    allNodes.sort(key = lambda x: order[x])
+    allNodes = sorted(allNodes, key = lambda x: order[x])
     print allNodes
     '''
     Creates a pool of worker threads. Automatically set to the number of
@@ -136,7 +141,7 @@ def pulse(pBound, currPath, allNodes, unvisitedNodes, node, definingBounds = [Fa
     processName = multiprocessing.current_process().name
     # making set of unvisited nodes by subtracting the intersection of all nodes with the 
     # nodes in the current path and node under consideration
-    if time.time() - startTime > stoppingTime:
+    if (definingBounds[0] and time.time() - startTime > boundsStoppingTime) or (time.time() - startTime > stoppingTime):
         return currPath
     
     result = []
@@ -291,6 +296,8 @@ def inBounds(node, path, pBound):
 OPTIMIZE THIS
 '''
 def getTao(reducedBoundsKeys, currTime):
+    if len(reducedBoundsKeys) == 0:
+        return -1
     reducedBoundsKeys.sort()
     if currTime < reducedBoundsKeys[0]:
         return -1
@@ -380,23 +387,13 @@ def defineBounds(boundsInfo, pBound, allNodes):
                     if n2 != n1:
                         newPath = [pathEndingTime]
                         foundPaths.append(pulse(pBound, newPath, allOtherNodes, allOtherNodes[:], n2, definingBounds = checkingBounds))
+                if time.time() - startTime > boundsStoppingTime:
+                    break
                 bestScore = max([getProfit(x) for x in foundPaths])
-                nodeTimes[n1] = bestScore
-                    
-
-#             path = pulse(pBound, path, allNodes, n, definingBounds = checkingBounds)
-#             #add a cost value to our global reducedBoundsMatrix
-#             if path == []:
-#                 # There was no feasible path from this node with the remaining
-#                 # time. Therefore the best possible additional profit from this
-#                 # path is 0.
-# #                 print "Found no path from", path, "to node", task.id
-#                 nodeTimes[n] = 0
-#             else:
-# #                 print "Found path from", path, "with node", task.id
-# #                 print path
-#                 nodeTimes[n] = getProfit(path)
-        
+                nodeTimes[n1] = bestScore + taskList[n1].priority
+            if time.time() - startTime > boundsStoppingTime:
+                nodeTimes = ([float("inf")] * len(allNodes))
+                break
         reducedBoundsMatrix[timeElapsed] = nodeTimes
     print "*********** exiting defineBounds ********************************************"
     print "matrix"
@@ -469,19 +466,21 @@ def getProfit(sched):
         tot += taskList[sched[t]].priority
     return tot
 
-def setTimes(timeLimit): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
-    global stoppingTime, startTime
+def setTimes(stopTime): ######THIS IS FOR ALGORITHM COMPARISON!!!!!
+    global stoppingTime, startTime, boundsStoppingTime
     startTime = time.time()
-    stoppingTime = timeLimit
+    stoppingTime = stopTime
+    boundsStoppingTime = (stoppingTime)/4
 
 def main():
-    global stoppingTime, startTime
     startTime = time.time()
     testFile = sys.argv[1]
     if len(sys.argv) >= 3:
-        stoppingTime = int(sys.argv[2])
+        setTimes(int(sys.argv[2]))
     else:
-        stoppingTime = float("inf")
+        setTimes(float("inf"))
+    print "test file:", testFile, "stopping time:", stoppingTime,
+    print "bounds stopping time:", boundsStoppingTime
     schedule = solve(testFile)
     
     helperFunctions.writeTasks("pulseSched.csv", schedule)
