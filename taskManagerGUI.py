@@ -410,7 +410,7 @@ def calendarDrawInit():
     #setup for VNS
     if buttonList[1] == True:
         stoppingCondition = timeValue
-        schedule[0], useless = solve(csvFile, stoppingCondition)
+        schedule[0], useless, useless2 = solve(csvFile, stoppingCondition)
         
 #         schedule os.system("python " + vns + " " + file)
        

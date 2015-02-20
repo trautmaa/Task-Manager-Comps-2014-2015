@@ -20,7 +20,7 @@ import createTests
 OUTPUT = [["Algorithm", "Time Ran", "Profit", "Optional Profit", "Tasks Scheduled", "Required Tasks Scheduled", "Optional Tasks Scheduled", 
            "Waiting Time", "Working Time", "Distance Traveled", 
            "Test Name", "Available Tasks", "Days", "Average Duration of Tasks", 
-           "Average Time Windows Per Task", "Average Length of Time Windows", "Available Release Tasks"]]
+           "Average Time Windows Per Task", "Average Length of Time Windows", "Available Release Tasks", "VNS Incumbent Profit"]]
 OUTPUTFILENAME = "TESTRESULTS" 
 
 
@@ -95,9 +95,11 @@ Runs vns on our list of testFiles.
 def runVNS(testList, timeLimit):
     for testName in testList:
         start = time.time()
-        schedule = vns.solve(testName, timeLimit)[0]###### THIS WONT WORK YET!!!!!
+        vnsTuple = vns.solve(testName, timeLimit)
+        schedule = vnsTuple[0]
+        incumbentProfit = vnsTuple[2]
         timeRan = time.time()-start
-        addToOutput(schedule, timeRan, testName, "VNS")
+        addToOutput(schedule, timeRan, testName, "VNS", incumbentProfit)
         
 '''
 Runs all greedies on our list of testFiles.
@@ -152,7 +154,7 @@ This function just adds data associated with a result of an
 algorithm on a test file to OUTPUT, which will later be written to
 a csv file.  More data may should be added but I don't know what???
 '''
-def addToOutput(schedule, timeRan, testName, algorithm):
+def addToOutput(schedule, timeRan, testName, algorithm, incumbentProfit = None):
     profit = schedule.getProfit()
     optionalProfit = schedule.getOptionalProfit()
     numRequiredTasks = schedule.getNumRequired()
@@ -164,7 +166,9 @@ def addToOutput(schedule, timeRan, testName, algorithm):
     taskList = createTasksFromCsv.getTaskList(testName)
     numTasks, numDays = len(taskList), len(taskList[0].timeWindows)
     avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks = getInfoFromSchedule(taskList)
-    OUTPUT.append([algorithm, timeRan, profit, optionalProfit, numTotalTasks, numRequiredTasks, numOptionalTasks, waitingTime, workingTime, distanceTraveled, testName[-20:], numTasks, numDays, avgDuration, avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks])
+    OUTPUT.append([algorithm, timeRan, profit, optionalProfit, numTotalTasks, numRequiredTasks, numOptionalTasks,
+        waitingTime, workingTime, distanceTraveled, testName[-20:], numTasks, numDays, avgDuration,
+        avgNumTimeWindows, avgLengthTimeWindow, numReleaseTasks, incumbentProfit])
 
     
 '''

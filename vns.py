@@ -43,6 +43,7 @@ def solve(csvFile, stoppingCondition):
     greedyByPresentChoiceSol = greedyByPresentChoice.runGreedyByPresentChoice(csvFile)
     solutionList = [greedyByPrioritySol, greedyByPriorityAvailabilitySol, greedyByDeadlineSol, greedyByPresentChoiceSol]
     bestGreedy = max(solutionList, key=lambda schedule : schedule.getProfit())
+    incumbentProfit = bestGreedy.getProfit()
 
     appendToSchedSteps("Initial schedule to be improved by VNS", bestGreedy)
             
@@ -67,7 +68,7 @@ def solve(csvFile, stoppingCondition):
     
 
 
-    return currSchedule, schedSteps
+    return currSchedule, schedSteps, incumbentProfit
 
 '''
 @return: best schedule found in time limit
