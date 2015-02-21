@@ -11,7 +11,7 @@ def setup():
     
     global sideBarWidth, headerHeight, schedSteps, currStep, sched, keyPressed
     
-    global dayColor, twColor, headerColor, sideBarColor, textColor, taskColor
+    global dayColor, twColor, headerColor, sideBarColor, textColor, taskColor, colorList, rectColors
     
     keyPressed = [False, False]
     
@@ -27,6 +27,11 @@ def setup():
     yellows = [color(192, 147, 59), color(229, 185, 100), color(255, 219, 148),
                color(255, 231, 185), color(255, 243, 221)]
     
+    #rainbow from which to create rectColors rainbow spectrum
+    colorList = [color(255, 0, 0), color(255, 100, 100), color(255,255, 255), color(240, 255, 100), color(240, 255, 0),\
+                color(0, 255, 0), color(100, 255, 100), color(100, 255, 255), color(0, 255, 255),\
+                color(0, 0, 255), color(100, 100, 255), color(255, 100, 255), color(255, 0, 255)]
+    rectColors = []
     
     dayColor = yellows[-1]
     twColor = blues[2]
@@ -43,11 +48,38 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps = vns.solve(pwd("averysImportantTestFile.csv"), 15)
+    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("VNSVisualizerTest.csv"), 5)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
+    setColors()
     
+def setColors():
+    #BADBADBADBAD
+    numTasks = 25
+    for d in range(numTasks):
+        #ABBY: bad bad bad bad bad bad
+        scaleFactor = float(d+1)/float(numTasks) * (len(colorList) - 1)
+        baseColor = int(floor(scaleFactor))
+        percentBetweenColors = scaleFactor - baseColor
+        #find new r, g and b where its scaled according to the percentBetweenColors
+        oldC = [red(colorList[baseColor - 1]), green(colorList[baseColor - 1]), blue(colorList[baseColor - 1])]
+        oldNextC = [red(colorList[baseColor]), green(colorList[baseColor]), blue(colorList[baseColor])] 
+        
+        
+        newC = [abs(oldC[c] - oldNextC[c]) for c in range(len(oldC))]
+        
+        for c in range(len(newC)):
+            if oldC[c] == 0:
+                newC[c] = oldC[c] + (oldNextC[c] - oldC[c]) * percentBetweenColors
+            else:
+                newC[c] = oldC[c] - (oldC[c] - oldNextC[c]) * percentBetweenColors
+        
+        newColor = color(newC[0], newC[1], newC[2])
+        
+        rectColors.append(newColor)  
+  
+  
     
 
 def draw():
@@ -152,18 +184,19 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
         
         fill(textColor, 255)
         text(task.id, taskX + taskWidth/2 - 5 , 45) 
-        
+        fill(rectColors[task.id], 255)
+
         for tw in range(len(task.timeWindows[routeIndex])):
             
             timeWindow = task.timeWindows[routeIndex][tw]
             
             twStart = (timeWindow[0] - routeIndex * dayLength) * scale
             twEnd = (timeWindow[1] - routeIndex * dayLength) * scale
-            fill(twColor, 150)
+            fill(rectColors[task.id], 255)
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
             
         
-        fill(taskColor, 50)
+        fill(74,71,71, 150)
         noStroke()
         taskHeight = task.duration * scale
         if ends:
