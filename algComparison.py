@@ -30,18 +30,15 @@ of test names.  It then outputs the results.
 '''
 def runAlreadyCreatedTestsForXTime(testList, timeLimit): 
     start = time.time()
-    constant = 1
     for test in testList:
         print test, "test", "\n"
         runGreedies([test])
-        runPulse([test], timeLimit)
+        # runPulse([test], timeLimit)
         runVNS([test], timeLimit)
         runTimedRandomIteration([test], timeLimit)
         # runTimedBruteForce([test], timeLimit)
         runIntegerProgram([test], timeLimit)
-        if (time.time() - start) >= 3600 * constant: # Outputs every hour...
-            constant += 1
-            outputOutput(time.time() - start)
+        outputOutput(time.time() - start)
 
 
     outputOutput("LAST OUTPUT")
@@ -209,7 +206,7 @@ def getFiles():
 def main():
     testList = getFiles()
     print testList
-    runAlreadyCreatedTestsForXTime(testList, 2)
+    runAlreadyCreatedTestsForXTime(testList, 300)
                                 
 if __name__ == '__main__':
 	main()
