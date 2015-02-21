@@ -354,8 +354,8 @@ def mousePressed():
     if mouseX > backButton[2] and mouseX < backButton[2] + backButton[4]:
         if mouseY > backButton[3] and mouseY < backButton[3] + backButton[5]:
             #goBack
-            setup()
-
+            initialize()
+            setupHelper()
 
 def setColors():
     for d in range(len(schedule[0])):

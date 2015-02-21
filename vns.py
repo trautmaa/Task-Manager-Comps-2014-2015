@@ -97,8 +97,6 @@ def vns(taskList, currSchedule, stoppingCondition):
     
     currSchedule = isFeasible(taskList, currSchedule)
     
-    currSchedule.resetEndingTimes()
-    
     for r in range(len(currSchedule)):
         route = currSchedule[r]
         isRouteActuallyFeasible(route, r,"After first call to isFeasible from VNS")
@@ -107,8 +105,7 @@ def vns(taskList, currSchedule, stoppingCondition):
         print "Your incumbent solution is infeasible, try again"
         exit(1)
     
-    currSchedule.resetEndingTimes
-    bestSchedule = currSchedule
+    bestSchedule = copy.deepcopy(currSchedule)
     
     initTime = time.time()
     
@@ -778,7 +775,8 @@ def getRouteDurationWithFeasibility(route, routeIndex, taskList):
     
     routeLen = currRoute.endingTimes[-1] - currRoute.endingTimes[0] + currRoute.taskList[0].duration
     
-    currRoute.resetEndingTimes
+    #AVERY
+    currRoute.resetEndingTimes()
     return routeLen, 0
 
                     
