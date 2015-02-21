@@ -49,7 +49,7 @@ def setupHelper():
     timeButtonsHeight = 3 * height / 6
     buttonFunctsFrontEnd = ["Okay!", "VNS",  "Greedy", "IntProg", "Pulse"]
     buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
-    fileList = ["newTest", "newTest2"]
+    fileList = ["medium20", "willSchedule", "averysImportantTestFile"]
     timeList = ["  3  ", "  15  ", "  60  "]
     buttonHighlightSize = 10
     buttonWidth = 10

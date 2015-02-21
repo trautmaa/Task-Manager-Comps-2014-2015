@@ -97,6 +97,8 @@ def vns(taskList, currSchedule, stoppingCondition):
     
     currSchedule = isFeasible(taskList, currSchedule)
     
+    currSchedule.resetEndingTimes()
+    
     for r in range(len(currSchedule)):
         route = currSchedule[r]
         isRouteActuallyFeasible(route, r,"After first call to isFeasible from VNS")
@@ -883,6 +885,9 @@ def tightenTWStarts(currRoute, routeIndex):
             tw = tw[1:]
             task.timeWindows[routeIndex] = tw
     
+    for task in currRoute:
+        removeBadTimeWindows(task, routeIndex)
+    
     if taskIndex < len(currRoute.taskList) - 1 or anyEmptyTWLists(currRoute, routeIndex):
         # print "********** Exiting tightenTWStarts 2 **********"
         
@@ -969,7 +974,10 @@ def tightenTWEnds(currRoute, routeIndex):
            # remove that task's first tw
            tw = tw[1:]
            task.timeWindows[routeIndex] = tw
-            
+    
+    for task in currRoute:
+        removeBadTimeWindows(task, routeIndex)
+    
     if taskIndex > 0 or anyEmptyTWLists(currRoute, routeIndex):
 #         print "********** Exiting tightenTWEnds2 **********"
         return None
@@ -977,6 +985,17 @@ def tightenTWEnds(currRoute, routeIndex):
 #     print "********** Exiting tightenTWEnds3 **********"
 #     appendToSchedSteps("Route %d is FEASIBLE after tightening time window ENDS" % (routeIndex), currRoute, routeIndex)
     return currRoute
+
+def removeBadTimeWindows(task, routeIndex):
+    timeWindows = task.timeWindows[routeIndex]
+    tw = 0
+    while tw < len(timeWindows):
+        timeWindow = timeWindows[tw]
+        if timeWindow[1] < timeWindow[0] + task.duration:
+            timeWindows = timeWindows[:tw] + timeWindows[tw+1:]
+        else:
+            tw += 1
+    task.timeWindows[routeIndex] = timeWindows
 
 def anyEmptyTWLists(route, routeIndex):
     for t in range(len(route)):  
@@ -991,12 +1010,13 @@ def anyEmptyTWLists(route, routeIndex):
 '''
 def minRoute(taskList, currRoute, routeIndex):
 #     print "********** Entering minRoute **********"
-#     appendToSchedSteps("Entering minRoute on route %d"%(routeIndex), currRoute, routeIndex)
+    appendToSchedSteps("Entering minRoute on route %d"%(routeIndex), currRoute, routeIndex)
 
     bestRoute = copy.deepcopy(currRoute)
     
     
     # Minimize each route
+    
     if len(currRoute) == 0:
         return resetTasks(currRoute, taskList)
     
@@ -1017,23 +1037,29 @@ def minRoute(taskList, currRoute, routeIndex):
     latestWaitingTask = getLatestWaitingTask(currRoute)
     if latestWaitingTask == -1:
         return resetTasks(currRoute, taskList)
-        
+    
+    appendToSchedSteps("Route before first domRout", bestRoute, routeIndex)
     bestRoute = dominantRoute(currRoute, assignedTWs, routeIndex)
 
     latestWaitingTask = getLatestWaitingTask(bestRoute)
-    
+    appendToSchedSteps("Route before minRoute while", bestRoute, routeIndex)
+
     # While this there are still tasks with waiting time and the latest
     # waiting task has time windows to switch to
     while latestWaitingTask > -1 and assignedTWs[latestWaitingTask] < len(currRoute[latestWaitingTask].timeWindows[routeIndex]) - 1:
         
         # move the latest waiting task to its next time window.
+        appendToSchedSteps("Route BEFORE switchTimeWindows in minRoute", bestRoute, routeIndex)
         newRoute = switchTimeWindows(bestRoute, latestWaitingTask, routeIndex, assignedTWs)
-
+        appendToSchedSteps("Route AFTER switchTimeWindows in minRoute", bestRoute, routeIndex)
+        
         if newRoute == None:
             break
         # find the shortest route with that ending time
+        appendToSchedSteps("Route BEFORE dominantRoute in minRoute", bestRoute, routeIndex)
         newRoute = dominantRoute(newRoute, assignedTWs, routeIndex)
-
+        appendToSchedSteps("Route AFTER dominantRoute in minRoute", bestRoute, routeIndex)
+        
         # if it's better than the best so far, update the best.
         if(getMinRouteDuration(newRoute) < getMinRouteDuration(bestRoute)):
             bestRoute = newRoute
