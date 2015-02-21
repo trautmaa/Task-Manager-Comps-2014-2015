@@ -255,7 +255,7 @@ def crossExchange(currSchedule, nHood):
     else:
         route2Len = random.randint(0, min(len2, nHood))
     
-    appendToSchedSteps("Swapping parts of routes %d and %d in CROSS EXCHANGE" %(day1, day2), currSchedule)
+#     appendToSchedSteps("Swapping parts of routes %d and %d in CROSS EXCHANGE" %(day1, day2), currSchedule)
 #     appendToSchedSteps("route %d, len %d, route %d, len %d" %(day1, route1Len, day2, route2Len), currSchedule)
     
     routeSegment1 = getRouteSegment(currSchedule, day1, day2, route1Len)
@@ -502,7 +502,7 @@ def iterativeImprovement(taskList, currSchedule, nHood):
 '''
 def threeOPT(taskList, currSchedule):
 #     print "********** Entering threeOPT **********"
-    appendToSchedSteps("About to  start 3-OPT", currSchedule)
+#     appendToSchedSteps("About to  start 3-OPT", currSchedule)
 #     appendToSchedSteps("routesModed for 3opt, %s" %(str(routesModified)), currSchedule)
 
     currSchedule = copy.deepcopy(currSchedule)
@@ -544,7 +544,7 @@ def threeOPT(taskList, currSchedule):
             if newRouteDominates(currLength, currFeasibility, newLength, newFeasibility):
                 currSchedule[day] = newRoute
 #                     print "********** Exiting threeOPT ***************"   
-                appendToSchedSteps("Found a better route in 3-OPT", currSchedule)
+#                 appendToSchedSteps("Found a better route in 3-OPT", currSchedule)
     
                 return currSchedule
             
@@ -575,11 +575,12 @@ def switchChains(k, j, currRoute):
 '''
 def bestInsertion(taskList, currSchedule):
 #     print "********** Entering bestInsertion **********"
-
+    appendToSchedSteps("Entering bestInsertion", currSchedule)
     currSchedule = copy.deepcopy(currSchedule)
 
     # Keep track of the first task we try to add, stop if we try to add it again
     if len(unplannedTasks) == 0:
+        appendToSchedSteps("Exiting bestInsertion: unplannedTasks" + str(unplannedTasks), currSchedule)
         return currSchedule
     currTask = unplannedTasks.popleft()
     firstTaskID = currTask.id
@@ -720,7 +721,7 @@ def isFeasible(taskList, currSchedule):
 def isRouteFeasible(currRoute, routeIndex):
 #     print "********** Entering isRouteFeasible **********"
     currRoute = copy.deepcopy(currRoute)
-    appendToSchedSteps("Beginning route feasibility check", currRoute, routeIndex)
+#     appendToSchedSteps("Beginning route feasibility check", currRoute, routeIndex)
 
     # for each task except the first, add travel time from prev task to curr task
     # to the duration of task, then subtract that same time from each time window
@@ -738,7 +739,7 @@ def isRouteFeasible(currRoute, routeIndex):
             oldTW = task.timeWindows[routeIndex][tw]
             newTW = (int(math.floor(oldTW[0] - travelTime)), oldTW[1])
             task.timeWindows[routeIndex][tw] = newTW
-    appendToSchedSteps("Added travel time to route %d" % (routeIndex), currRoute, routeIndex)
+#     appendToSchedSteps("Added travel time to route %d" % (routeIndex), currRoute, routeIndex)
     oldRoute = copy.deepcopy(currRoute)
     
     currRoute = tightenTWStarts(currRoute, routeIndex)
@@ -754,7 +755,7 @@ def isRouteFeasible(currRoute, routeIndex):
 
 
 #     print "********** Exiting isRouteFeasible2 **********"
-    appendToSchedSteps("Route %d is NOT FEASIBLE after tightening, return None"  %(routeIndex), currRoute, routeIndex)
+#     appendToSchedSteps("Route %d is NOT FEASIBLE after tightening, return None"  %(routeIndex), currRoute, routeIndex)
     return None, infeas
                     
 '''
@@ -887,7 +888,7 @@ def tightenTWStarts(currRoute, routeIndex):
         
         return None
     # print "********** Exiting tightenTWStarts 3 **********"
-    appendToSchedSteps("Route %d is FEASIBLE after tightening time window STARTS" % (routeIndex), currRoute, routeIndex)
+#     appendToSchedSteps("Route %d is FEASIBLE after tightening time window STARTS" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 '''
@@ -974,7 +975,7 @@ def tightenTWEnds(currRoute, routeIndex):
         return None
     
 #     print "********** Exiting tightenTWEnds3 **********"
-    appendToSchedSteps("Route %d is FEASIBLE after tightening time window ENDS" % (routeIndex), currRoute, routeIndex)
+#     appendToSchedSteps("Route %d is FEASIBLE after tightening time window ENDS" % (routeIndex), currRoute, routeIndex)
     return currRoute
 
 def anyEmptyTWLists(route, routeIndex):
@@ -990,7 +991,7 @@ def anyEmptyTWLists(route, routeIndex):
 '''
 def minRoute(taskList, currRoute, routeIndex):
 #     print "********** Entering minRoute **********"
-    appendToSchedSteps("Entering minRoute on route %d"%(routeIndex), currRoute, routeIndex)
+#     appendToSchedSteps("Entering minRoute on route %d"%(routeIndex), currRoute, routeIndex)
 
     bestRoute = copy.deepcopy(currRoute)
     
@@ -1038,7 +1039,7 @@ def minRoute(taskList, currRoute, routeIndex):
             bestRoute = newRoute
         latestWaitingTask = getLatestWaitingTask(newRoute)
         
-#     appendToSchedSteps("Route at end of minRoute, before task revert", bestRoute, routeIndex)
+    appendToSchedSteps("Route at end of minRoute, before task revert", bestRoute, routeIndex)
 
     # Set bestRoute tasks to be the original tasks from the tasklist
     # We do this to remove changes we made to time windows in the
@@ -1074,7 +1075,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
 
     currRoute = copy.deepcopy(currRoute)
     
-    isRouteActuallyFeasible(currRoute, day, "beginning of switchTimeWindows")
+#     isRouteActuallyFeasible(currRoute, day, "beginning of switchTimeWindows")
     
     # print "Original Route:"
     # print currRoute
@@ -1159,7 +1160,7 @@ def switchTimeWindows(currRoute, latestWaitingTaskIndex, day, assignedTWs):
             # print "********** Exiting switchTimeWindows **********"
             return None
     
-    isRouteActuallyFeasible(currRoute, day, "After all squidging")
+#     isRouteActuallyFeasible(currRoute, day, "After all squidging")
     # print "********** Exiting switchTimeWindows **********"
     return currRoute
 
