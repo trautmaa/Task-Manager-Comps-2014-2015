@@ -197,24 +197,26 @@ def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, dur
         isRequired[i] = True
     for i in consistentIndices:
         isConsistent[i] = True
-
+    print "yayayayay"
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
         for i in range(n):
+            print i
             taskList.append(generateTask(xRange, yRange, releaseTimeRange, durationMin, durationMax,
                 deadlineRange, priorityRange, isRequired[i], isConsistent[i], numDays, maxNumTimeWindows, dayLength))
         maxSumProfit = (n + 1) * priorityRange + 1
         changeRequiredTasksProfit(taskList, maxSumProfit)
         setDependencies(taskList, numberDependencies)
         for task in taskList:
+            print task
             writer.writerow(task)
     return csvFile
 
 def main():
 
     # make sure these make sense!
-    numberOfTasks = 64
+    numberOfTasks = 25
     numDays = 3
     xRange = 60
     yRange = 60
@@ -227,14 +229,13 @@ def main():
 
     priorityRange = 10 # optional tasks assigned priority between 1 and this
     numberRequired = 6 # number of required tasks
-    maxTaskTimeWindows = 2 # max number of time windows a task can have on a particular day
+    maxTaskTimeWindows = 4 # max number of time windows a task can have on a particular day
     numberDependencies = 0 # percent of tasks with 1 dependency (must be <.5 right now)
     numberConsistent = 0
     assert(numberDependencies <= numberOfTasks / 2)
-    for i in range(10):
-        writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
-            durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
-            numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "testing" + str(i)             + ".csv")
+    writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
+        durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
+        numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "VNSVisualizerTest.csv")
 
 
 if __name__ == '__main__':

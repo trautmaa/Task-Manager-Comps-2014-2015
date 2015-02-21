@@ -28,8 +28,9 @@ def setup():
                color(255, 231, 185), color(255, 243, 221)]
     
     #rainbow from which to create rectColors rainbow spectrum
-    colorList = [color(255, 0, 0), color(240, 255, 0), color(0, 255, 0),\
-                 color(0, 255, 255), color(0, 0, 255), color(255, 0, 255)]
+    colorList = [color(255, 0, 0), color(255, 100, 100), color(255,255, 255), color(240, 255, 100), color(240, 255, 0),\
+                color(0, 255, 0), color(100, 255, 100), color(100, 255, 255), color(0, 255, 255),\
+                color(0, 0, 255), color(100, 100, 255), color(255, 100, 255), color(255, 0, 255)]
     rectColors = []
     
     dayColor = yellows[-1]
@@ -47,7 +48,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("averysImportantTestFile.csv"), 5)
+    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("Testing Folder/test_threeWindow_3.csv"), 5)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -55,9 +56,10 @@ def setup():
     
 def setColors():
     #BADBADBADBAD
-    for d in range(30):
+    numTasks = 64
+    for d in range(numTasks):
         #ABBY: bad bad bad bad bad bad
-        scaleFactor = float(d+1)/float(30) * (len(colorList) - 1)
+        scaleFactor = float(d+1)/float(numTasks) * (len(colorList) - 1)
         baseColor = int(floor(scaleFactor))
         percentBetweenColors = scaleFactor - baseColor
         #find new r, g and b where its scaled according to the percentBetweenColors
@@ -194,7 +196,7 @@ def drawRouteTimeWindows(routeX, route, routeWidth, routeIndex):
             rect(taskX, headerHeight + twStart, taskWidth, twEnd - twStart)
             
         
-        fill(taskColor, 50)
+        fill(74,71,71, 150)
         noStroke()
         taskHeight = task.duration * scale
         if ends:
