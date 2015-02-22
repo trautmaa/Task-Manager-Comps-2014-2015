@@ -48,7 +48,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("Testing Folder/test_threeWindow_3.csv"), 5)
+    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("averysImportantTestFile.csv"), 5)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -56,7 +56,7 @@ def setup():
     
 def setColors():
     #BADBADBADBAD
-    numTasks = 64
+    numTasks = 30
     for d in range(numTasks):
         #ABBY: bad bad bad bad bad bad
         scaleFactor = float(d+1)/float(numTasks) * (len(colorList) - 1)
@@ -92,7 +92,8 @@ def draw():
     if keyPressed[0]:
         
         keyPressed[0] = False
-        currStep[0] += 1
+        if currStep[0] < len(schedSteps) - 1:
+            currStep[0] += 1
         newSched = schedSteps[currStep[0]]
         
         if isinstance(newSched[1], Objects.Route):
