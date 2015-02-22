@@ -30,9 +30,19 @@ def findBestScheduleWithTimeLimit(taskList, permutations, timeLimit):
         newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
         if isBetterSchedule(newSchedule, bestSchedule):
             bestSchedule = newSchedule
-        if time.time()-start >= timeLimit:
+        if time.time() - start >= timeLimit:
             return bestSchedule
 
+    
+    return bestSchedule
+
+def findBestSchedule(taskList, permutations):
+    helperFunctions.preprocessTimeWindows(taskList)
+    bestSchedule = Objects.Schedule()
+    for perm in permutations:
+        newSchedule = helperFunctions.createOptimalSchedule(taskList, perm)     
+        if isBetterSchedule(newSchedule, bestSchedule):
+            bestSchedule = newSchedule
     
     return bestSchedule
 
@@ -50,14 +60,17 @@ def getAllPermutations(lengthOfPerms):
 
 
 
-def runBruteForceAlgWithTimeLimit(csvFile, timeLimit):
+def runBruteForceAlgWithTimeLimit(csvFile, timeLimit = None):
     '''
     A function that will run our brute force algorithm to find the
     best schedule it can find in a certain timeLimit.
     '''
     objectList = createTasksFromCsv.getTaskList(csvFile)
     taskOrderings = getAllPermutations(len(objectList))
-    bestSchedule = findBestScheduleWithTimeLimit(objectList, taskOrderings, timeLimit)
+    if timeLimit != None:
+        bestSchedule = findBestScheduleWithTimeLimit(objectList, taskOrderings, timeLimit)
+    else:
+        bestSchedule = findBestSchedule(objectList, taskOrderings)
     return bestSchedule
 
 
@@ -65,7 +78,7 @@ def runBruteForceAlgWithTimeLimit(csvFile, timeLimit):
 Prints the output of runBruteForceAlg in a more
 detailed format.
 '''
-def printBruteForce(csvFile, timeLimit):
+def printBruteForce(csvFile, timeLimit = None):
     schedule = runBruteForceAlgWithTimeLimit(csvFile, timeLimit)
     print schedule
     print schedule.getProfit()
@@ -75,9 +88,9 @@ def printBruteForce(csvFile, timeLimit):
     print
 
 def main():
-    print
-    printBruteForce("little1.csv")
-    print datetime.datetime.now()
+    startTime = datetime.datetime.now()
+    printBruteForce("test11.csv")
+    print datetime.datetime.now() - startTime
 
 
 if __name__ == '__main__':
