@@ -1,0 +1,9 @@
+Algorithm,Time Ran,Profit,Optional Profit,Tasks Scheduled,Required Tasks Scheduled,Optional Tasks Scheduled,Waiting Time,Working Time,Distance Traveled,Test Name,Available Tasks,Days,Average Duration of Tasks,Average Time Windows Per Task,Average Length of Time Windows,Available Release Tasks,VNS Incumbent Profit,intProg Optimal
+GBOOBD,0.07393789291381836,82451.0,179.0,63,32,31,113.0,2728.0,1273,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+GBOFRT,0.07017993927001953,82491.0,219.0,59,32,27,144.0,2736.0,1210,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+GBOPOA,0.0642709732055664,77333.0,203.0,60,30,30,235.0,2627.0,1303,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+GBOOBP,0.06639289855957031,82491.0,219.0,59,32,27,144.0,2736.0,1210,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+GPC,1.3840420246124268,15700.0,274.0,55,6,49,201.0,2510.0,1480,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+VNS,302.7221658229828,82495.0,223.0,60,32,28,84.0,2772.0,1212,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,82491.0,
+TRI,300.053297996521,38814.0,249.0,56,15,41,179.0,2629.0,1349,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,
+IP,479.0401220321655,10395.0,111.0,26,4,22,1546.0000000000032,1393.0,695,test_twoFiftySixTask_3.csv,256,3,59.28515625,3.125,212,0,,False
