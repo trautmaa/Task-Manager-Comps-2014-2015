@@ -47,7 +47,7 @@ def setupHelper():
     algButtonsHeight = height/6
     fileButtonsHeight = 2 * height / 6
     timeButtonsHeight = 3 * height / 6
-    buttonFunctsFrontEnd = ["Okay!", "VNS",  "Greedy", "IntProg", "Pulse"]
+    buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse"]
     buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
     fileList = ["medium20", "willSchedule", "averysImportantTestFile"]
     timeList = ["  3  ", "  15  ", "  60  "]
@@ -58,7 +58,6 @@ def setupHelper():
     exitButton = [False, "Exit", 20, height - buttonHeight - 20, buttonWidth + textWidth("Exit"), buttonHeight]
     #backButton = [False, "Back", width - 20 - textWidth("Back") - buttonWidth, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
     backButton = [False, "Back", 1820, height - buttonHeight - 20, buttonWidth + textWidth("Back"), buttonHeight]
-    print width - 20 - textWidth("Back") - buttonWidth
     
     #initialize empty list; leave room for OKAY button dimensions
     buttonRects = [0] * (len(buttonFunctsFrontEnd))
@@ -479,6 +478,7 @@ def calendarDrawInit():
                 if len(schedule[0][day][t].timeWindows[j]) > maxNumTimeWindows[0]:
                     maxNumTimeWindows[0] = len(schedule[0][day][t].timeWindows[j])
     background(bgColor)
+    print "cashmoney", schedule[0]
 
 
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
@@ -726,7 +726,6 @@ def drawTasks(route, leftX):
     taskRects.append(dayToAdd)
     #taskMapDots is a list days, each of which is a list of coordinates of points on the map for that day
     taskMapDots.append(mapLocationsToAdd)
-
     popStyle()
 
 
@@ -765,6 +764,26 @@ def drawMap(whichDay, whichTask):
             x = task[0]
             y = task[1]
             point(x, y)
+
+    #when tasks are in the same location, we need to draw a 
+    #highlighted task's dot last so it appears with its lines
+    if whichDay != -1:
+        
+        for t in range(len(taskMapDots[whichDay])):         
+                
+           #selected task gets a bigger dot
+           if t == whichTask: 
+               stroke(rectColors[whichDay])
+               strokeWeight(15)
+
+           #non-selected task on a selected day gets a gray dot
+           else:
+               stroke(rectColors[whichDay], alpha = 100)
+               
+        task = taskMapDots[whichDay][t]
+        x = task[0]
+        y = task[1]
+        point(x, y)
 
     #if cursor is over a day, draw the lines connecting that day's tasks
     if whichDay != -1:
