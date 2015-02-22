@@ -26,6 +26,7 @@ from math import floor
 from createTests import dayLength
 import os
 from vns import solve, getStoppingCondition
+from bruteForce import runBruteForceAlgWithTimeLimit
 
 
 def setup():
@@ -39,7 +40,7 @@ def setupHelper():
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
     global firstCalDraw, buttonHighlightSize, algButtonsHeight, fileButtonsHeight, timeButtonsHeight
     global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects, timeBooleans
-    global exitButton, timeList, timeRects, backButton, fileListBackEnd
+    global exitButton, timeList, timeRects, backButton, fileListBackEnd, timeValue
     
     firstCalDraw = [True]
     
@@ -47,10 +48,10 @@ def setupHelper():
     algButtonsHeight = height/6
     fileButtonsHeight = 2 * height / 6
     timeButtonsHeight = 3 * height / 6
-    buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse"]
-    buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
-    fileList = ["Medium 20", "Will's Schedule", "Avery's Important Tests"]
-    fileListBackEnd = ["medium20", "willSchedule", "averysImportantTestFile"]
+    buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse", "BruteForce"]
+    buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py", "bruteForce.py"]
+    fileList = ["Abby's Schedule", "Will's Schedule", "Avery's Schedule"]
+    fileListBackEnd = ["medium20", "GUI_Test", "averysImportantTestFile"]
     timeList = ["  3  ", "  15  ", "  60  "]
     buttonHighlightSize = 10
     buttonWidth = 10
@@ -66,6 +67,7 @@ def setupHelper():
     timeRects = [0] * (len(timeList))
     textSize(buttonTextSize)
     buttonRects[0] = [width/2 - textWidth(buttonFunctsFrontEnd[0])/2, height * 4 / 6]
+    timeValue = []
     
     #math
     totalFunctionButtonsWidth = 0
@@ -151,7 +153,7 @@ def drawMenu():
     
 def drawLabels():
     pushStyle()
-    label0 = "Choose three..."
+    label0 = ""
     label1 = "Algorithm:"
     label2 = "Test File:"
     label3 = "Time Limit:"
@@ -403,13 +405,13 @@ def calendarDrawInit():
     #get an integer value for running time
     for b in range(len(timeBooleans)):
         if timeBooleans[b]:
-            timeValue = int(timeList[b])
+            timeValue.append(int(timeList[b]))
             
     #do stuff so that we can call different algorithms depending on user's selection
     csvFile = pwd(fileName)
     #setup for VNS
     if buttonList[1] == True:
-        stoppingCondition = timeValue
+        stoppingCondition = timeValue[0]
         schedule[0], useless, useless2 = solve(csvFile, stoppingCondition)
         
 #         schedule os.system("python " + vns + " " + file)
@@ -428,7 +430,7 @@ def calendarDrawInit():
     #setup for Integer
     elif buttonList[3] == True:
         fileName = pwd(fileName)
-        output = os.system("python " + pwd("integerProgram.py") + " " + fileName + " " + str(timeValue))
+        output = os.system("python " + pwd("integerProgram.py") + " " + fileName + " " + str(timeValue[0]))
         print output
         sched = createTasksFromCsv.getTaskList("intProgSched.csv")
         order = range(len(sched))
@@ -438,12 +440,16 @@ def calendarDrawInit():
     #setup for Pulse
     elif buttonList[4]:
         fileName = pwd(fileName)
-        output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " " + str(timeValue))
+        output = os.system("python " + pwd("pulseOPTW.py") + " " + fileName + " " + str(timeValue[0]))
         print output
         sched = createTasksFromCsv.getTaskList("pulseSched.csv")
         order = range(len(sched))
         schedule[0] = helperFunctions.createOptimalSchedule(sched, order)
 
+    #setup for bruteForce
+    elif buttonList[5]:
+        fileName = pwd(fileName)
+        schedule[0] = runBruteForceAlgWithTimeLimit(csvFile, timeValue[0])
     
     else:
         #ERROR: none of our known algorithms were selected when okay when selected
@@ -479,7 +485,6 @@ def calendarDrawInit():
                 if len(schedule[0][day][t].timeWindows[j]) > maxNumTimeWindows[0]:
                     maxNumTimeWindows[0] = len(schedule[0][day][t].timeWindows[j])
     background(bgColor)
-    print "cashmoney", schedule[0]
 
 
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
@@ -564,12 +569,13 @@ def highlight(whichTask, whichDay):
         task = schedule[0][whichDay][whichTask]
         textStr = ""
         textStr = textStr + "Name: " + str(task.name) + "\n"
-        textStr = textStr + "ID: " + str(task.id) + "\n"
+        textStr = textStr + "Start Time: " + str(schedule[0][whichDay].endingTimes[whichTask] - task.duration) + "\n"
         textStr = textStr + "Release Time: " + str(task.releaseTime) + "\n"
+        textStr = textStr + "Priority: " + str(task.priority) + "\n"
+        textStr = textStr + "Required? " + ("Yes" if task.required == "1" else "No")  + "\n"
         textStr = textStr + "X Coordinate: " + str(task.x) + "\n"
         textStr = textStr + "Y Coordinate: " + str(task.y) + "\n"
-        textStr = textStr + "Start Time: " + str(schedule[0][whichDay].endingTimes[whichTask] - task.duration) + "\n"
-        
+
         
         text(textStr, textX + textDimensionX / 100, textY + textDimensionY / 10)
         
@@ -810,14 +816,16 @@ def drawTextBox(whichDay, whichTask):
     rect(textX, textY, textDimensionX, textDimensionY)
     for i in range(len(buttonList)):
         if buttonList[i]:
-            labelString = "Algorithm: " + buttonFunctsFrontEnd[i]
+            labelString = "Algorithm: " + buttonFunctsFrontEnd[i] + "\n"
+    labelString += "Time Limit: " + str(timeValue[0]) + "\n"
+    labelString += "Profit: " + str(schedule[0].getProfit()) + "\n"
             
         
     #draw the algorithm label
     stroke(1)
     fill(255,255,255)
     textSize(32)
-    text(labelString, textX + textDimensionX / 2 - textWidth(labelString) / 2, textY + 3 * textDimensionY / 2)   
+    text(labelString, textX + textDimensionX / 2 - textWidth(labelString) / 2, textY + 5 * textDimensionY / 4)   
     
     popStyle()
     
