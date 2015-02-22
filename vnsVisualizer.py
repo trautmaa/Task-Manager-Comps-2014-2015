@@ -48,7 +48,7 @@ def setup():
     headerHeight = 60
     currStep = [-1]
         
-    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("averysImportantTestFile.csv"), 5)
+    currSchedule, schedSteps, thisDoesntMatter = vns.solve(pwd("VNSVisualizerTest.csv"), 5)
     fill(sideBarColor, 255)
     noStroke()
     rect(0, headerHeight, sideBarWidth, height-headerHeight)
@@ -56,7 +56,7 @@ def setup():
     
 def setColors():
     #BADBADBADBAD
-    numTasks = 30
+    numTasks = 25
     for d in range(numTasks):
         #ABBY: bad bad bad bad bad bad
         scaleFactor = float(d+1)/float(numTasks) * (len(colorList) - 1)
