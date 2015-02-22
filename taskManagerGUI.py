@@ -39,7 +39,7 @@ def setupHelper():
     global buttonList, buttonRects, buttonFunctsFrontEnd, buttonWidth, buttonHeight
     global firstCalDraw, buttonHighlightSize, algButtonsHeight, fileButtonsHeight, timeButtonsHeight
     global buttonTextSize, buttonFunctsBackEnd, fileList, fileBooleans, fileRects, timeBooleans
-    global exitButton, timeList, timeRects, backButton
+    global exitButton, timeList, timeRects, backButton, fileListBackEnd
     
     firstCalDraw = [True]
     
@@ -49,7 +49,8 @@ def setupHelper():
     timeButtonsHeight = 3 * height / 6
     buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse"]
     buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
-    fileList = ["medium20", "willSchedule", "averysImportantTestFile"]
+    fileList = ["Medium 20", "Will's Schedule", "Avery's Important Tests"]
+    fileListBackEnd = ["medium20", "willSchedule", "averysImportantTestFile"]
     timeList = ["  3  ", "  15  ", "  60  "]
     buttonHighlightSize = 10
     buttonWidth = 10
@@ -397,7 +398,7 @@ def calendarDrawInit():
     #get the name of the test file we are to use
     for b in range(len(fileBooleans)):
         if fileBooleans[b]:
-            fileName = fileList[b] + ".csv"
+            fileName = fileListBackEnd[b] + ".csv"
     
     #get an integer value for running time
     for b in range(len(timeBooleans)):
@@ -737,10 +738,18 @@ def drawMap(whichDay, whichTask):
     fill(255,255,255)
     rect(mapX, mapY, mapDimension, mapDimension)
 
-    #draw the dots
+    #draw the dots, ALL BUT THE SELECTED DAY's
     fill(0,0,0)
     for day in range(len(taskMapDots)):
         for t in range(len(taskMapDots[day])):
+                #blank space
+    #             stroke(255,255,255)
+    #             strokeWeight(20)
+    #             task = taskMapDots[day][t]
+    #             x = task[0]
+    #             y = task[1]
+    #             point(x, y)
+                
             strokeWeight(10)
 
             #set the stroke depending on whichDay and whichTask are selected
@@ -767,23 +776,25 @@ def drawMap(whichDay, whichTask):
 
     #when tasks are in the same location, we need to draw a 
     #highlighted task's dot last so it appears with its lines
-    if whichDay != -1:
-        
-        for t in range(len(taskMapDots[whichDay])):         
-                
-           #selected task gets a bigger dot
-           if t == whichTask: 
-               stroke(rectColors[whichDay])
-               strokeWeight(15)
-
-           #non-selected task on a selected day gets a gray dot
-           else:
-               stroke(rectColors[whichDay], alpha = 100)
-               
-        task = taskMapDots[whichDay][t]
-        x = task[0]
-        y = task[1]
-        point(x, y)
+#     if whichDay != -1:
+#           
+#         for t in range(len(taskMapDots[whichDay])):         
+#               
+#              
+#              
+#            #selected task gets a bigger dot
+#            if t == whichTask: 
+#                stroke(rectColors[whichDay])
+#                strokeWeight(15)
+#   
+#            #non-selected task on a selected day gets a gray dot
+#            else:
+#                stroke(rectColors[whichDay], alpha = 100)
+#                  
+#         task = taskMapDots[whichDay][t]
+#         x = task[0]
+#         y = task[1]
+#         point(x, y)
 
     #if cursor is over a day, draw the lines connecting that day's tasks
     if whichDay != -1:
