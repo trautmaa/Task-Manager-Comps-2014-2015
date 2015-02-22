@@ -197,7 +197,6 @@ def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, dur
         isRequired[i] = True
     for i in consistentIndices:
         isConsistent[i] = True
-    print "yayayayay"
     with open(csvFile, 'wb') as f:
         writer = csv.writer(f)
         writer.writerow(taskFeatures)
@@ -216,12 +215,12 @@ def writeNTasks(dayLength, n, xRange, yRange, releaseTimeRange, durationMin, dur
 def main():
 
     # make sure these make sense!
-    numberOfTasks = 25
-    numDays = 3
-    xRange = 60
-    yRange = 60
-    durationMin = 1 # tasks will receive durations no shorter than this
-    durationMax = 120 # tasks will receive durations no longer than this
+    numberOfTasks = 35
+    numDays = 5
+    xRange = 300
+    yRange = 300
+    durationMin = 20 # tasks will receive durations no shorter than this
+    durationMax = 240 # tasks will receive durations no longer than this. 250 is too long
 
     # these do nothing right now:
     releaseTimeRange = (dayLength * numDays) - durationMax # tasks will receive release times no later than this
@@ -229,13 +228,13 @@ def main():
 
     priorityRange = 10 # optional tasks assigned priority between 1 and this
     numberRequired = 6 # number of required tasks
-    maxTaskTimeWindows = 4 # max number of time windows a task can have on a particular day
+    maxTaskTimeWindows = 3 # max number of time windows a task can have on a particular day
     numberDependencies = 0 # percent of tasks with 1 dependency (must be <.5 right now)
-    numberConsistent = 0
+    numberConsistent = 2
     assert(numberDependencies <= numberOfTasks / 2)
     writeNTasks(dayLength, numberOfTasks, xRange, yRange, releaseTimeRange,
         durationMin, durationMax, deadlineRange, priorityRange, numberRequired,
-        numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "VNSVisualizerTest.csv")
+        numDays, maxTaskTimeWindows, numberDependencies, numberConsistent, "GUI_Test.csv")
 
 
 if __name__ == '__main__':
