@@ -484,7 +484,6 @@ def calendarDrawInit():
                 if len(schedule[0][day][t].timeWindows[j]) > maxNumTimeWindows[0]:
                     maxNumTimeWindows[0] = len(schedule[0][day][t].timeWindows[j])
     background(bgColor)
-    print "cashmoney", schedule[0]
 
 
 #Updating our global values whichDay and whichTask, telling us which day and which task (if any) need to be highlighted
