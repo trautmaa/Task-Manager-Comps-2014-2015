@@ -88,9 +88,7 @@ def printBruteForce(csvFile, timeLimit = None):
     print
 
 def main():
-    startTime = datetime.datetime.now()
     printBruteForce("test11.csv")
-    print datetime.datetime.now() - startTime
 
 
 if __name__ == '__main__':

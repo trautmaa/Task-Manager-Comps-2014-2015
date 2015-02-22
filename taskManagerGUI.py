@@ -26,6 +26,7 @@ from math import floor
 from createTests import dayLength
 import os
 from vns import solve, getStoppingCondition
+from bruteForce import runBruteForceAlgWithTimeLimit
 
 
 def setup():
@@ -47,8 +48,8 @@ def setupHelper():
     algButtonsHeight = height/6
     fileButtonsHeight = 2 * height / 6
     timeButtonsHeight = 3 * height / 6
-    buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse"]
-    buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py"]
+    buttonFunctsFrontEnd = ["Plan It!", "VNS",  "Greedy", "IntProg", "Pulse", "BruteForce"]
+    buttonFunctsBackEnd = ["DontMatta", "vns.py", "greedyByOrder.py", "integerProgram.py", "pulseOPTW.py", "bruteForce.py"]
     fileList = ["Medium 20", "Will's Schedule", "Avery's Important Tests"]
     fileListBackEnd = ["medium20", "willSchedule", "averysImportantTestFile"]
     timeList = ["  3  ", "  15  ", "  60  "]
@@ -444,6 +445,10 @@ def calendarDrawInit():
         order = range(len(sched))
         schedule[0] = helperFunctions.createOptimalSchedule(sched, order)
 
+    #setup for bruteForce
+    elif buttonList[5]:
+        fileName = pwd(fileName)
+        schedule[0] = runBruteForceAlgWithTimeLimit(csvFile, timeValue)
     
     else:
         #ERROR: none of our known algorithms were selected when okay when selected
