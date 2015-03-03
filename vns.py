@@ -365,15 +365,14 @@ def optionalExchange1(currSchedule, nHood):
 #     print "********** Entering optExchange1**********"
 #     print currSchedule
 #     printUnplanned()
-    
     # select the number of tasks to remove and add from unplanned according to nHood Index
-    numToRemove = nHood - 9
+    numToRemove = nHood - 8
     numToAdd = 1
     
     if nHood == 12:
         numToRemove = 0
         numToAdd = 2
-
+    
     # pick a random day and starting time to exchange customers
     day = random.randint(0, len(currSchedule) - 1)
     
@@ -383,7 +382,7 @@ def optionalExchange1(currSchedule, nHood):
         required = []
         # using the numToRemove and numToAdd values, add and remove however many customers you need to
         for task in currSchedule[day][pos:pos + numToRemove]:
-            if task.required == 0:
+            if task.required == '0':
                 unplannedTasks.append(task)
             else:
                 required.append(task)
@@ -454,7 +453,7 @@ def optionalExchange2(currSchedule, nHood):
     required = []
     # using the numToRemove value, remove however many customers you need to
     for task in currSchedule[day][pos:pos + numToRemove]:
-        if task.required == 0:
+        if task.required == '0':
             unplannedTasks.append(task)
         else:
             required.append(task)
@@ -1468,6 +1467,11 @@ def main():
     f = os.path.realpath(f)
     
     result = solve(f, stoppingCondition)
+    
+    
+    for route in result[0]:
+        assert(None not in route.endingTimes)
+    
     print
     print result[0]
     print
